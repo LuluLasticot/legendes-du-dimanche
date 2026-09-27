@@ -292,12 +292,22 @@ function momentSection(fp: Fingerprint): void {
         defenders: [
           ...Array.from({ length: i % 4 }, () => ({
             role: 'wall' as const,
-            attributes: { pace: 60, defending: r.int(30, 95), physical: r.int(30, 95), heightCm: r.int(172, 195) },
+            attributes: {
+              pace: 60,
+              defending: r.int(30, 95),
+              physical: r.int(30, 95),
+              heightCm: r.int(172, 195),
+            },
           })),
           {
             role: 'marker' as const,
             feet: v3(from.x + r.range(4, 9), 0, from.z + r.range(-2, 2)),
-            attributes: { pace: r.int(30, 95), defending: r.int(30, 95), physical: r.int(30, 95), heightCm: 182 },
+            attributes: {
+              pace: r.int(30, 95),
+              defending: r.int(30, 95),
+              physical: r.int(30, 95),
+              heightCm: 182,
+            },
           },
         ],
         defenderTuning: SELFTEST_DEFENDER_TUNING,

@@ -12,7 +12,15 @@ import {
   type DefenderSetup,
   type ShotMomentSetup,
 } from '../src/moments/index.ts';
-import { BALL, DEFAULT_PHYSICS, GOAL, kickedBall, PITCH, v3, type Vec3 } from '../src/physics/index.ts';
+import {
+  BALL,
+  DEFAULT_PHYSICS,
+  GOAL,
+  kickedBall,
+  PITCH,
+  v3,
+  type Vec3,
+} from '../src/physics/index.ts';
 import { Rng } from '../src/rng/index.ts';
 
 const AVERAGE: DefenderAttributes = { pace: 65, defending: 65, physical: 65, heightCm: 182 };
@@ -98,9 +106,13 @@ describe('markers', () => {
   it('a marker next to the shot line closes it down; one far away does not', () => {
     const from = spot(18);
     const target = v3(PITCH.goalLineX, 0.4, 0.5);
-    const close = simulateShotMoment(setup(from, target, [{ role: 'marker', feet: v3(from.x + 7, 0, 0.9), attributes: AVERAGE }]));
+    const close = simulateShotMoment(
+      setup(from, target, [{ role: 'marker', feet: v3(from.x + 7, 0, 0.9), attributes: AVERAGE }]),
+    );
     expect(close.outcome).toBe('blocked');
-    const far = simulateShotMoment(setup(from, target, [{ role: 'marker', feet: v3(from.x + 7, 0, 6), attributes: AVERAGE }]));
+    const far = simulateShotMoment(
+      setup(from, target, [{ role: 'marker', feet: v3(from.x + 7, 0, 6), attributes: AVERAGE }]),
+    );
     expect(far.outcome).toBe('goal');
   });
 
@@ -116,7 +128,11 @@ describe('markers', () => {
     const blocked = (attributes: DefenderAttributes): number =>
       shots.filter((s) => {
         const feet = v3(s.from.x + s.marker, 0, s.from.z + s.side);
-        return simulateShotMoment(setup(s.from, s.target, [{ role: 'marker', feet, attributes }], { seed: s.seed })).outcome === 'blocked';
+        return (
+          simulateShotMoment(
+            setup(s.from, s.target, [{ role: 'marker', feet, attributes }], { seed: s.seed }),
+          ).outcome === 'blocked'
+        );
       }).length;
     const quick = blocked(QUICK);
     const slow = blocked(SLOW);
@@ -126,11 +142,20 @@ describe('markers', () => {
   });
 
   it('is deterministic with defenders and deflections', () => {
-    const s = setup(spot(20, -4), v3(PITCH.goalLineX, 0.5, -2), [...wall(3), { role: 'marker', feet: v3(35, 0, -1), attributes: AVERAGE }], { seed: 5 });
+    const s = setup(
+      spot(20, -4),
+      v3(PITCH.goalLineX, 0.5, -2),
+      [...wall(3), { role: 'marker', feet: v3(35, 0, -1), attributes: AVERAGE }],
+      { seed: 5 },
+    );
     const a = simulateShotMoment(s, 720, 60);
     const b = simulateShotMoment(s, 720, 60);
     expect(a.outcome).toBe(b.outcome);
-    expect(a.states.map((st) => st.flight.ball.pos)).toEqual(b.states.map((st) => st.flight.ball.pos));
-    expect(a.states.map((st) => st.defenders.map((d) => d.head))).toEqual(b.states.map((st) => st.defenders.map((d) => d.head)));
+    expect(a.states.map((st) => st.flight.ball.pos)).toEqual(
+      b.states.map((st) => st.flight.ball.pos),
+    );
+    expect(a.states.map((st) => st.defenders.map((d) => d.head))).toEqual(
+      b.states.map((st) => st.defenders.map((d) => d.head)),
+    );
   });
 });

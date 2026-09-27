@@ -121,7 +121,11 @@ export function startShotMoment(setup: ShotMomentSetup): {
   const setups = setup.defenders ?? [];
   const context: ShotMomentContext = {
     setup,
-    flight: { params: setup.physics, surface: setup.surface, rng: jitter ? root.fork('bounces') : null },
+    flight: {
+      params: setup.physics,
+      surface: setup.surface,
+      rng: jitter ? root.fork('bounces') : null,
+    },
     keeperTuning,
     keeperRng,
     defenderTuning,
@@ -136,7 +140,10 @@ export function startShotMoment(setup: ShotMomentSetup): {
         keeperRng,
       )
     : null;
-  const wallSlots = wallPositions(setup.ball.pos, setups.filter((d) => d.role === 'wall' && !d.feet).length);
+  const wallSlots = wallPositions(
+    setup.ball.pos,
+    setups.filter((d) => d.role === 'wall' && !d.feet).length,
+  );
   let wallIndex = 0;
   const defenders = setups.map((d) => {
     const feet = d.feet ?? wallSlots[wallIndex++] ?? setup.ball.pos;
@@ -144,7 +151,14 @@ export function startShotMoment(setup: ShotMomentSetup): {
   });
   return {
     context,
-    state: { tick: 0, flight: startFlight(setup.ball), keeper, defenders, outcome: null, lastTouch: null },
+    state: {
+      tick: 0,
+      flight: startFlight(setup.ball),
+      keeper,
+      defenders,
+      outcome: null,
+      lastTouch: null,
+    },
   };
 }
 
@@ -176,9 +190,23 @@ export function stepShotMoment(
   for (let i = 0; i < state.defenders.length; i++) {
     const d = state.defenders[i] as DefenderState;
     const setupD = context.defenderSetups[i] as DefenderSetup;
-    let next = stepDefender(d, tick, flight.ball, setupD.attributes, context.defenderTuning, context.flight);
+    let next = stepDefender(
+      d,
+      tick,
+      flight.ball,
+      setupD.attributes,
+      context.defenderTuning,
+      context.flight,
+    );
     if (live()) {
-      const contact = defenderContact(next, tick, flight.ball, setupD.attributes, context.defenderTuning, context.defenderRng);
+      const contact = defenderContact(
+        next,
+        tick,
+        flight.ball,
+        setupD.attributes,
+        context.defenderTuning,
+        context.defenderRng,
+      );
       if (contact) {
         next = touchedDefender(next, tick);
         flight = { ...flight, ball: contact.ball, outcome: null };
@@ -193,7 +221,13 @@ export function stepShotMoment(
 
   if (keeper && keeperSetup) {
     if (deflected) {
-      keeper = keeperReReact(keeper, tick, keeperSetup.attributes, context.keeperTuning, context.keeperRng);
+      keeper = keeperReReact(
+        keeper,
+        tick,
+        keeperSetup.attributes,
+        context.keeperTuning,
+        context.keeperRng,
+      );
     }
     const before = keeper.phase;
     keeper = stepKeeper(

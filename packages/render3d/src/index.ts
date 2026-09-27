@@ -32,5 +32,6 @@ export {
   toShotTuning,
   type SandboxSettings,
 } from './scenes/sandbox-settings.ts';
-export { KeeperFigure } from './players/keeper-figure.ts';
+export { PlayerFigure, KEEPER_KIT, OPPONENT_KIT, type FigureKit } from './players/player-figure.ts';
 export { toKeeperAttributes, toKeeperTuning } from './scenes/sandbox-settings.ts';
+export { toDefenderSetups, toDefenderTuning } from './scenes/sandbox-settings.ts';

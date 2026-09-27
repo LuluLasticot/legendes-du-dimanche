@@ -116,3 +116,13 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - **Calibrage par défaut** (500 tirs visés de 12 à 25 m par un tireur à 70, taux de but des tirs cadrés) : gardien 90 → 17 % (coins 28 %), ~77 → 33 % (coins 52 %), ~52 → 60 % (coins 87 %), ~35 → 70 % (coins 90 %). Le test de propriété vérifie un écart d'au moins 15 points entre un bon et un mauvais gardien. Tous les paramètres sont réglables dans `/lab/ball` (dossiers « Gardien » et « Réglages du gardien »).
 - Rendu : silhouette provisoire dont les membres relient exactement les points utilisés par le moteur pour les contacts (pieds, tête, mains). Elle sera remplacée par le personnage animé.
 - Le test de déterminisme couvre désormais 10 actions complètes contre un gardien (réglages figés).
+
+## D-016 — Défenseurs et mur (Phase 1, PR 7)
+
+- **Modèle déterministe** (`engine/moments/defenders.ts`) : chaque défenseur est une capsule pieds → tête, avec deux rôles.
+  - **Mur** : placé automatiquement à 9,15 m, du premier poteau vers le centre. Il saute à la frappe après un court délai (DÉF) ; la détente dépend de PHY.
+  - **Marquage** : après sa réaction, il vise le **point le plus tôt de la trajectoire qu'il peut atteindre** (course avec accélération, VIT). Il se jette au dernier moment (allonge du tacle, DÉF) ou saute pour une tête.
+- **Réaction courte au marquage** (0,30 → 0,08 s) : un défenseur face au tireur lit sa position avant la frappe. Découvert en test : avec un temps de réaction « visuel » classique, aucun contre n'était possible à moins de 9 m, ce qui n'est pas réaliste.
+- **Contre** : réflexion sur le corps, perte de vitesse (40 % gardés) et ricochet tiré de la graine. Le ballon reste vivant : une déviation peut finir au fond. **Le gardien réagit de nouveau** après une déviation s'il n'a pas encore plongé (sinon il est pris à contre-pied). Issue `blocked` si le dernier à toucher le ballon est un défenseur.
+- Mesuré : la plupart des contres viennent d'un défenseur déjà sur la ligne de tir ; la vitesse et la défense ajoutent environ 40 % de contres « de justesse » (test statistique).
+- Bac à sable : nombre de joueurs dans le mur, défenseurs au marquage (distance, écart), attributs et tous les réglages ; silhouettes rouges (`PlayerFigure`, commune avec le gardien). Vérifié : coup franc enroulé par-dessus un mur de 4 → but dans la lucarne du premier poteau.

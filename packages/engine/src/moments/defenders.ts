@@ -171,7 +171,8 @@ function planInterception(
     const needed = Math.max(0, sqrt(dx * dx + dz * dz) - reach);
     const slack = runDistance(i * TICK_DT, top, tuning.accelerationTime) - needed;
     if (slack >= 0) return { target: v3(p.x, 0, p.z), targetTick: tick + i };
-    if (best === null || slack > best.slack) best = { target: v3(p.x, 0, p.z), targetTick: tick + i, slack };
+    if (best === null || slack > best.slack)
+      best = { target: v3(p.x, 0, p.z), targetTick: tick + i, slack };
   }
   return best ? { target: best.target, targetTick: best.targetTick } : null;
 }
@@ -261,7 +262,9 @@ export function defenderContact(
   const gap = length(offset);
   // A lunge extends the reach of the lower body (outstretched leg).
   const lowerBody = point.y - defender.feet.y < 1;
-  const radius = BODY_RADIUS + (defender.lunging && lowerBody ? pick(tuning.lungeRange, attributes.defending) : 0);
+  const radius =
+    BODY_RADIUS +
+    (defender.lunging && lowerBody ? pick(tuning.lungeRange, attributes.defending) : 0);
   if (gap >= radius + BALL.radius) return null;
 
   const normal = gap > 1e-6 ? scale(offset, 1 / gap) : v3(-1, 0, 0);
@@ -270,7 +273,11 @@ export function defenderContact(
   const speed = length(ball.vel);
   // Reflect on the body, lose pace, plus a random ricochet.
   const reflected = sub(ball.vel, scale(normal, 2 * vn));
-  const jitter = v3(rng.normal(0, tuning.deflectSpread), rng.normal(0, tuning.deflectSpread) * 0.6, rng.normal(0, tuning.deflectSpread));
+  const jitter = v3(
+    rng.normal(0, tuning.deflectSpread),
+    rng.normal(0, tuning.deflectSpread) * 0.6,
+    rng.normal(0, tuning.deflectSpread),
+  );
   const dir0 = scale(reflected, 1 / Math.max(1e-6, length(reflected)));
   const dir = add(dir0, jitter);
   const out = speed * tuning.deflectRestitution;

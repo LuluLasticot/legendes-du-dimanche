@@ -53,7 +53,8 @@
         "touchline": "Touche",
         "stopped": "Arrêté",
         "none": "—",
-        "saved": "Arrêt"
+        "saved": "Arrêt",
+        "blocked": "Contré"
       },
       "webglError": "WebGL 2 n'est pas disponible sur cet appareil ou ce navigateur."
     },
@@ -150,7 +151,27 @@
         "parryRestitution": "vitesse gardée à la parade",
         "lateAdjustLow": "correction en plongeon (m), réflexes 1",
         "lateAdjustHigh": "correction en plongeon (m), réflexes 99",
-        "maxShuffle": "replacement max avant plongeon (m)"
+        "maxShuffle": "replacement max avant plongeon (m)",
+        "defenders": "Défenseurs",
+        "wall": "joueurs dans le mur",
+        "markers": "défenseurs au marquage",
+        "markerDistance": "distance au ballon (m)",
+        "markerSpread": "écart latéral (m)",
+        "pace": "vitesse (VIT)",
+        "defending": "défense (DÉF)",
+        "physical": "physique (PHY)",
+        "defenderTuning": "Réglages des défenseurs",
+        "wallReactionSlow": "saut du mur (s), DÉF 1",
+        "wallReactionFast": "saut du mur (s), DÉF 99",
+        "speedLow": "vitesse de course (m/s), VIT 1",
+        "speedHigh": "vitesse de course (m/s), VIT 99",
+        "jumpLow": "détente (m), PHY 1",
+        "jumpHigh": "détente (m), PHY 99",
+        "lungeLow": "allonge du tacle (m), DÉF 1",
+        "lungeHigh": "allonge du tacle (m), DÉF 99",
+        "deflectRestitution": "vitesse gardée au contre",
+        "markerReactionSlow": "réaction au marquage (s), DÉF 1",
+        "markerReactionFast": "réaction au marquage (s), DÉF 99"
       },
       "surfaces": {
         "grass": "Pelouse",
@@ -165,12 +186,14 @@
         "touchline": "Touche",
         "stopped": "Arrêté",
         "none": "—",
-        "saved": "Arrêt"
+        "saved": "Arrêt",
+        "blocked": "Contré"
       },
       "webglError": "WebGL 2 n'est pas disponible sur cet appareil ou ce navigateur.",
       "saves": {
         "catch": "capté",
-        "parry": "repoussé"
+        "parry": "repoussé",
+        "block": "contré par un défenseur"
       }
     }
   }
