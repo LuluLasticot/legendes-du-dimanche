@@ -1,0 +1,138 @@
+{
+  "positions": {
+    "GK": { "short": "G", "long": "Gardien" },
+    "RB": { "short": "DD", "long": "Défenseur droit" },
+    "CB": { "short": "DC", "long": "Défenseur central" },
+    "LB": { "short": "DG", "long": "Défenseur gauche" },
+    "RWB": { "short": "DLD", "long": "Latéral droit offensif" },
+    "LWB": { "short": "DLG", "long": "Latéral gauche offensif" },
+    "CDM": { "short": "MDC", "long": "Milieu défensif" },
+    "CM": { "short": "MC", "long": "Milieu central" },
+    "RM": { "short": "MD", "long": "Milieu droit" },
+    "LM": { "short": "MG", "long": "Milieu gauche" },
+    "CAM": { "short": "MOC", "long": "Milieu offensif" },
+    "RW": { "short": "AD", "long": "Ailier droit" },
+    "LW": { "short": "AG", "long": "Ailier gauche" },
+    "CF": { "short": "AT", "long": "Attaquant de soutien" },
+    "ST": { "short": "BU", "long": "Buteur" }
+  },
+  "formations": {
+    "4-4-2": "4-4-2",
+    "4-3-3": "4-3-3",
+    "4-3-3-holding": "4-3-3 (défensif)",
+    "4-3-3-attack": "4-3-3 (offensif)",
+    "4-2-3-1": "4-2-3-1",
+    "4-1-2-1-2": "4-1-2-1-2 (losange)",
+    "3-5-2": "3-5-2",
+    "3-4-3": "3-4-3",
+    "5-3-2": "5-3-2",
+    "5-4-1": "5-4-1",
+    "4-5-1": "4-5-1"
+  },
+  "attributes": {
+    "pace": "VIT",
+    "shooting": "TIR",
+    "passing": "PAS",
+    "dribbling": "DRI",
+    "defending": "DÉF",
+    "physical": "PHY",
+    "diving": "PLO",
+    "handling": "MAI",
+    "kicking": "PIE",
+    "reflexes": "RÉF",
+    "speed": "VIT",
+    "positioning": "PLA"
+  },
+  "tiers": {
+    "bronze": "Bronze",
+    "silver": "Argent",
+    "gold": "Or",
+    "special": "Spéciale"
+  },
+  "rarities": {
+    "common": "Commune",
+    "rare": "Rare"
+  },
+  "levels": {
+    "national": "National",
+    "regional": "Régional",
+    "district": "District"
+  },
+  "surfaces": {
+    "grass": "Pelouse",
+    "artificial": "Synthétique",
+    "muddy": "Terrain gras",
+    "dirt": "Stabilisé"
+  },
+  "kitPatterns": {
+    "plain": "Uni",
+    "stripes": "Rayé",
+    "hoops": "Cerclé",
+    "bands": "Bandes",
+    "checkered": "Damier"
+  },
+  "traits": {
+    "workhorse": {
+      "name": "Poumon",
+      "description": "Endurance quasi illimitée, presse tout le match."
+    },
+    "poacher": {
+      "name": "Renard des surfaces",
+      "description": "Placement et finition renforcés dans la surface."
+    },
+    "thunderbolt": {
+      "name": "Frappe de mule",
+      "description": "Frappe plus puissante, mais moins précise."
+    },
+    "defensive-leader": {
+      "name": "Patron de la défense",
+      "description": "Améliore le marquage des défenseurs voisins."
+    },
+    "aerial-threat": {
+      "name": "Coiffeur",
+      "description": "Jeu de tête supérieur, domine sur les corners."
+    },
+    "set-piece-specialist": {
+      "name": "Tireur de coups de pied arrêtés",
+      "description": "Précision et effet sur coups francs et corners."
+    },
+    "captain": {
+      "name": "Capitaine",
+      "description": "Remonte le moral de l'équipe après un but encaissé."
+    },
+    "magician": {
+      "name": "Magicien",
+      "description": "Débloque les gestes techniques dans les actions clés."
+    },
+    "former-pro": {
+      "name": "Ancien pro",
+      "description": "Sang-froid et vision dans les moments décisifs."
+    },
+    "diesel": {
+      "name": "Diesel",
+      "description": "Démarre doucement, plus fort en seconde période."
+    },
+    "veteran": { "name": "Vétéran", "description": "Moins rapide, mieux placé et plus lucide." },
+    "third-half": {
+      "name": "Troisième mi-temps",
+      "description": "Moins d'endurance, plus de moral d'équipe."
+    },
+    "trash-talker": {
+      "name": "Chambreur",
+      "description": "Déstabilise son vis-à-vis, mais risque le carton."
+    },
+    "hothead": { "name": "Râleur", "description": "Prend plus souvent un carton jaune." },
+    "one-footed": { "name": "Pied carré", "description": "Pied faible garanti à une étoile." },
+    "late-arrival": {
+      "name": "Arrivé à 14h58",
+      "description": "En retard sur les dix premières minutes."
+    },
+    "fair-weather": {
+      "name": "Frileux",
+      "description": "Moins bon sous la pluie et sur terrain gras."
+    }
+  },
+  "legal": {
+    "unofficial": "Jeu non officiel, non affilié à la FFF, aux ligues ou aux clubs."
+  }
+}

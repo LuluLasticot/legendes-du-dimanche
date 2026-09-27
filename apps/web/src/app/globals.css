@@ -1,0 +1,50 @@
+@import 'tailwindcss';
+@import '@legendes/ui/tokens.css';
+@import '@legendes/ui/theme.css';
+
+/* Scan workspace UI components for class names. */
+@source '../../../../packages/ui/src';
+
+@layer base {
+  html {
+    background-color: var(--ld-color-pitch-950);
+    color: var(--ld-color-chalk);
+    font-family: var(--ld-font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--ld-color-floodlight-400);
+    color: var(--ld-color-pitch-950);
+  }
+}
+
+@utility font-display {
+  font-family: var(--ld-font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+/* Chalk markings of a pitch seen from above, drawn with gradients (no asset). */
+@utility pitch-lines {
+  background-image:
+    radial-gradient(
+      circle at 50% 100%,
+      transparent 119px,
+      rgb(244 241 232 / 0.09) 120px,
+      rgb(244 241 232 / 0.09) 122px,
+      transparent 123px
+    ),
+    linear-gradient(to top, transparent calc(100% - 2px), rgb(244 241 232 / 0.09) calc(100% - 2px)),
+    repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.018) 0 64px, transparent 64px 128px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

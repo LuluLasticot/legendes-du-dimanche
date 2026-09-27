@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Turbo / tooling
+.turbo/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# Env and secrets (public repository: never commit credentials)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+
+# Vercel
+.vercel/
+
+# OS / editors
+.DS_Store
+*.log
+.idea/

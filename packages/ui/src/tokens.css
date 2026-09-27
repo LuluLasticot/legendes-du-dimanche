@@ -1,0 +1,41 @@
+/* Design tokens as CSS variables (mirror of tokens.ts — keep in sync, checked by tests). */
+:root {
+  --ld-color-pitch-950: #06140f;
+  --ld-color-pitch-900: #0a1f17;
+  --ld-color-pitch-800: #0f2c21;
+  --ld-color-pitch-700: #15402f;
+  --ld-color-pitch-600: #1d5a41;
+  --ld-color-pitch-500: #2a7a58;
+  --ld-color-chalk: #f4f1e8;
+  --ld-color-chalk-muted: #c9c5b8;
+  --ld-color-chalk-faint: #8f9a92;
+  --ld-color-floodlight-300: #ffe29a;
+  --ld-color-floodlight-400: #ffd166;
+  --ld-color-floodlight-500: #ffb627;
+  --ld-color-floodlight-600: #f28c28;
+  --ld-color-bronze-light: #e0a872;
+  --ld-color-bronze: #b87333;
+  --ld-color-bronze-dark: #7a4a22;
+  --ld-color-silver-light: #eef2f5;
+  --ld-color-silver: #c0c7cf;
+  --ld-color-silver-dark: #8a939c;
+  --ld-color-gold-light: #f5d77a;
+  --ld-color-gold: #d4af37;
+  --ld-color-gold-dark: #9c7a1c;
+  --ld-color-success: #30a46c;
+  --ld-color-danger: #e5484d;
+
+  --ld-radius-sm: 6px;
+  --ld-radius-md: 10px;
+  --ld-radius-lg: 16px;
+  --ld-radius-card: 14px;
+  --ld-radius-pill: 999px;
+
+  --ld-font-display: var(--ld-font-display-family, 'Big Shoulders'), 'Arial Narrow', sans-serif;
+  --ld-font-sans: var(--ld-font-sans-family, Manrope), system-ui, sans-serif;
+
+  --ld-shadow-floodlight: 0 0 48px -8px rgb(255 209 102 / 0.45);
+  --ld-shadow-card: 0 18px 40px -18px rgb(0 0 0 / 0.7);
+
+  color-scheme: dark;
+}

@@ -1,0 +1,39 @@
+{
+  "name": "legendes-du-dimanche",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@legendes/web",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:deno": "turbo run test:deno",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:deno",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "determinism:update": "pnpm --filter @legendes/engine determinism:update",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:new": "supabase migration new",
+    "db:types": "supabase gen types typescript --local > packages/shared/src/db/database.types.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@next/eslint-plugin-next": "16.3.6",
+    "@types/node": "catalog:",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "supabase": "^2.118.0",
+    "turbo": "^2.11.4",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.70.1"
+  }
+}

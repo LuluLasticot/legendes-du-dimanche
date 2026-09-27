@@ -1,0 +1,39 @@
+/* Tailwind v4 theme mapped on the design tokens: bg-pitch-900, text-chalk, font-display… */
+@theme inline {
+  --color-pitch-950: var(--ld-color-pitch-950);
+  --color-pitch-900: var(--ld-color-pitch-900);
+  --color-pitch-800: var(--ld-color-pitch-800);
+  --color-pitch-700: var(--ld-color-pitch-700);
+  --color-pitch-600: var(--ld-color-pitch-600);
+  --color-pitch-500: var(--ld-color-pitch-500);
+  --color-chalk: var(--ld-color-chalk);
+  --color-chalk-muted: var(--ld-color-chalk-muted);
+  --color-chalk-faint: var(--ld-color-chalk-faint);
+  --color-floodlight-300: var(--ld-color-floodlight-300);
+  --color-floodlight-400: var(--ld-color-floodlight-400);
+  --color-floodlight-500: var(--ld-color-floodlight-500);
+  --color-floodlight-600: var(--ld-color-floodlight-600);
+  --color-bronze-light: var(--ld-color-bronze-light);
+  --color-bronze: var(--ld-color-bronze);
+  --color-bronze-dark: var(--ld-color-bronze-dark);
+  --color-silver-light: var(--ld-color-silver-light);
+  --color-silver: var(--ld-color-silver);
+  --color-silver-dark: var(--ld-color-silver-dark);
+  --color-gold-light: var(--ld-color-gold-light);
+  --color-gold: var(--ld-color-gold);
+  --color-gold-dark: var(--ld-color-gold-dark);
+  --color-success: var(--ld-color-success);
+  --color-danger: var(--ld-color-danger);
+
+  --radius-sm: var(--ld-radius-sm);
+  --radius-md: var(--ld-radius-md);
+  --radius-lg: var(--ld-radius-lg);
+  --radius-card: var(--ld-radius-card);
+  --radius-pill: var(--ld-radius-pill);
+
+  --font-display: var(--ld-font-display);
+  --font-sans: var(--ld-font-sans);
+
+  --shadow-floodlight: var(--ld-shadow-floodlight);
+  --shadow-card: var(--ld-shadow-card);
+}

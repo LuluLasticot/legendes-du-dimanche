@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
+jobs:
+  check:
+    name: Format, lint, types, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  # The engine must produce bit-identical results on every runtime that executes it:
+  # browsers and Node (client, tests), Deno (Supabase Edge Functions, match validation).
+  determinism:
+    name: Determinism (${{ matrix.runtime }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [node-22, node-24, deno-2]
+    steps:
+      - uses: actions/checkout@v7
+
+      - if: startsWith(matrix.runtime, 'node')
+        uses: pnpm/action-setup@v6
+      - if: startsWith(matrix.runtime, 'node')
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.runtime == 'node-22' && '22' || '24' }}
+          cache: pnpm
+      - if: startsWith(matrix.runtime, 'node')
+        run: pnpm install --frozen-lockfile --filter @legendes/engine...
+      - if: startsWith(matrix.runtime, 'node')
+        run: pnpm --filter @legendes/engine exec vitest run test/determinism.test.ts
+
+      # The engine has zero dependencies: Deno runs its sources directly, no install step.
+      - if: matrix.runtime == 'deno-2'
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - if: matrix.runtime == 'deno-2'
+        working-directory: packages/engine
+        run: deno test --no-config --no-lock test/determinism.deno.ts

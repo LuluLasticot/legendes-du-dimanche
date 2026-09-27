@@ -1,0 +1,184 @@
+// ESLint flat config for the whole monorepo (each package runs `eslint .` from its folder).
+import { join } from 'node:path';
+import js from '@eslint/js';
+import nextPlugin from '@next/eslint-plugin-next';
+import reactHooks from 'eslint-plugin-react-hooks';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+
+// Math functions whose results are "implementation-approximated" by ECMAScript: they may
+// differ between JS engines, so they are banned from the deterministic engine (CLAUDE.md rule 1).
+const NON_DETERMINISTIC_MATH = [
+  'random',
+  'sin',
+  'cos',
+  'tan',
+  'asin',
+  'acos',
+  'atan',
+  'atan2',
+  'sinh',
+  'cosh',
+  'tanh',
+  'asinh',
+  'acosh',
+  'atanh',
+  'exp',
+  'expm1',
+  'log',
+  'log1p',
+  'log2',
+  'log10',
+  'pow',
+  'cbrt',
+  'hypot',
+];
+
+export default tseslint.config(
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/dist/**',
+      '**/.turbo/**',
+      '**/coverage/**',
+      '**/next-env.d.ts',
+      'supabase/**',
+    ],
+  },
+
+  js.configs.recommended,
+  tseslint.configs.recommendedTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+      globals: { ...globals.es2023 },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      eqeqeq: ['error', 'always'],
+    },
+  },
+  {
+    files: ['**/*.{js,mjs,cjs}'],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: { globals: { ...globals.node } },
+  },
+
+  // Node scripts of the engine have their own tsconfig (Node types stay out of the engine sources).
+  {
+    files: ['packages/engine/scripts/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: join(import.meta.dirname, 'packages/engine/tsconfig.scripts.json'),
+      },
+    },
+  },
+
+  // ─── Deterministic engine ───────────────────────────────────────────────────
+  {
+    files: ['packages/engine/src/**/*.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        ...NON_DETERMINISTIC_MATH.map((property) => ({
+          object: 'Math',
+          property,
+          message:
+            property === 'random'
+              ? 'Use the seeded Rng from engine/rng (never Math.random).'
+              : 'Not deterministic across JS engines: use engine/math (dmath) instead.',
+        })),
+      ],
+      'no-restricted-syntax': [
+        'error',
+        { selector: "BinaryExpression[operator='**']", message: 'Use pow() from engine/math.' },
+        {
+          selector: "AssignmentExpression[operator='**=']",
+          message: 'Use pow() from engine/math.',
+        },
+        {
+          selector: "NewExpression[callee.name='Date']",
+          message: 'No wall-clock time in the engine: use ticks.',
+        },
+        {
+          selector: "MemberExpression[object.name='Date']",
+          message: 'No wall-clock time in the engine: use ticks.',
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='Object'][callee.property.name=/^(keys|values|entries)$/]",
+          message: 'Iteration order must be explicit: use arrays for engine logic.',
+        },
+        {
+          selector: 'ForInStatement',
+          message: 'Iteration order must be explicit: use arrays for engine logic.',
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        ...[
+          'window',
+          'document',
+          'performance',
+          'crypto',
+          'setTimeout',
+          'setInterval',
+          'requestAnimationFrame',
+        ].map((name) => ({
+          name,
+          message: 'The engine is pure: no platform APIs, no timers, no system entropy.',
+        })),
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@legendes/render*',
+                '@legendes/ui',
+                '@legendes/ui/*',
+                '@legendes/web',
+                'react',
+                'react-dom',
+                'three',
+                'three/*',
+                'pixi.js',
+                'node:*',
+              ],
+              message: 'engine must not depend on rendering, UI, apps or platform modules.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // ─── Web app ─────────────────────────────────────────────────────────────────
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    plugins: { '@next/next': nextPlugin, 'react-hooks': reactHooks },
+    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    settings: { next: { rootDir: join(import.meta.dirname, 'apps/web') } },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+      ...reactHooks.configs.recommended.rules,
+    },
+  },
+
+  // ─── Tests ───────────────────────────────────────────────────────────────────
+  {
+    files: ['**/test/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
+  },
+);

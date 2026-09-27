@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "Légendes du Dimanche — Ton club. Ta carte. Ta légende.",
+    "description": "Jeu de cartes et de gestion d'équipe consacré au football amateur français, du District au National 2."
+  },
+  "home": {
+    "eyebrow": "Football amateur · District → National 2",
+    "title": "Légendes du Dimanche",
+    "titleMain": "Légendes",
+    "titleSub": "du Dimanche",
+    "tagline": "Ton club. Ta carte. Ta légende.",
+    "pitch": "Ouvre des packs, collectionne les cartes des joueurs de ton district, compose ton onze et vis les actions décisives en 3D, sous les projecteurs du stade municipal.",
+    "status": "En construction — phase 0 : fondations",
+    "cardPreview": "Aperçu provisoire — joueur fictif",
+    "features": {
+      "packs": {
+        "title": "Des packs, pas de carte bancaire",
+        "body": "Les crédits se gagnent uniquement en jouant. Les probabilités de chaque pack sont affichées."
+      },
+      "collectives": {
+        "title": "Le local avant tout",
+        "body": "Même club, même district, même ligue : les collectifs récompensent les vraies rivalités de clocher."
+      },
+      "moments": {
+        "title": "Le frisson du geste",
+        "body": "Trace la frappe du doigt : effet, ralenti, filet qui tremble… et le chien qui traverse le terrain."
+      }
+    }
+  },
+  "engineCheck": {
+    "pending": "Vérification du moteur déterministe…",
+    "ok": "Moteur déterministe vérifié dans ce navigateur",
+    "mismatch": "Écart de déterminisme détecté dans ce navigateur",
+    "fingerprint": "empreinte {digest}"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // No ambient Node/DOM types: the engine must run unchanged in browsers, Node and Deno.
+    "types": []
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}

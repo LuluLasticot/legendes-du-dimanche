@@ -1,0 +1,29 @@
+{
+  "name": "@legendes/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic core: seeded PRNG, deterministic math, match simulation, ball physics.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./rng": "./src/rng/index.ts",
+    "./math": "./src/math/index.ts",
+    "./hash": "./src/hash/index.ts",
+    "./time": "./src/time/index.ts",
+    "./selftest": "./src/selftest/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:deno": "deno test --no-config --no-lock test/determinism.deno.ts",
+    "determinism:update": "node scripts/update-golden.ts"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "fast-check": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

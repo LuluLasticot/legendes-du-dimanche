@@ -1,0 +1,24 @@
+{
+  "name": "@legendes/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared domain constants (positions, formations, tiers, divisions), Zod schemas and FR labels.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./messages/fr.json": "./messages/fr.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "fast-check": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
