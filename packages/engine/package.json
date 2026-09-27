@@ -11,7 +11,8 @@
     "./hash": "./src/hash/index.ts",
     "./time": "./src/time/index.ts",
     "./selftest": "./src/selftest/index.ts",
-    "./physics": "./src/physics/index.ts"
+    "./physics": "./src/physics/index.ts",
+    "./moments": "./src/moments/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",

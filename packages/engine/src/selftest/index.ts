@@ -4,6 +4,12 @@
 // at server start-up before trusting the engine to validate matches.
 
 import { Fingerprint } from '../hash/index.ts';
+import {
+  applyExecutionError,
+  shooterProfile,
+  solveShot,
+  type ShotTuning,
+} from '../moments/index.ts';
 import * as m from '../math/index.ts';
 import { deriveSeed, Rng, type Seed } from '../rng/index.ts';
 import {
@@ -161,11 +167,71 @@ function physicsSection(fp: Fingerprint): void {
   }
 }
 
+/** Frozen copy of the shot tuning, for the same reason as SELFTEST_PHYSICS. */
+const SELFTEST_SHOT_TUNING: ShotTuning = {
+  maxSpeedRange: [21, 34],
+  minSpeed: 9,
+  maxSpinRange: [18, 70],
+  errorDegRange: [4.5, 0.6],
+  weakFootPenaltyPerStar: 0.3,
+  pressurePenalty: 1,
+  lobBackspin: 25,
+  paceErrorRatio: 0.6,
+};
+
+/** Shot solver + seeded execution error. */
+function shotSection(fp: Fingerprint): void {
+  const rng = Rng.create('selftest:shots');
+  for (let i = 0; i < 8; i++) {
+    const shotRng = rng.fork('shot', i);
+    const profile = shooterProfile(
+      {
+        shotPower: shotRng.int(30, 95),
+        curve: shotRng.int(30, 95),
+        finishing: shotRng.int(30, 95),
+        composure: shotRng.int(30, 95),
+      },
+      {
+        weakFoot: shotRng.chance(0.3),
+        weakFootStars: shotRng.int(1, 5),
+        pressure: shotRng.float(),
+      },
+      SELFTEST_SHOT_TUNING,
+    );
+    const from = v3(PITCH.goalLineX - shotRng.range(11, 28), BALL.radius, shotRng.range(-10, 10));
+    const solution = solveShot(
+      from,
+      {
+        target: v3(PITCH.goalLineX, shotRng.range(0.3, 2.2), shotRng.range(-3.3, 3.3)),
+        power: shotRng.range(0.5, 1),
+        bulge: shotRng.range(-1, 1),
+        lob: i === 7,
+      },
+      profile,
+      SELFTEST_PHYSICS,
+      'grass',
+      { tuning: SELFTEST_SHOT_TUNING },
+    );
+    const struck = applyExecutionError(
+      solution,
+      profile,
+      shotRng.fork('execution'),
+      SELFTEST_SHOT_TUNING,
+    );
+    for (const v of [solution.velocity, solution.spin, struck.velocity, struck.spin])
+      fp.f64(v.x).f64(v.y).f64(v.z);
+    fp.f64(solution.miss)
+      .u32(solution.iterations)
+      .u32(solution.converged ? 1 : 0);
+  }
+}
+
 export function runDeterminismScenario(): DeterminismReport {
   const fp = new Fingerprint();
   rngSection(fp);
   mathSection(fp);
   physicsSection(fp);
+  shotSection(fp);
   return { digest: fp.digest(), words: fp.size };
 }
 
