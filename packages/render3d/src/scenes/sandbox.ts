@@ -6,8 +6,10 @@ import { moments, physics, Rng, TICK_DT, TICK_RATE } from '@legendes/engine';
 import * as THREE from 'three';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
 import { Stadium } from '../stadium/stadium.ts';
-import { KeeperFigure } from '../players/keeper-figure.ts';
+import { KEEPER_KIT, OPPONENT_KIT, PlayerFigure } from '../players/player-figure.ts';
 import {
+  toDefenderSetups,
+  toDefenderTuning,
   toKeeperAttributes,
   toKeeperTuning,
   toPhysicsParams,
@@ -31,8 +33,8 @@ export interface ShotReport {
   readonly solverMiss: number;
   readonly solverIterations: number;
   readonly outcome: moments.MomentOutcome | null;
-  /** Keeper touch: caught or parried. */
-  readonly save: 'catch' | 'parry' | null;
+  /** Last touch: caught or parried by the keeper, or blocked by a defender. */
+  readonly save: 'catch' | 'parry' | 'block' | null;
 }
 
 export interface SandboxHandle {
@@ -153,8 +155,24 @@ export function mountBallSandbox(
   let profile = moments.shooterProfile(settings.shooter, settings.shooter, tuning);
   let spot = physics.v3(0, 0, 0);
 
-  const keeperFigure = new KeeperFigure();
+  const keeperFigure = new PlayerFigure(KEEPER_KIT);
   scene.add(keeperFigure.group);
+  const defenderFigures: PlayerFigure[] = [];
+  /** One figure per defender of the current setup (rebuilt when the count changes). */
+  const syncDefenderFigures = (count: number): void => {
+    while (defenderFigures.length > count) {
+      const figure = defenderFigures.pop();
+      if (figure) scene.remove(figure.group);
+    }
+    while (defenderFigures.length < count) {
+      const figure = new PlayerFigure(
+        OPPONENT_KIT,
+        defenderFigures.length % 2 === 0 ? 0x8d5a3b : 0xd8a47f,
+      );
+      scene.add(figure.group);
+      defenderFigures.push(figure);
+    }
+  };
 
   let phase: Phase = 'aiming';
   /** Moment for a ball at rest (keeper set, nothing flies) until a shot is taken. */
@@ -168,6 +186,8 @@ export function mountBallSandbox(
       keeper: settings.keeper.enabled
         ? { attributes: toKeeperAttributes(settings), tuning: toKeeperTuning(settings) }
         : null,
+      defenders: toDefenderSetups(settings, at.pos),
+      defenderTuning: toDefenderTuning(settings),
       seed: 0,
     });
   let { context: momentContext, state: moment } = restingMoment(restingBall(0, 0));
@@ -212,6 +232,7 @@ export function mountBallSandbox(
     ({ context: momentContext, state: moment } = restingMoment(restingBall(spot.x, spot.z)));
     previousMoment = moment;
     keeperFigure.group.visible = settings.keeper.enabled;
+    syncDefenderFigures(moment.defenders.length);
     ball.position.set(spot.x, spot.y, spot.z);
     phase = 'aiming';
     replaying = false;
@@ -292,6 +313,8 @@ export function mountBallSandbox(
       keeper: settings.keeper.enabled
         ? { attributes: toKeeperAttributes(settings), tuning: toKeeperTuning(settings) }
         : null,
+      defenders: toDefenderSetups(settings, initial.pos),
+      defenderTuning: toDefenderTuning(settings),
       seed: momentSeed,
     }));
     previousMoment = moment;
@@ -435,6 +458,11 @@ export function mountBallSandbox(
             emitShot(currentReport);
             stage.shake.add(Math.min(0.35, event.speed * 0.012));
           }
+          if (event.type === 'block' && currentReport) {
+            currentReport = { ...currentReport, save: 'block', replay: replaying };
+            emitShot(currentReport);
+            stage.shake.add(Math.min(0.3, event.speed * 0.01));
+          }
           if (event.type === 'frame') stage.shake.add(Math.min(0.5, event.speed * 0.02));
           if (event.type === 'net') {
             stage.shake.add(Math.min(0.2, event.speed * 0.01));
@@ -470,6 +498,11 @@ export function mountBallSandbox(
       ball.rotation.x += w.x * frame.simDt;
       ball.rotation.y += w.y * frame.simDt;
       ball.rotation.z += w.z * frame.simDt;
+    }
+    for (let i = 0; i < defenderFigures.length; i++) {
+      const now = moment.defenders[i];
+      const before = previousMoment.defenders[i] ?? now;
+      if (now && before) (defenderFigures[i] as PlayerFigure).update(before, now, a);
     }
     if (moment.keeper && previousMoment.keeper)
       keeperFigure.update(previousMoment.keeper, moment.keeper, a);

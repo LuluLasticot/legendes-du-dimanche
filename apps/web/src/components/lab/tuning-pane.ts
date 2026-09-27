@@ -35,8 +35,9 @@ export function createTuningPane(
     min: number,
     max: number,
     step: number,
+    labelKey: string = key,
   ): void => {
-    f.addBinding(obj, key, { label: t(key), min, max, step });
+    f.addBinding(obj, key, { label: t(labelKey), min, max, step });
   };
 
   const shooter = folder('shooter', true);
@@ -85,6 +86,27 @@ export function createTuningPane(
   num(keeperTuning, settings.keeper, 'lateAdjustLow', 0, 0.6, 0.01);
   num(keeperTuning, settings.keeper, 'lateAdjustHigh', 0, 0.6, 0.01);
   num(keeperTuning, settings.keeper, 'maxShuffle', 0, 2, 0.05);
+
+  const defenders = folder('defenders', true);
+  num(defenders, settings.defenders, 'wall', 0, 6, 1);
+  num(defenders, settings.defenders, 'markers', 0, 2, 1);
+  num(defenders, settings.defenders, 'markerDistance', 2, 15, 0.5);
+  num(defenders, settings.defenders, 'markerSpread', 0, 5, 0.1);
+  for (const key of ['pace', 'defending', 'physical'] as const)
+    num(defenders, settings.defenders, key, 1, 99, 1);
+  num(defenders, settings.defenders, 'heightCm', 165, 200, 1);
+  const defenderTuning = folder('defenderTuning');
+  num(defenderTuning, settings.defenders, 'reactionSlow', 0, 0.8, 0.01, 'markerReactionSlow');
+  num(defenderTuning, settings.defenders, 'reactionFast', 0, 0.8, 0.01, 'markerReactionFast');
+  num(defenderTuning, settings.defenders, 'wallReactionSlow', 0, 0.8, 0.01);
+  num(defenderTuning, settings.defenders, 'wallReactionFast', 0, 0.8, 0.01);
+  num(defenderTuning, settings.defenders, 'speedLow', 2, 11, 0.1);
+  num(defenderTuning, settings.defenders, 'speedHigh', 2, 11, 0.1);
+  num(defenderTuning, settings.defenders, 'jumpLow', 0, 1, 0.01);
+  num(defenderTuning, settings.defenders, 'jumpHigh', 0, 1, 0.01);
+  num(defenderTuning, settings.defenders, 'lungeLow', 0, 1.2, 0.01);
+  num(defenderTuning, settings.defenders, 'lungeHigh', 0, 1.2, 0.01);
+  num(defenderTuning, settings.defenders, 'deflectRestitution', 0, 1, 0.01);
 
   const shot = folder('shot');
   shot.addBinding(settings.shot, 'lob', { label: t('lob') });

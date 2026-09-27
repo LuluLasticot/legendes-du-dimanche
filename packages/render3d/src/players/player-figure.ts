@@ -1,11 +1,23 @@
-// Placeholder goalkeeper figure (greybox): limbs are segments between the engine's keeper points
-// (feet, head, hands), so what you see is exactly what the simulation uses for contacts.
+// Placeholder player figure (greybox): limbs are segments between the engine's points (feet,
+// head and, for keepers, hands), so what you see is exactly what the simulation uses for contacts.
 // Replaced by the rigged, animated character later in Phase 1.
 
-import type { moments } from '@legendes/engine';
 import * as THREE from 'three';
 
-type KeeperState = moments.KeeperState;
+interface Point {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+}
+
+export interface FigureKit {
+  readonly shirt: number;
+  readonly shorts: number;
+  readonly gloves: boolean;
+}
+
+export const KEEPER_KIT: FigureKit = { shirt: 0xd4ff3a, shorts: 0x1b1f24, gloves: true };
+export const OPPONENT_KIT: FigureKit = { shirt: 0xc4302b, shorts: 0xf2f2ee, gloves: false };
 
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -37,7 +49,7 @@ const lerp3 = (
   t: number,
 ): THREE.Vector3 => out.set(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
 
-export class KeeperFigure {
+export class PlayerFigure {
   readonly group = new THREE.Group();
   private readonly torso: Limb;
   private readonly legL: Limb;
@@ -56,11 +68,16 @@ export class KeeperFigure {
   private readonly tmpA = new THREE.Vector3();
   private readonly tmpB = new THREE.Vector3();
 
-  constructor(kitColour = 0xd4ff3a) {
-    const kit = new THREE.MeshStandardMaterial({ color: kitColour, roughness: 0.7 });
-    const shorts = new THREE.MeshStandardMaterial({ color: 0x1b1f24, roughness: 0.8 });
-    const skin = new THREE.MeshStandardMaterial({ color: 0xc58c64, roughness: 0.8 });
-    const gloves = new THREE.MeshStandardMaterial({ color: 0xf4f1e8, roughness: 0.6 });
+  private readonly hasHands: boolean;
+
+  constructor(kitStyle: FigureKit = KEEPER_KIT, skinColour = 0xc58c64) {
+    const kit = new THREE.MeshStandardMaterial({ color: kitStyle.shirt, roughness: 0.7 });
+    const shorts = new THREE.MeshStandardMaterial({ color: kitStyle.shorts, roughness: 0.8 });
+    const skin = new THREE.MeshStandardMaterial({ color: skinColour, roughness: 0.8 });
+    const gloves = kitStyle.gloves
+      ? new THREE.MeshStandardMaterial({ color: 0xf4f1e8, roughness: 0.6 })
+      : skin;
+    this.hasHands = kitStyle.gloves;
     this.torso = new Limb(0.19, kit);
     this.legL = new Limb(0.085, shorts);
     this.legR = new Limb(0.085, shorts);
@@ -82,11 +99,19 @@ export class KeeperFigure {
     );
   }
 
-  /** Poses the figure between two engine states (`alpha` from the frame clock). */
-  update(previous: KeeperState, current: KeeperState, alpha: number): void {
+  /**
+   * Poses the figure between two engine states (`alpha` from the frame clock). Without hands
+   * (outfield players), the arms hang along the body.
+   */
+  update(
+    previous: { readonly feet: Point; readonly head: Point; readonly hands?: Point },
+    current: { readonly feet: Point; readonly head: Point; readonly hands?: Point },
+    alpha: number,
+  ): void {
     lerp3(this.feet, previous.feet, current.feet, alpha);
     lerp3(this.top, previous.head, current.head, alpha);
-    lerp3(this.hands, previous.hands, current.hands, alpha);
+    if (previous.hands && current.hands) lerp3(this.hands, previous.hands, current.hands, alpha);
+    else this.hands.lerpVectors(this.feet, this.top, 0.5);
 
     // Body axis feet → head; hip and neck along it.
     this.hip.lerpVectors(this.feet, this.top, 0.42);
@@ -110,7 +135,7 @@ export class KeeperFigure {
     );
 
     const shoulder = 0.2;
-    const glove = 0.1;
+    const glove = this.hasHands ? 0.1 : 0.26;
     this.gloveL.position.copy(this.hands).addScaledVector(this.side, -glove);
     this.gloveR.position.copy(this.hands).addScaledVector(this.side, glove);
     this.armL.set(

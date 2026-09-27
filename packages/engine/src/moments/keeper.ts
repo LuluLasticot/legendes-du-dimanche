@@ -483,3 +483,26 @@ export function keeperReachEnvelope(
     top: standingReach(attributes) + pick(tuning.jumpRange, attributes.diving),
   };
 }
+
+/**
+ * The ball changed direction (deflection) before the keeper committed: he has to react again
+ * (new delay, new read). Once diving, he is wrong-footed and keeps his dive.
+ */
+export function keeperReReact(
+  keeper: KeeperState,
+  tick: Tick,
+  attributes: KeeperAttributes,
+  tuning: KeeperTuning,
+  rng: Rng,
+): KeeperState {
+  if (keeper.phase !== 'set' && keeper.phase !== 'tracking') return keeper;
+  const reaction = pick(tuning.reactionRange, attributes.reflexes) * (1 + rng.normal(0, 0.08));
+  return {
+    ...keeper,
+    phase: 'set',
+    reactionTick: tick + Math.max(1, secondsToTicks(reaction)),
+    target: null,
+    crossing: null,
+    arrivalTick: null,
+  };
+}

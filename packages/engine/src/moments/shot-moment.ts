@@ -16,10 +16,23 @@ import type { Vec3 } from '../physics/vec3.ts';
 import { Rng, type Seed } from '../rng/index.ts';
 import type { Tick } from '../time/index.ts';
 import {
+  createDefender,
+  DEFAULT_DEFENDER_TUNING,
+  defenderContact,
+  stepDefender,
+  touchedDefender,
+  wallPositions,
+  type DefenderAttributes,
+  type DefenderRole,
+  type DefenderState,
+  type DefenderTuning,
+} from './defenders.ts';
+import {
   createKeeper,
   DEFAULT_KEEPER_TUNING,
   holdingKeeper,
   keeperContact,
+  keeperReReact,
   keeperSetPosition,
   parriedKeeper,
   stepKeeper,
@@ -28,7 +41,7 @@ import {
   type KeeperTuning,
 } from './keeper.ts';
 
-export type MomentOutcome = FlightOutcome | 'saved';
+export type MomentOutcome = FlightOutcome | 'saved' | 'blocked';
 
 export type MomentEvent =
   | FlightEvent
@@ -45,7 +58,22 @@ export type MomentEvent =
       readonly kind: 'catch' | 'parry';
       readonly pos: Vec3;
       readonly speed: number;
+    }
+  | {
+      readonly tick: Tick;
+      readonly type: 'block';
+      /** Index of the defender in the setup. */
+      readonly defender: number;
+      readonly pos: Vec3;
+      readonly speed: number;
     };
+
+export interface DefenderSetup {
+  readonly role: DefenderRole;
+  /** Feet position; walls are placed automatically when omitted. */
+  readonly feet?: Vec3;
+  readonly attributes: DefenderAttributes;
+}
 
 export interface ShotMomentSetup {
   /** Ball at the instant of the strike (after execution error). */
@@ -53,6 +81,8 @@ export interface ShotMomentSetup {
   readonly physics: PhysicsParams;
   readonly surface: PhysicsSurface;
   readonly keeper: { readonly attributes: KeeperAttributes; readonly tuning?: KeeperTuning } | null;
+  readonly defenders?: readonly DefenderSetup[];
+  readonly defenderTuning?: DefenderTuning;
   /** Sub-seed of the moment: keeper reaction/read/catch draws and bounce jitter. */
   readonly seed: Seed;
 }
@@ -61,9 +91,10 @@ export interface ShotMomentState {
   readonly tick: Tick;
   readonly flight: FlightState;
   readonly keeper: KeeperState | null;
+  readonly defenders: readonly DefenderState[];
   readonly outcome: MomentOutcome | null;
-  /** The keeper got a touch: anything but a goal afterwards counts as a save. */
-  readonly parried: boolean;
+  /** Last player to touch the ball: anything but a goal afterwards is a save or a block. */
+  readonly lastTouch: 'keeper' | 'defender' | null;
 }
 
 export interface ShotMomentContext {
@@ -71,6 +102,9 @@ export interface ShotMomentContext {
   readonly flight: FlightContext;
   readonly keeperTuning: KeeperTuning;
   readonly keeperRng: Rng;
+  readonly defenderTuning: DefenderTuning;
+  readonly defenderRng: Rng;
+  readonly defenderSetups: readonly DefenderSetup[];
 }
 
 /** Creates the mutable context (generators) and the initial state of a shot moment. */
@@ -82,6 +116,9 @@ export function startShotMoment(setup: ShotMomentSetup): {
   const keeperTuning = setup.keeper?.tuning ?? DEFAULT_KEEPER_TUNING;
   const keeperRng = root.fork('keeper');
   const jitter = setup.physics.surfaces[setup.surface].bounceJitter > 0;
+  const defenderTuning = setup.defenderTuning ?? DEFAULT_DEFENDER_TUNING;
+  const defenderRng = root.fork('defenders');
+  const setups = setup.defenders ?? [];
   const context: ShotMomentContext = {
     setup,
     flight: {
@@ -91,6 +128,9 @@ export function startShotMoment(setup: ShotMomentSetup): {
     },
     keeperTuning,
     keeperRng,
+    defenderTuning,
+    defenderRng,
+    defenderSetups: setups,
   };
   const keeper = setup.keeper
     ? createKeeper(
@@ -100,9 +140,25 @@ export function startShotMoment(setup: ShotMomentSetup): {
         keeperRng,
       )
     : null;
+  const wallSlots = wallPositions(
+    setup.ball.pos,
+    setups.filter((d) => d.role === 'wall' && !d.feet).length,
+  );
+  let wallIndex = 0;
+  const defenders = setups.map((d) => {
+    const feet = d.feet ?? wallSlots[wallIndex++] ?? setup.ball.pos;
+    return createDefender(d.role, feet, d.attributes, defenderTuning, defenderRng);
+  });
   return {
     context,
-    state: { tick: 0, flight: startFlight(setup.ball), keeper, outcome: null, parried: false },
+    state: {
+      tick: 0,
+      flight: startFlight(setup.ball),
+      keeper,
+      defenders,
+      outcome: null,
+      lastTouch: null,
+    },
   };
 }
 
@@ -124,10 +180,55 @@ export function stepShotMoment(
   let flight = stepped.state;
   for (const e of stepped.events) events.push(e);
   let outcome: MomentOutcome | null = state.outcome ?? flight.outcome;
+  let lastTouch = state.lastTouch;
+  const live = (): boolean => state.outcome === null || state.outcome === 'stopped';
 
+  // Defenders first (they stand between the ball and the goal), in a fixed order.
   let keeper = state.keeper;
-  let parried = state.parried;
+  const defenders: DefenderState[] = [];
+  let deflected = false;
+  for (let i = 0; i < state.defenders.length; i++) {
+    const d = state.defenders[i] as DefenderState;
+    const setupD = context.defenderSetups[i] as DefenderSetup;
+    let next = stepDefender(
+      d,
+      tick,
+      flight.ball,
+      setupD.attributes,
+      context.defenderTuning,
+      context.flight,
+    );
+    if (live()) {
+      const contact = defenderContact(
+        next,
+        tick,
+        flight.ball,
+        setupD.attributes,
+        context.defenderTuning,
+        context.defenderRng,
+      );
+      if (contact) {
+        next = touchedDefender(next, tick);
+        flight = { ...flight, ball: contact.ball, outcome: null };
+        outcome = null;
+        lastTouch = 'defender';
+        deflected = true;
+        events.push({ tick, type: 'block', defender: i, pos: contact.pos, speed: contact.speed });
+      }
+    }
+    defenders.push(next);
+  }
+
   if (keeper && keeperSetup) {
+    if (deflected) {
+      keeper = keeperReReact(
+        keeper,
+        tick,
+        keeperSetup.attributes,
+        context.keeperTuning,
+        context.keeperRng,
+      );
+    }
     const before = keeper.phase;
     keeper = stepKeeper(
       keeper,
@@ -144,7 +245,7 @@ export function stepShotMoment(
       events.push({ tick, type: 'keeper-dive', side: keeper.diveSide, target: keeper.target });
     }
     // Only a live ball in front of the goal can be saved.
-    if (state.outcome === null || state.outcome === 'stopped') {
+    if (live()) {
       const contact = keeperContact(
         keeper,
         tick,
@@ -161,20 +262,23 @@ export function stepShotMoment(
           outcome: null,
         };
         outcome = 'saved';
+        lastTouch = 'keeper';
         events.push({ tick, type: 'save', kind: 'catch', pos: contact.pos, speed: contact.speed });
       } else if (contact?.kind === 'parry') {
         keeper = parriedKeeper(keeper, tick);
         flight = { ...flight, ball: contact.ball, outcome: null };
         outcome = null;
-        parried = true;
+        lastTouch = 'keeper';
         events.push({ tick, type: 'save', kind: 'parry', pos: contact.pos, speed: contact.speed });
       }
     }
   }
 
   let final: MomentOutcome | null = outcome ?? flight.outcome;
-  if (parried && final !== null && final !== 'goal') final = 'saved';
-  return { state: { tick, flight, keeper, outcome: final, parried }, events };
+  if (final !== null && final !== 'goal' && final !== 'saved' && lastTouch !== null) {
+    final = lastTouch === 'keeper' ? 'saved' : 'blocked';
+  }
+  return { state: { tick, flight, keeper, defenders, outcome: final, lastTouch }, events };
 }
 
 export interface ShotMomentResult {

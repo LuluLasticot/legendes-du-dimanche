@@ -9,6 +9,7 @@ import {
   shooterProfile,
   simulateShotMoment,
   solveShot,
+  type DefenderTuning,
   type KeeperTuning,
   type ShotTuning,
 } from '../moments/index.ts';
@@ -247,6 +248,19 @@ const SELFTEST_KEEPER_TUNING: KeeperTuning = {
   maxShuffle: 0.5,
 };
 
+/** Frozen copy of the defender tuning, for the same reason as SELFTEST_PHYSICS. */
+const SELFTEST_DEFENDER_TUNING: DefenderTuning = {
+  reactionRange: [0.3, 0.08],
+  wallReactionRange: [0.26, 0.1],
+  speedRange: [5.5, 8.2],
+  accelerationTime: 0.45,
+  jumpRange: [0.22, 0.55],
+  lungeRange: [0.2, 0.55],
+  lungeTime: 0.28,
+  deflectRestitution: 0.4,
+  deflectSpread: 0.25,
+};
+
 /** Whole shot moments against a keeper (reaction, read, dive, catch/parry draws). */
 function momentSection(fp: Fingerprint): void {
   const rng = Rng.create('selftest:moments');
@@ -275,6 +289,28 @@ function momentSection(fp: Fingerprint): void {
           },
           tuning: SELFTEST_KEEPER_TUNING,
         },
+        defenders: [
+          ...Array.from({ length: i % 4 }, () => ({
+            role: 'wall' as const,
+            attributes: {
+              pace: 60,
+              defending: r.int(30, 95),
+              physical: r.int(30, 95),
+              heightCm: r.int(172, 195),
+            },
+          })),
+          {
+            role: 'marker' as const,
+            feet: v3(from.x + r.range(4, 9), 0, from.z + r.range(-2, 2)),
+            attributes: {
+              pace: r.int(30, 95),
+              defending: r.int(30, 95),
+              physical: r.int(30, 95),
+              heightCm: 182,
+            },
+          },
+        ],
+        defenderTuning: SELFTEST_DEFENDER_TUNING,
         seed: r.nextU32(),
       },
       720,
@@ -286,6 +322,7 @@ function momentSection(fp: Fingerprint): void {
       const k = state.keeper;
       if (k)
         fp.str(k.phase).f64(k.hands.x).f64(k.hands.y).f64(k.hands.z).f64(k.feet.z).f64(k.head.y);
+      for (const d of state.defenders) fp.f64(d.feet.x).f64(d.feet.z).f64(d.head.y);
     }
     for (const e of result.events) fp.u32(e.tick).str(e.type);
     fp.str(result.outcome ?? 'none');
