@@ -4,6 +4,7 @@
 
 export * as dmath from './math/index.ts';
 export * as physics from './physics/index.ts';
+export * as moments from './moments/index.ts';
 export { Rng, deriveSeed, toSeed } from './rng/index.ts';
 export type { RngState, Seed, SeedLabel } from './rng/index.ts';
 export { Fingerprint, fmix32, hashCombine, hashString } from './hash/index.ts';
