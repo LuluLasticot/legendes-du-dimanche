@@ -49,6 +49,7 @@ docs/               GDD, architecture, roadmap, données et légal, décisions
 
 ## Labo
 
+- `/lab/ball` : bac à sable du ballon — trace la frappe au doigt ou à la souris, trajectoire prévue, ralenti, page de réglage (stats, surface, vent, physique, geste).
 - `/lab/render` : banc d'essai du rendu 3D (stats, budgets). Qualité forcée possible avec `?q=low|medium|high`.
 
 ## Déploiement (Vercel)
