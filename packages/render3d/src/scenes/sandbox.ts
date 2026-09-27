@@ -6,9 +6,16 @@ import { moments, physics, Rng, TICK_DT, TICK_RATE } from '@legendes/engine';
 import * as THREE from 'three';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
 import { Stadium } from '../stadium/stadium.ts';
-import { toPhysicsParams, toShotTuning, type SandboxSettings } from './sandbox-settings.ts';
+import { KeeperFigure } from '../players/keeper-figure.ts';
+import {
+  toKeeperAttributes,
+  toKeeperTuning,
+  toPhysicsParams,
+  toShotTuning,
+  type SandboxSettings,
+} from './sandbox-settings.ts';
 
-const { BALL, PITCH, kickedBall, restingBall, simulateFlight, startFlight, stepFlight } = physics;
+const { BALL, PITCH, kickedBall, restingBall, simulateFlight } = physics;
 
 export interface ShotReport {
   readonly index: number;
@@ -23,7 +30,9 @@ export interface ShotReport {
   readonly errorDeg: number;
   readonly solverMiss: number;
   readonly solverIterations: number;
-  readonly outcome: physics.FlightOutcome | null;
+  readonly outcome: moments.MomentOutcome | null;
+  /** Keeper touch: caught or parried. */
+  readonly save: 'catch' | 'parry' | null;
 }
 
 export interface SandboxHandle {
@@ -43,7 +52,7 @@ type Phase = 'aiming' | 'tracing' | 'flying';
 
 interface StoredShot {
   readonly initial: physics.BallState;
-  readonly bouncesSeed: number;
+  readonly momentSeed: number;
   readonly report: ShotReport;
 }
 
@@ -144,10 +153,25 @@ export function mountBallSandbox(
   let profile = moments.shooterProfile(settings.shooter, settings.shooter, tuning);
   let spot = physics.v3(0, 0, 0);
 
+  const keeperFigure = new KeeperFigure();
+  scene.add(keeperFigure.group);
+
   let phase: Phase = 'aiming';
-  let flight = startFlight(restingBall(0, 0));
-  let previous = flight.ball;
-  let flightRng: Rng | null = null;
+  /** Moment for a ball at rest (keeper set, nothing flies) until a shot is taken. */
+  const restingMoment = (
+    at: physics.BallState,
+  ): { context: moments.ShotMomentContext; state: moments.ShotMomentState } =>
+    moments.startShotMoment({
+      ball: at,
+      physics: params,
+      surface: settings.pitch.surface,
+      keeper: settings.keeper.enabled
+        ? { attributes: toKeeperAttributes(settings), tuning: toKeeperTuning(settings) }
+        : null,
+      seed: 0,
+    });
+  let { context: momentContext, state: moment } = restingMoment(restingBall(0, 0));
+  let previousMoment = moment;
   let heldAfterOutcome = 0;
   let replaying = false;
   let shotIndex = 0;
@@ -185,8 +209,9 @@ export function mountBallSandbox(
 
   const placeBall = (): void => {
     spot = physics.v3(PITCH.goalLineX - settings.spot.distance, BALL.radius, settings.spot.offset);
-    flight = startFlight(restingBall(spot.x, spot.z));
-    previous = flight.ball;
+    ({ context: momentContext, state: moment } = restingMoment(restingBall(spot.x, spot.z)));
+    previousMoment = moment;
+    keeperFigure.group.visible = settings.keeper.enabled;
     ball.position.set(spot.x, spot.y, spot.z);
     phase = 'aiming';
     replaying = false;
@@ -256,13 +281,20 @@ export function mountBallSandbox(
 
   const launch = (
     initial: physics.BallState,
-    bouncesSeed: number,
+    momentSeed: number,
     report: ShotReport,
     replay: boolean,
   ): void => {
-    flight = startFlight(initial);
-    previous = initial;
-    flightRng = settings.surface.bounceJitter > 0 ? Rng.create(bouncesSeed) : null;
+    ({ context: momentContext, state: moment } = moments.startShotMoment({
+      ball: initial,
+      physics: params,
+      surface: settings.pitch.surface,
+      keeper: settings.keeper.enabled
+        ? { attributes: toKeeperAttributes(settings), tuning: toKeeperTuning(settings) }
+        : null,
+      seed: momentSeed,
+    }));
+    previousMoment = moment;
     samples.length = 0;
     samples.push(initial);
     heldAfterOutcome = 0;
@@ -328,11 +360,12 @@ export function mountBallSandbox(
       solverMiss: solution.miss,
       solverIterations: solution.iterations,
       outcome: null,
+      save: null,
     };
     const initial = kickedBall(spot, struck.velocity, struck.spin);
-    const bouncesSeed = shotRng.fork('bounces').nextU32();
-    lastShot = { initial, bouncesSeed, report };
-    launch(initial, bouncesSeed, report, false);
+    const momentSeed = shotRng.fork('moment').nextU32();
+    lastShot = { initial, momentSeed, report };
+    launch(initial, momentSeed, report, false);
   };
 
   // ─── Input ──────────────────────────────────────────────────────────────────
@@ -392,24 +425,15 @@ export function mountBallSandbox(
 
     if (phase === 'flying') {
       for (let i = 0; i < frame.ticks; i++) {
-        previous = flight.ball;
-        const next = stepFlight(flight, {
-          params,
-          surface: settings.pitch.surface,
-          rng: flightRng,
-        });
-        flight = next.state;
-        samples.push(flight.ball);
+        previousMoment = moment;
+        const next = moments.stepShotMoment(moment, momentContext);
+        moment = next.state;
+        samples.push(moment.flight.ball);
         for (const event of next.events) {
-          if (event.type === 'outcome' && currentReport) {
-            currentReport = { ...currentReport, outcome: event.outcome, replay: replaying };
-            if (!replaying && lastShot) lastShot = { ...lastShot, report: currentReport };
+          if (event.type === 'save' && currentReport) {
+            currentReport = { ...currentReport, save: event.kind, replay: replaying };
             emitShot(currentReport);
-            if (event.outcome === 'goal') {
-              stage.clock.hitStop(0.07);
-              stage.shake.add(0.45);
-              stage.postSettings.flash = 0.3;
-            }
+            stage.shake.add(Math.min(0.35, event.speed * 0.012));
           }
           if (event.type === 'frame') stage.shake.add(Math.min(0.5, event.speed * 0.02));
           if (event.type === 'net') {
@@ -417,9 +441,19 @@ export function mountBallSandbox(
             stadium.netImpact(event.pos, event.speed, simTime + (i + 1) * TICK_DT);
           }
         }
+        if (currentReport && moment.outcome !== null && currentReport.outcome !== moment.outcome) {
+          currentReport = { ...currentReport, outcome: moment.outcome, replay: replaying };
+          if (!replaying && lastShot) lastShot = { ...lastShot, report: currentReport };
+          emitShot(currentReport);
+          if (moment.outcome === 'goal') {
+            stage.clock.hitStop(0.07);
+            stage.shake.add(0.45);
+            stage.postSettings.flash = 0.3;
+          }
+        }
       }
       if (settings.debug.trail) setLine(trail, samples, 2);
-      if (flight.outcome !== null) {
+      if (moment.outcome !== null) {
         heldAfterOutcome += frame.simDt;
         if (heldAfterOutcome > RESULT_HOLD * (replaying ? settings.debug.replayScale : 1))
           placeBall();
@@ -427,16 +461,18 @@ export function mountBallSandbox(
     }
 
     const a = frame.alpha;
-    const p0 = previous.pos;
-    const p1 = flight.ball.pos;
+    const p0 = previousMoment.flight.ball.pos;
+    const p1 = moment.flight.ball.pos;
     ball.position.set(p0.x + (p1.x - p0.x) * a, p0.y + (p1.y - p0.y) * a, p0.z + (p1.z - p0.z) * a);
     if (phase === 'flying') {
       // Ball spin, for the eye only.
-      const w = flight.ball.spin;
+      const w = moment.flight.ball.spin;
       ball.rotation.x += w.x * frame.simDt;
       ball.rotation.y += w.y * frame.simDt;
       ball.rotation.z += w.z * frame.simDt;
     }
+    if (moment.keeper && previousMoment.keeper)
+      keeperFigure.update(previousMoment.keeper, moment.keeper, a);
     simTime += frame.simDt;
     stadium.update(simTime);
     stage.postSettings.flash = Math.max(0, stage.postSettings.flash - frame.wallDt * 2.5);
@@ -457,14 +493,15 @@ export function mountBallSandbox(
       trail.visible = settings.debug.trail;
       if (!settings.debug.prediction) prediction.geometry.setDrawRange(0, 0);
       if (phase === 'flying' && !replaying) stage.clock.setTimeScale(settings.debug.timeScale);
-      if (spotChanged && phase === 'aiming') placeBall();
+      if (phase === 'aiming') placeBall();
+      else if (spotChanged) trail.geometry.setDrawRange(0, 0);
     },
     replay() {
       if (!lastShot || phase === 'tracing') return;
       launch(
         lastShot.initial,
-        lastShot.bouncesSeed,
-        { ...lastShot.report, replay: true, outcome: null },
+        lastShot.momentSeed,
+        { ...lastShot.report, replay: true, outcome: null, save: null },
         true,
       );
     },

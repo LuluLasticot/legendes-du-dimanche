@@ -52,7 +52,8 @@
         "over": "Au-dessus",
         "touchline": "Touche",
         "stopped": "Arrêté",
-        "none": "—"
+        "none": "—",
+        "saved": "Arrêt"
       },
       "webglError": "WebGL 2 n'est pas disponible sur cet appareil ou ce navigateur."
     },
@@ -70,7 +71,8 @@
         "solver": "solveur",
         "outcome": "issue",
         "replay": "ralenti",
-        "shot": "tir n° {index}"
+        "shot": "tir n° {index}",
+        "save": "gardien"
       },
       "panel": {
         "title": "Réglages",
@@ -125,7 +127,30 @@
         "resetSettings": "Réglages par défaut",
         "copy": "Copier les réglages (JSON)",
         "copied": "Réglages copiés",
-        "stillThreshold": "seuil d’immobilité du doigt"
+        "stillThreshold": "seuil d’immobilité du doigt",
+        "keeper": "Gardien",
+        "keeperEnabled": "gardien présent",
+        "diving": "plongeon",
+        "handling": "jeu à la main",
+        "reflexes": "réflexes",
+        "speed": "vitesse",
+        "positioning": "placement",
+        "heightCm": "taille (cm)",
+        "keeperTuning": "Réglages du gardien",
+        "reactionSlow": "réaction (s), réflexes 1",
+        "reactionFast": "réaction (s), réflexes 99",
+        "readErrorHigh": "erreur de lecture (m), placement 1",
+        "readErrorLow": "erreur de lecture (m), placement 99",
+        "diveReachLow": "portée du plongeon (m), plongeon 1",
+        "diveReachHigh": "portée du plongeon (m), plongeon 99",
+        "diveTimeSlow": "durée du plongeon (s), plongeon 1",
+        "diveTimeFast": "durée du plongeon (s), plongeon 99",
+        "catchLow": "captage, main 1",
+        "catchHigh": "captage, main 99",
+        "parryRestitution": "vitesse gardée à la parade",
+        "lateAdjustLow": "correction en plongeon (m), réflexes 1",
+        "lateAdjustHigh": "correction en plongeon (m), réflexes 99",
+        "maxShuffle": "replacement max avant plongeon (m)"
       },
       "surfaces": {
         "grass": "Pelouse",
@@ -139,9 +164,14 @@
         "over": "Au-dessus",
         "touchline": "Touche",
         "stopped": "Arrêté",
-        "none": "—"
+        "none": "—",
+        "saved": "Arrêt"
       },
-      "webglError": "WebGL 2 n'est pas disponible sur cet appareil ou ce navigateur."
+      "webglError": "WebGL 2 n'est pas disponible sur cet appareil ou ce navigateur.",
+      "saves": {
+        "catch": "capté",
+        "parry": "repoussé"
+      }
     }
   }
 }

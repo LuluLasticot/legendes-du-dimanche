@@ -46,6 +46,36 @@ export interface SandboxSettings {
     pressurePenalty: number;
     lob: boolean;
   };
+  keeper: {
+    enabled: boolean;
+    diving: number;
+    handling: number;
+    reflexes: number;
+    speed: number;
+    positioning: number;
+    heightCm: number;
+    /** Reaction delay (s) at reflexes 1 / 99. */
+    reactionSlow: number;
+    reactionFast: number;
+    /** Read error (m) at positioning 1 / 99. */
+    readErrorHigh: number;
+    readErrorLow: number;
+    /** Dive reach (m) at diving 1 / 99. */
+    diveReachLow: number;
+    diveReachHigh: number;
+    /** Dive duration (s) at diving 1 / 99. */
+    diveTimeSlow: number;
+    diveTimeFast: number;
+    /** Catch probability at handling 1 / 99. */
+    catchLow: number;
+    catchHigh: number;
+    parryRestitution: number;
+    /** Late hand correction during a dive (m) at reflexes 1 / 99. */
+    lateAdjustLow: number;
+    lateAdjustHigh: number;
+    /** Furthest shuffle before diving (m). */
+    maxShuffle: number;
+  };
   debug: {
     prediction: boolean;
     vectors: boolean;
@@ -62,6 +92,7 @@ export interface SandboxSettings {
 export function defaultSandboxSettings(surface: physics.PhysicsSurface = 'grass'): SandboxSettings {
   const { air, surfaces } = physics.DEFAULT_PHYSICS;
   const shot = moments.DEFAULT_SHOT_TUNING;
+  const keeper = moments.DEFAULT_KEEPER_TUNING;
   return {
     shooter: {
       shotPower: 80,
@@ -93,6 +124,29 @@ export function defaultSandboxSettings(surface: physics.PhysicsSurface = 'grass'
       weakFootPenaltyPerStar: shot.weakFootPenaltyPerStar,
       pressurePenalty: shot.pressurePenalty,
       lob: false,
+    },
+    keeper: {
+      enabled: true,
+      diving: 70,
+      handling: 68,
+      reflexes: 72,
+      speed: 60,
+      positioning: 68,
+      heightCm: 186,
+      reactionSlow: keeper.reactionRange[0],
+      reactionFast: keeper.reactionRange[1],
+      readErrorHigh: keeper.readErrorRange[0],
+      readErrorLow: keeper.readErrorRange[1],
+      diveReachLow: keeper.diveReachRange[0],
+      diveReachHigh: keeper.diveReachRange[1],
+      diveTimeSlow: keeper.diveTimeRange[0],
+      diveTimeFast: keeper.diveTimeRange[1],
+      catchLow: keeper.catchRange[0],
+      catchHigh: keeper.catchRange[1],
+      parryRestitution: keeper.parryRestitution,
+      lateAdjustLow: keeper.lateAdjustRange[0],
+      lateAdjustHigh: keeper.lateAdjustRange[1],
+      maxShuffle: keeper.maxShuffle,
     },
     debug: {
       prediction: true,
@@ -128,5 +182,32 @@ export function toShotTuning(s: SandboxSettings): moments.ShotTuning {
     errorDegRange: [s.shot.errorDegHigh, s.shot.errorDegLow],
     weakFootPenaltyPerStar: s.shot.weakFootPenaltyPerStar,
     pressurePenalty: s.shot.pressurePenalty,
+  };
+}
+
+export function toKeeperAttributes(s: SandboxSettings): moments.KeeperAttributes {
+  const k = s.keeper;
+  return {
+    diving: k.diving,
+    handling: k.handling,
+    reflexes: k.reflexes,
+    speed: k.speed,
+    positioning: k.positioning,
+    heightCm: k.heightCm,
+  };
+}
+
+export function toKeeperTuning(s: SandboxSettings): moments.KeeperTuning {
+  const k = s.keeper;
+  return {
+    ...moments.DEFAULT_KEEPER_TUNING,
+    reactionRange: [k.reactionSlow, k.reactionFast],
+    readErrorRange: [k.readErrorHigh, k.readErrorLow],
+    diveReachRange: [k.diveReachLow, k.diveReachHigh],
+    diveTimeRange: [k.diveTimeSlow, k.diveTimeFast],
+    catchRange: [k.catchLow, k.catchHigh],
+    parryRestitution: k.parryRestitution,
+    lateAdjustRange: [k.lateAdjustLow, k.lateAdjustHigh],
+    maxShuffle: k.maxShuffle,
   };
 }

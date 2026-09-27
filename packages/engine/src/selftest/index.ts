@@ -7,7 +7,9 @@ import { Fingerprint } from '../hash/index.ts';
 import {
   applyExecutionError,
   shooterProfile,
+  simulateShotMoment,
   solveShot,
+  type KeeperTuning,
   type ShotTuning,
 } from '../moments/index.ts';
 import * as m from '../math/index.ts';
@@ -226,12 +228,77 @@ function shotSection(fp: Fingerprint): void {
   }
 }
 
+/** Frozen copy of the keeper tuning, for the same reason as SELFTEST_PHYSICS. */
+const SELFTEST_KEEPER_TUNING: KeeperTuning = {
+  reactionRange: [0.32, 0.13],
+  readErrorRange: [0.9, 0.18],
+  curlReadPenalty: 0.006,
+  diveReachRange: [1.2, 1.95],
+  diveTimeRange: [0.62, 0.42],
+  shuffleSpeedRange: [1.6, 3],
+  jumpRange: [0.25, 0.6],
+  lineDepthRange: [0.3, 1],
+  catchRange: [0.45, 0.92],
+  catchSpeedFree: 12,
+  catchSpeedPenalty: 0.03,
+  catchStretchPenalty: 0.3,
+  parryRestitution: 0.38,
+  lateAdjustRange: [0.05, 0.22],
+  maxShuffle: 0.5,
+};
+
+/** Whole shot moments against a keeper (reaction, read, dive, catch/parry draws). */
+function momentSection(fp: Fingerprint): void {
+  const rng = Rng.create('selftest:moments');
+  for (let i = 0; i < 10; i++) {
+    const r = rng.fork('moment', i);
+    const from = v3(PITCH.goalLineX - r.range(11, 26), BALL.radius, r.range(-10, 10));
+    const target = v3(PITCH.goalLineX, r.range(0.3, 2.3), r.range(-3.4, 3.4));
+    const dx = target.x - from.x;
+    const dz = target.z - from.z;
+    const h = m.hypot(dx, dz);
+    const speed = r.range(16, 30);
+    const velocity = v3((dx / h) * speed, r.range(1, 6), (dz / h) * speed);
+    const result = simulateShotMoment(
+      {
+        ball: kickedBall(from, velocity, v3(0, r.range(-50, 50), 0)),
+        physics: SELFTEST_PHYSICS,
+        surface: PHYSICS_SURFACES[i % PHYSICS_SURFACES.length] ?? 'grass',
+        keeper: {
+          attributes: {
+            diving: r.int(30, 95),
+            handling: r.int(30, 95),
+            reflexes: r.int(30, 95),
+            speed: r.int(30, 95),
+            positioning: r.int(30, 95),
+            heightCm: r.int(175, 198),
+          },
+          tuning: SELFTEST_KEEPER_TUNING,
+        },
+        seed: r.nextU32(),
+      },
+      720,
+      30,
+    );
+    for (const state of result.states) {
+      const b = state.flight.ball.pos;
+      fp.f64(b.x).f64(b.y).f64(b.z);
+      const k = state.keeper;
+      if (k)
+        fp.str(k.phase).f64(k.hands.x).f64(k.hands.y).f64(k.hands.z).f64(k.feet.z).f64(k.head.y);
+    }
+    for (const e of result.events) fp.u32(e.tick).str(e.type);
+    fp.str(result.outcome ?? 'none');
+  }
+}
+
 export function runDeterminismScenario(): DeterminismReport {
   const fp = new Fingerprint();
   rngSection(fp);
   mathSection(fp);
   physicsSection(fp);
   shotSection(fp);
+  momentSection(fp);
   return { digest: fp.digest(), words: fp.size };
 }
 

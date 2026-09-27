@@ -64,6 +64,28 @@ export function createTuningPane(
   num(pitch, settings.pitch, 'windSpeed', 0, 15, 0.5);
   num(pitch, settings.pitch, 'windDirection', -180, 180, 5);
 
+  const keeper = folder('keeper', true);
+  keeper.addBinding(settings.keeper, 'enabled', { label: t('keeperEnabled') });
+  for (const key of ['diving', 'handling', 'reflexes', 'speed', 'positioning'] as const) {
+    num(keeper, settings.keeper, key, 1, 99, 1);
+  }
+  num(keeper, settings.keeper, 'heightCm', 165, 205, 1);
+  const keeperTuning = folder('keeperTuning');
+  num(keeperTuning, settings.keeper, 'reactionSlow', 0.05, 0.8, 0.01);
+  num(keeperTuning, settings.keeper, 'reactionFast', 0.05, 0.8, 0.01);
+  num(keeperTuning, settings.keeper, 'readErrorHigh', 0, 2, 0.02);
+  num(keeperTuning, settings.keeper, 'readErrorLow', 0, 2, 0.02);
+  num(keeperTuning, settings.keeper, 'diveReachLow', 0.5, 3.5, 0.05);
+  num(keeperTuning, settings.keeper, 'diveReachHigh', 0.5, 3.5, 0.05);
+  num(keeperTuning, settings.keeper, 'diveTimeSlow', 0.2, 1.2, 0.01);
+  num(keeperTuning, settings.keeper, 'diveTimeFast', 0.2, 1.2, 0.01);
+  num(keeperTuning, settings.keeper, 'catchLow', 0, 1, 0.01);
+  num(keeperTuning, settings.keeper, 'catchHigh', 0, 1, 0.01);
+  num(keeperTuning, settings.keeper, 'parryRestitution', 0, 1, 0.01);
+  num(keeperTuning, settings.keeper, 'lateAdjustLow', 0, 0.6, 0.01);
+  num(keeperTuning, settings.keeper, 'lateAdjustHigh', 0, 0.6, 0.01);
+  num(keeperTuning, settings.keeper, 'maxShuffle', 0, 2, 0.05);
+
   const shot = folder('shot');
   shot.addBinding(settings.shot, 'lob', { label: t('lob') });
   num(shot, settings.shot, 'minSpeed', 2, 20, 0.5);
