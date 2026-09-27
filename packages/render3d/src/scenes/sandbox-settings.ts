@@ -2,6 +2,11 @@
 // tuning panel. Plain data (JSON-serialisable) mapped to engine parameters by `toEngine…`.
 
 import { moments, physics } from '@legendes/engine';
+import {
+  DEFAULT_DIRECTOR_SETTINGS,
+  type DirectorSettings,
+  type ReplayAngle,
+} from '../camera/director.ts';
 
 export interface SandboxSettings {
   shooter: {
@@ -100,6 +105,9 @@ export interface SandboxSettings {
     lungeHigh: number;
     deflectRestitution: number;
   };
+  camera: DirectorSettings;
+  /** Replay angle: cycled automatically or fixed. */
+  cameraReplayAngle: 'auto' | ReplayAngle;
   debug: {
     prediction: boolean;
     vectors: boolean;
@@ -194,6 +202,8 @@ export function defaultSandboxSettings(surface: physics.PhysicsSurface = 'grass'
       lungeHigh: defender.lungeRange[1],
       deflectRestitution: defender.deflectRestitution,
     },
+    camera: { ...DEFAULT_DIRECTOR_SETTINGS },
+    cameraReplayAngle: 'auto',
     debug: {
       prediction: true,
       vectors: false,

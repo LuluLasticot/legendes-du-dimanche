@@ -4,6 +4,13 @@
 
 import { moments, physics, Rng, TICK_DT, TICK_RATE } from '@legendes/engine';
 import * as THREE from 'three';
+import {
+  CameraDirector,
+  REPLAY_ANGLES,
+  type DirectorInput,
+  type ReplayAngle,
+  type ResultKind,
+} from '../camera/director.ts';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
 import { Stadium } from '../stadium/stadium.ts';
 import { KEEPER_KIT, OPPONENT_KIT, PlayerFigure } from '../players/player-figure.ts';
@@ -217,14 +224,48 @@ export function mountBallSandbox(
     for (const listener of shotListeners) listener(report);
   };
 
-  const placeCamera = (): void => {
-    const goalCentre = new THREE.Vector3(PITCH.goalLineX, 0, 0);
-    const toGoal = new THREE.Vector3(goalCentre.x - spot.x, 0, goalCentre.z - spot.z).normalize();
-    // Behind and above the ball: the ball sits in the lower third, the whole goal is visible.
-    camera.position.set(spot.x - toGoal.x * 4.5, 1.9, spot.z - toGoal.z * 4.5);
-    camera.lookAt(PITCH.goalLineX, 0.2, spot.z * 0.35);
+  // ─── Camera director ────────────────────────────────────────────────────────
+  const director = new CameraDirector(settings.camera);
+  let replayAngle: ReplayAngle | null = null;
+  let replayCount = 0;
+  const ballPos = new THREE.Vector3();
+
+  const resultKind = (): ResultKind => {
+    const outcome = moment.outcome;
+    if (outcome === null) return null;
+    if (outcome === 'goal' || outcome === 'saved' || outcome === 'blocked') return outcome;
+    return 'miss';
+  };
+
+  const directorInput = (): DirectorInput => ({
+    phase: phase === 'flying' ? (moment.outcome !== null ? 'result' : 'flying') : 'aiming',
+    replay: replaying ? replayAngle : null,
+    ball: ballPos,
+    ballVel: moment.flight.ball.vel,
+    spot,
+    goal: { x: PITCH.goalLineX, y: 0, z: 0 },
+    keeper: moment.keeper ? moment.keeper.head : null,
+    result: resultKind(),
+  });
+
+  /** Applies the director's pose to the camera (dt = real seconds). */
+  const applyCamera = (dt: number): void => {
+    const pose = director.update(dt, directorInput());
+    camera.position.copy(pose.position);
+    camera.lookAt(pose.target);
+    if (Math.abs(camera.fov - pose.fov) > 1e-3) {
+      camera.fov = pose.fov;
+      camera.updateProjectionMatrix();
+    }
     // Raycasts (gesture → target) must not depend on a frame having been rendered.
     camera.updateMatrixWorld();
+  };
+
+  const applyEffects = (effects: { hitStop: number; shake: number; flash: number }): void => {
+    if (effects.hitStop > 0) stage.clock.hitStop(effects.hitStop);
+    if (effects.shake > 0) stage.shake.add(effects.shake);
+    if (effects.flash > 0)
+      stage.postSettings.flash = Math.max(stage.postSettings.flash, effects.flash);
   };
 
   const placeBall = (): void => {
@@ -240,7 +281,9 @@ export function mountBallSandbox(
     stage.clock.reset();
     velocityArrow.visible = false;
     spinArrow.visible = false;
-    placeCamera();
+    ballPos.set(spot.x, spot.y, spot.z);
+    director.cut();
+    applyCamera(0);
   };
 
   /** Shot intent from the current trace, or null if the trace is not a gesture yet. */
@@ -326,6 +369,14 @@ export function mountBallSandbox(
     currentReport = report;
     stage.clock.reset();
     stage.clock.setTimeScale(replay ? settings.debug.replayScale : settings.debug.timeScale);
+    if (replay) {
+      replayAngle =
+        settings.cameraReplayAngle === 'auto'
+          ? (REPLAY_ANGLES[replayCount++ % REPLAY_ANGLES.length] ?? 'side')
+          : settings.cameraReplayAngle;
+      director.cut();
+    }
+    applyEffects(director.impact('strike', report.power, replay));
 
     const v = initial.vel;
     const speed = length3(v);
@@ -456,14 +507,14 @@ export function mountBallSandbox(
           if (event.type === 'save' && currentReport) {
             currentReport = { ...currentReport, save: event.kind, replay: replaying };
             emitShot(currentReport);
-            stage.shake.add(Math.min(0.35, event.speed * 0.012));
+            applyEffects(director.impact('save', event.speed, replaying));
           }
           if (event.type === 'block' && currentReport) {
             currentReport = { ...currentReport, save: 'block', replay: replaying };
             emitShot(currentReport);
-            stage.shake.add(Math.min(0.3, event.speed * 0.01));
+            applyEffects(director.impact('block', event.speed, replaying));
           }
-          if (event.type === 'frame') stage.shake.add(Math.min(0.5, event.speed * 0.02));
+          if (event.type === 'frame') applyEffects(director.impact('post', event.speed, replaying));
           if (event.type === 'net') {
             stage.shake.add(Math.min(0.2, event.speed * 0.01));
             stadium.netImpact(event.pos, event.speed, simTime + (i + 1) * TICK_DT);
@@ -473,18 +524,25 @@ export function mountBallSandbox(
           currentReport = { ...currentReport, outcome: moment.outcome, replay: replaying };
           if (!replaying && lastShot) lastShot = { ...lastShot, report: currentReport };
           emitShot(currentReport);
-          if (moment.outcome === 'goal') {
-            stage.clock.hitStop(0.07);
-            stage.shake.add(0.45);
-            stage.postSettings.flash = 0.3;
-          }
+          if (moment.outcome === 'goal') applyEffects(director.impact('goal', 1, replaying));
         }
       }
       if (settings.debug.trail) setLine(trail, samples, 2);
       if (moment.outcome !== null) {
-        heldAfterOutcome += frame.simDt;
-        if (heldAfterOutcome > RESULT_HOLD * (replaying ? settings.debug.replayScale : 1))
-          placeBall();
+        heldAfterOutcome += frame.wallDt;
+        if (heldAfterOutcome > RESULT_HOLD) {
+          // A live goal is replayed once from another angle, then the ball goes back.
+          if (!replaying && moment.outcome === 'goal' && settings.camera.autoReplay && lastShot) {
+            launch(
+              lastShot.initial,
+              lastShot.momentSeed,
+              { ...lastShot.report, replay: true, outcome: null, save: null },
+              true,
+            );
+          } else {
+            placeBall();
+          }
+        }
       }
     }
 
@@ -492,6 +550,14 @@ export function mountBallSandbox(
     const p0 = previousMoment.flight.ball.pos;
     const p1 = moment.flight.ball.pos;
     ball.position.set(p0.x + (p1.x - p0.x) * a, p0.y + (p1.y - p0.y) * a, p0.z + (p1.z - p0.z) * a);
+    ballPos.copy(ball.position);
+
+    // Director: camera every frame (real time, fluid in slow motion) and slow motion.
+    if (phase === 'flying') {
+      const base = replaying ? settings.debug.replayScale : settings.debug.timeScale;
+      stage.clock.setTimeScale(base * director.timeScale(directorInput()), 0.06);
+    }
+    applyCamera(frame.wallDt);
     if (phase === 'flying') {
       // Ball spin, for the eye only.
       const w = moment.flight.ball.spin;
@@ -519,6 +585,7 @@ export function mountBallSandbox(
       const spotChanged =
         next.spot.distance !== settings.spot.distance || next.spot.offset !== settings.spot.offset;
       settings = next;
+      director.settings = settings.camera;
       stadium.setSurface(settings.pitch.surface);
       params = toPhysicsParams(settings);
       tuning = toShotTuning(settings);
