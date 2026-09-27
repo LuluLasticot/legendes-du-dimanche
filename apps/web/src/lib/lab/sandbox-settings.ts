@@ -5,7 +5,7 @@ import { physics } from '@legendes/engine';
 import type { SandboxSettings } from '@legendes/render3d';
 import { z } from 'zod';
 
-const STORAGE_KEY = 'ldd.lab.ball.v2';
+const STORAGE_KEY = 'ldd.lab.ball.v3';
 
 const n = (min: number, max: number) => z.number().min(min).max(max);
 
@@ -55,6 +55,29 @@ export const sandboxSettingsSchema = z.strictObject({
     weakFootPenaltyPerStar: n(0, 2),
     pressurePenalty: n(0, 5),
     lob: z.boolean(),
+  }),
+  keeper: z.strictObject({
+    enabled: z.boolean(),
+    diving: n(1, 99),
+    handling: n(1, 99),
+    reflexes: n(1, 99),
+    speed: n(1, 99),
+    positioning: n(1, 99),
+    heightCm: n(160, 210),
+    reactionSlow: n(0.02, 1),
+    reactionFast: n(0.02, 1),
+    readErrorHigh: n(0, 3),
+    readErrorLow: n(0, 3),
+    diveReachLow: n(0.3, 4),
+    diveReachHigh: n(0.3, 4),
+    diveTimeSlow: n(0.1, 1.5),
+    diveTimeFast: n(0.1, 1.5),
+    catchLow: n(0, 1),
+    catchHigh: n(0, 1),
+    parryRestitution: n(0, 1),
+    lateAdjustLow: n(0, 1),
+    lateAdjustHigh: n(0, 1),
+    maxShuffle: n(0, 3),
   }),
   debug: z.strictObject({
     prediction: z.boolean(),

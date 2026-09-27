@@ -11,11 +11,33 @@ import {
   type KeeperAttributes,
   type ShotMomentSetup,
 } from '../src/moments/index.ts';
-import { BALL, DEFAULT_PHYSICS, GOAL, kickedBall, PITCH, v3, type Vec3 } from '../src/physics/index.ts';
+import {
+  BALL,
+  DEFAULT_PHYSICS,
+  GOAL,
+  kickedBall,
+  PITCH,
+  v3,
+  type Vec3,
+} from '../src/physics/index.ts';
 import { Rng } from '../src/rng/index.ts';
 
-const GOOD: KeeperAttributes = { diving: 85, handling: 85, reflexes: 88, speed: 70, positioning: 85, heightCm: 190 };
-const POOR: KeeperAttributes = { diving: 35, handling: 35, reflexes: 35, speed: 40, positioning: 35, heightCm: 178 };
+const GOOD: KeeperAttributes = {
+  diving: 85,
+  handling: 85,
+  reflexes: 88,
+  speed: 70,
+  positioning: 85,
+  heightCm: 190,
+};
+const POOR: KeeperAttributes = {
+  diving: 35,
+  handling: 35,
+  reflexes: 35,
+  speed: 40,
+  positioning: 35,
+  heightCm: 178,
+};
 
 const spot = (distance: number, z = 0): Vec3 => v3(PITCH.goalLineX - distance, BALL.radius, z);
 
@@ -24,11 +46,24 @@ function strike(from: Vec3, target: Vec3, power: number, bulge: number, seed: nu
     { shotPower: 80, curve: 75, finishing: 80, composure: 75 },
     { weakFoot: false, weakFootStars: 3, pressure: 0 },
   );
-  const solution = solveShot(from, { target, power, bulge, lob: false }, profile, DEFAULT_PHYSICS, 'grass');
+  const solution = solveShot(
+    from,
+    { target, power, bulge, lob: false },
+    profile,
+    DEFAULT_PHYSICS,
+    'grass',
+  );
   return applyExecutionError(solution, profile, Rng.create(seed));
 }
 
-function moment(from: Vec3, target: Vec3, keeper: KeeperAttributes | null, seed = 1, power = 0.8, bulge = 0): ShotMomentSetup {
+function moment(
+  from: Vec3,
+  target: Vec3,
+  keeper: KeeperAttributes | null,
+  seed = 1,
+  power = 0.8,
+  bulge = 0,
+): ShotMomentSetup {
   const s = strike(from, target, power, bulge, seed);
   return {
     ball: kickedBall(from, s.velocity, s.spin),
@@ -79,7 +114,9 @@ describe('shot moments with a keeper', () => {
   });
 
   it('without a keeper the same central shot is a goal', () => {
-    expect(simulateShotMoment(moment(spot(20), v3(PITCH.goalLineX, 1, 0), null, 1, 0.35)).outcome).toBe('goal');
+    expect(
+      simulateShotMoment(moment(spot(20), v3(PITCH.goalLineX, 1, 0), null, 1, 0.35)).outcome,
+    ).toBe('goal');
   });
 
   it('is deterministic', () => {
@@ -107,7 +144,9 @@ describe('shot moments with a keeper', () => {
       let goals = 0;
       let onTarget = 0;
       for (const s of shots) {
-        const result = simulateShotMoment(moment(s.from, s.target, keeper, s.seed, s.power, s.bulge));
+        const result = simulateShotMoment(
+          moment(s.from, s.target, keeper, s.seed, s.power, s.bulge),
+        );
         if (result.outcome === 'goal' || result.outcome === 'saved') onTarget++;
         if (result.outcome === 'goal') goals++;
       }

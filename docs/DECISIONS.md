@@ -104,3 +104,15 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - **Filets déformables** : grille de cordes (bords fixés au cadre et au sol), déformation = somme de bosses amorties déclenchées par les événements `net` du moteur (`net-field.ts`, pur et testé). Pilotée par le temps simulé : le ralenti fait onduler le filet au ralenti, et un replay rejoue la même déformation.
 - **Budgets** : éléments répétés instanciés (poteaux de la main courante, arbres, maisons, pylônes, projecteurs) ou fusionnés (buts, tribune, rails). Mesuré : **22 appels de dessin, 10 800 triangles** pour le stade complet.
 - Résolution de la texture du terrain selon la qualité (10 à 18 px/m), filtrage anisotrope ; une seule lumière portée (depuis un pylône), ombres désactivées en qualité basse.
+
+## D-015 — Gardien de but (Phase 1, PR 6)
+
+- **Modèle déterministe** (`engine/moments/keeper.ts`), pas à pas avec le ballon dans `shot-moment.ts` (action de tir = vol + gardien ; réutilisable par le serveur et l'auto-résolution) :
+  1. **Placement** sur la bissectrice de l'angle de tir, avancé selon le placement (0,3 à 1 m).
+  2. **Réaction** (réflexes : 0,32 → 0,13 s), puis **lecture** du point de passage avec une erreur tirée de la graine (placement ; l'effet la rend plus difficile). **La lecture s'affine en approchant** (erreur ∝ √temps restant) : un tir droit sur le gardien est presque toujours arrêté.
+  3. **Suivi** : un ou deux pas chassés au maximum (0,5 m), puis **plongeon déclenché pour arriver en extension au passage du ballon**. Découvert en test : plonger dès la lecture le faisait retomber avant l'arrivée des tirs lents.
+  4. **Enveloppe de portée elliptique** : pleine latéralement à hauteur de hanche, moindre en hauteur **et** au ras du sol. Les lucarnes restent hors de portée des gardiens moyens. Petite **correction tardive** des mains en plein plongeon (réflexes).
+  5. **Contact** mains / bras / corps : capter ou repousser selon la prise de balle, la vitesse du tir et l'extension. **La parade éloigne toujours le ballon du but** (vers le terrain, au-dessus ou autour du poteau). Découvert en test : la simple réflexion sur la main renvoyait certains ballons dans le filet. Une parade qui ne finit pas au fond compte comme un arrêt.
+- **Calibrage par défaut** (500 tirs visés de 12 à 25 m par un tireur à 70, taux de but des tirs cadrés) : gardien 90 → 17 % (coins 28 %), ~77 → 33 % (coins 52 %), ~52 → 60 % (coins 87 %), ~35 → 70 % (coins 90 %). Le test de propriété vérifie un écart d'au moins 15 points entre un bon et un mauvais gardien. Tous les paramètres sont réglables dans `/lab/ball` (dossiers « Gardien » et « Réglages du gardien »).
+- Rendu : silhouette provisoire dont les membres relient exactement les points utilisés par le moteur pour les contacts (pieds, tête, mains). Elle sera remplacée par le personnage animé.
+- Le test de déterminisme couvre désormais 10 actions complètes contre un gardien (réglages figés).

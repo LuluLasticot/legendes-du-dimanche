@@ -145,6 +145,12 @@ export function BallSandbox() {
           <dd className="text-right text-chalk">
             {(report.solverMiss * 100).toFixed(1)} cm · {report.solverIterations} it.
           </dd>
+          {report.save && (
+            <>
+              <dt>{t('hud.save')}</dt>
+              <dd className="text-right text-chalk">{t(`saves.${report.save}`)}</dd>
+            </>
+          )}
           <dt>{t('hud.outcome')}</dt>
           <dd className="text-right text-floodlight-400">{outcomeLabel(report.outcome)}</dd>
         </dl>

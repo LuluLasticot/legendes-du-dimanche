@@ -53,22 +53,28 @@ export interface KeeperTuning {
   readonly catchStretchPenalty: number;
   /** Speed kept by a parried ball (fraction of the incoming speed). */
   readonly parryRestitution: number;
+  /** How far the hands can still correct during a dive (m) at reflexes 1 → 99. */
+  readonly lateAdjustRange: Range;
+  /** Furthest the keeper can shuffle from his set position before diving (m): a step or two. */
+  readonly maxShuffle: number;
 }
 
 export const DEFAULT_KEEPER_TUNING: KeeperTuning = {
   reactionRange: [0.32, 0.13],
   readErrorRange: [0.9, 0.18],
   curlReadPenalty: 0.006,
-  diveReachRange: [1.4, 2.3],
+  diveReachRange: [1.2, 1.95],
   diveTimeRange: [0.62, 0.42],
-  shuffleSpeedRange: [2.8, 5],
+  shuffleSpeedRange: [1.6, 3],
   jumpRange: [0.25, 0.6],
-  lineDepthRange: [0.4, 1.4],
+  lineDepthRange: [0.3, 1],
   catchRange: [0.45, 0.92],
   catchSpeedFree: 12,
   catchSpeedPenalty: 0.03,
   catchStretchPenalty: 0.3,
   parryRestitution: 0.38,
+  lateAdjustRange: [0.05, 0.22],
+  maxShuffle: 0.5,
 };
 
 const BODY_RADIUS = 0.2;
@@ -84,6 +90,8 @@ export interface KeeperState {
   readonly phase: KeeperPhase;
   /** Feet position on the ground. */
   readonly feet: Vec3;
+  /** Feet position when set (before the shot). */
+  readonly setFeet: Vec3;
   /** Centre of both hands. */
   readonly hands: Vec3;
   /** Top of the body segment (shoulders/head). */
@@ -94,6 +102,11 @@ export interface KeeperState {
   readonly target: Vec3 | null;
   /** Tick at which the ball is expected to reach the keeper's plane (from the read). */
   readonly arrivalTick: Tick | null;
+  /** Where the ball really crosses the keeper's plane (known once read). */
+  readonly crossing: Vec3 | null;
+  /** Initial read error; it shrinks as the ball gets closer (the keeper keeps adjusting). */
+  readonly readOffset: Vec3;
+  readonly readTick: Tick;
   readonly diveFrom: Vec3 | null;
   readonly diveStartTick: Tick;
   readonly diveTicks: number;
@@ -104,7 +117,12 @@ export interface KeeperState {
 
 export type KeeperContact =
   | { readonly kind: 'catch'; readonly pos: Vec3; readonly speed: number }
-  | { readonly kind: 'parry'; readonly pos: Vec3; readonly speed: number; readonly ball: BallState };
+  | {
+      readonly kind: 'parry';
+      readonly pos: Vec3;
+      readonly speed: number;
+      readonly ball: BallState;
+    };
 
 const t01 = (value: number): number => clamp((value - 1) / 98, 0, 1);
 const pick = (range: Range, attribute: number): number => lerp(range[0], range[1], t01(attribute));
@@ -158,11 +176,15 @@ export function createKeeper(
   return {
     phase: 'set',
     feet,
+    setFeet: feet,
     hands: restingHands(feet),
     head: restingHead(feet, attributes),
     reactionTick: Math.max(1, secondsToTicks(reaction)),
     target: null,
     arrivalTick: null,
+    crossing: null,
+    readOffset: v3(0, 0, 0),
+    readTick: 0,
     diveFrom: null,
     diveStartTick: 0,
     diveTicks: 0,
@@ -175,13 +197,19 @@ export function createKeeper(
  * Clamps a hands target to what the keeper can reach from his feet: an elliptic envelope,
  * full lateral reach low down, less reach the higher the ball (top corners stay out of reach).
  */
-function reachableTarget(target: Vec3, feet: Vec3, attributes: KeeperAttributes, tuning: KeeperTuning): Vec3 {
+function reachableTarget(
+  target: Vec3,
+  feet: Vec3,
+  attributes: KeeperAttributes,
+  tuning: KeeperTuning,
+): Vec3 {
   const lateralReach = pick(tuning.diveReachRange, attributes.diving) + 0.45;
   const top = standingReach(attributes) + pick(tuning.jumpRange, attributes.diving);
   const centreY = 1;
   const upReach = top - centreY;
   const y = clamp(target.y, 0.12, top);
-  const dy = Math.max(0, y - centreY) / upReach;
+  // Getting down to a ball at the foot of the post costs reach too, a bit less than going up.
+  const dy = y >= centreY ? (y - centreY) / upReach : ((centreY - y) / (centreY - 0.12)) * 0.6;
   const lateralAtY = lateralReach * sqrt(Math.max(0, 1 - dy * dy));
   const lateral = clamp(target.z - feet.z, -lateralAtY, lateralAtY);
   return v3(handsPlaneX(feet), y, feet.z + lateral);
@@ -196,7 +224,7 @@ function readShot(
   tuning: KeeperTuning,
   flight: FlightContext,
   rng: Rng,
-): { point: Vec3; arrivalTick: Tick } | null {
+): { crossing: Vec3; offset: Vec3; arrivalTick: Tick } | null {
   const planeX = handsPlaneX(keeper.feet);
   if (ball.vel.x <= 0.5 || ball.pos.x >= planeX) return null;
   const prediction = simulateFlight(ball, { ...flight, rng: null }, { maxTicks: 360 });
@@ -207,9 +235,11 @@ function readShot(
       const f = (planeX - a.x) / (b.x - a.x);
       const crossing = add(a, scale(sub(b, a), f));
       const sigma =
-        pick(tuning.readErrorRange, attributes.positioning) + tuning.curlReadPenalty * Math.abs(ball.spin.y);
+        pick(tuning.readErrorRange, attributes.positioning) +
+        tuning.curlReadPenalty * Math.abs(ball.spin.y);
       return {
-        point: v3(crossing.x, crossing.y + rng.normal(0, sigma * 0.6), crossing.z + rng.normal(0, sigma)),
+        crossing,
+        offset: v3(0, rng.normal(0, sigma * 0.6), rng.normal(0, sigma)),
         arrivalTick: tick + i,
       };
     }
@@ -218,9 +248,15 @@ function readShot(
 }
 
 /** Ticks a dive covering `distance` takes. */
-function diveDuration(distance: number, attributes: KeeperAttributes, tuning: KeeperTuning): number {
+function diveDuration(
+  distance: number,
+  attributes: KeeperAttributes,
+  tuning: KeeperTuning,
+): number {
   const reach = pick(tuning.diveReachRange, attributes.diving);
-  const time = pick(tuning.diveTimeRange, attributes.diving) * clamp(0.55 + (0.45 * distance) / reach, 0.55, 1);
+  const time =
+    pick(tuning.diveTimeRange, attributes.diving) *
+    clamp(0.55 + (0.45 * distance) / reach, 0.55, 1);
   return Math.max(1, secondsToTicks(time));
 }
 
@@ -230,7 +266,7 @@ function easeOutQuad(t: number): number {
 
 /** Advances the keeper by one tick (before contact resolution). */
 export function stepKeeper(
-  keeper: KeeperState,
+  current: KeeperState,
   tick: Tick,
   ball: BallState,
   attributes: KeeperAttributes,
@@ -238,6 +274,7 @@ export function stepKeeper(
   flight: FlightContext,
   rng: Rng,
 ): KeeperState {
+  let keeper = current;
   if (keeper.phase === 'holding') return keeper;
 
   if (keeper.phase === 'grounded') {
@@ -253,18 +290,36 @@ export function stepKeeper(
   if (keeper.phase === 'set') {
     if (tick < keeper.reactionTick) return keeper;
     const read = readShot(ball, tick, keeper, attributes, tuning, flight, rng);
-    return { ...keeper, phase: 'tracking', target: read?.point ?? null, arrivalTick: read?.arrivalTick ?? null };
+    if (read === null) return { ...keeper, phase: 'tracking' };
+    return {
+      ...keeper,
+      phase: 'tracking',
+      crossing: read.crossing,
+      readOffset: read.offset,
+      readTick: tick,
+      arrivalTick: read.arrivalTick,
+      target: add(read.crossing, read.offset),
+    };
   }
 
   if (keeper.phase === 'tracking') {
-    if (keeper.target === null || keeper.arrivalTick === null) return keeper;
-    const reachable = reachableTarget(keeper.target, keeper.feet, attributes, tuning);
+    const arrivalTick = keeper.arrivalTick;
+    if (keeper.crossing === null || arrivalTick === null) return keeper;
+    // The read sharpens as the ball approaches: the error decays with the time left.
+    const total = Math.max(1, arrivalTick - keeper.readTick);
+    const decay = clamp((arrivalTick - tick) / total, 0, 1);
+    const estimate = add(keeper.crossing, scale(keeper.readOffset, sqrt(decay)));
+    keeper = { ...keeper, target: estimate };
+    const reachable = reachableTarget(estimate, keeper.feet, attributes, tuning);
     const gap = length(sub(reachable, keeper.hands));
-    const ticksLeft = keeper.arrivalTick - tick;
+    const ticksLeft = arrivalTick - tick;
     // Close ball: take it standing, hands moving to it at shuffle speed.
     if (gap < 0.55) {
       const step = pick(tuning.shuffleSpeedRange, attributes.speed) * 1.6 * TICK_DT;
-      const move = gap <= step ? sub(reachable, keeper.hands) : scale(sub(reachable, keeper.hands), step / gap);
+      const move =
+        gap <= step
+          ? sub(reachable, keeper.hands)
+          : scale(sub(reachable, keeper.hands), step / gap);
       return { ...keeper, hands: add(keeper.hands, move) };
     }
     const duration = diveDuration(gap, attributes, tuning);
@@ -281,21 +336,45 @@ export function stepKeeper(
     }
     // Time to spare: shuffle across to shorten the dive.
     const step = pick(tuning.shuffleSpeedRange, attributes.speed) * TICK_DT;
-    const dz = clamp(keeper.target.z - keeper.feet.z, -step, step);
-    const feet = v3(keeper.feet.x, 0, clamp(keeper.feet.z + dz, -GOAL.width / 2, GOAL.width / 2));
+    const dz = clamp(estimate.z - keeper.feet.z, -step, step);
+    const setZ = keeper.setFeet.z;
+    const feet = v3(
+      keeper.feet.x,
+      0,
+      clamp(keeper.feet.z + dz, setZ - tuning.maxShuffle, setZ + tuning.maxShuffle),
+    );
     return { ...keeper, feet, hands: restingHands(feet), head: restingHead(feet, attributes) };
   }
 
-  // Diving: hands travel along an eased path, the body follows them.
-  const target = keeper.target ?? keeper.hands;
+  // Diving: hands travel along an eased path, the body follows them. A late correction towards
+  // the real ball is possible, limited by reflexes.
+  const committed = keeper.target ?? keeper.hands;
+  let target = committed;
+  if (keeper.crossing !== null) {
+    const late = pick(tuning.lateAdjustRange, attributes.reflexes);
+    const pDive = clamp((tick - keeper.diveStartTick) / keeper.diveTicks, 0, 1);
+    const wanted = reachableTarget(keeper.crossing, keeper.feet, attributes, tuning);
+    target = v3(
+      committed.x,
+      committed.y + clamp(wanted.y - committed.y, -late, late) * pDive,
+      committed.z + clamp(wanted.z - committed.z, -late, late) * pDive,
+    );
+  }
   const from = keeper.diveFrom ?? keeper.hands;
   const p = clamp((tick - keeper.diveStartTick) / keeper.diveTicks, 0, 1);
   const e = easeOutQuad(p);
   const hands = add(from, scale(sub(target, from), e));
-  const feet = v3(keeper.feet.x, 0, lerp(keeper.feet.z, keeper.feet.z + (target.z - keeper.feet.z) * 0.02, e));
+  const feet = v3(
+    keeper.feet.x,
+    0,
+    lerp(keeper.feet.z, keeper.feet.z + (target.z - keeper.feet.z) * 0.02, e),
+  );
   const toHands = sub(hands, feet);
   const reach = length(toHands);
-  const head = reach > 1e-6 ? add(feet, scale(toHands, clamp(1 - 0.35 / reach, 0.3, 1))) : restingHead(feet, attributes);
+  const head =
+    reach > 1e-6
+      ? add(feet, scale(toHands, clamp(1 - 0.35 / reach, 0.3, 1)))
+      : restingHead(feet, attributes);
   return { ...keeper, hands, feet, head, phase: p >= 1 ? 'grounded' : 'diving' };
 }
 
@@ -369,7 +448,10 @@ export function keeperContact(
   const dir = add(away, jitter);
   const outSpeed = Math.max(4, speed * tuning.parryRestitution);
   const vel = scale(dir, outSpeed / Math.max(1e-6, length(dir)));
-  const pos = add(point, scale(normal, (part === 'body' ? BODY_RADIUS : HANDS_RADIUS) + BALL.radius + 1e-3));
+  const pos = add(
+    point,
+    scale(normal, (part === 'body' ? BODY_RADIUS : HANDS_RADIUS) + BALL.radius + 1e-3),
+  );
   return {
     kind: 'parry',
     pos,
@@ -389,7 +471,10 @@ export function parriedKeeper(keeper: KeeperState, tick: Tick): KeeperState {
 }
 
 /** Distance helper exported for tests and the renderer. */
-export function keeperReachEnvelope(attributes: KeeperAttributes, tuning: KeeperTuning = DEFAULT_KEEPER_TUNING): {
+export function keeperReachEnvelope(
+  attributes: KeeperAttributes,
+  tuning: KeeperTuning = DEFAULT_KEEPER_TUNING,
+): {
   lateral: number;
   top: number;
 } {
@@ -398,4 +483,3 @@ export function keeperReachEnvelope(attributes: KeeperAttributes, tuning: Keeper
     top: standingReach(attributes) + pick(tuning.jumpRange, attributes.diving),
   };
 }
-

@@ -33,8 +33,19 @@ export type MomentOutcome = FlightOutcome | 'saved';
 export type MomentEvent =
   | FlightEvent
   | { readonly tick: Tick; readonly type: 'keeper-react'; readonly target: Vec3 | null }
-  | { readonly tick: Tick; readonly type: 'keeper-dive'; readonly side: -1 | 0 | 1; readonly target: Vec3 }
-  | { readonly tick: Tick; readonly type: 'save'; readonly kind: 'catch' | 'parry'; readonly pos: Vec3; readonly speed: number };
+  | {
+      readonly tick: Tick;
+      readonly type: 'keeper-dive';
+      readonly side: -1 | 0 | 1;
+      readonly target: Vec3;
+    }
+  | {
+      readonly tick: Tick;
+      readonly type: 'save';
+      readonly kind: 'catch' | 'parry';
+      readonly pos: Vec3;
+      readonly speed: number;
+    };
 
 export interface ShotMomentSetup {
   /** Ball at the instant of the strike (after execution error). */
@@ -63,21 +74,36 @@ export interface ShotMomentContext {
 }
 
 /** Creates the mutable context (generators) and the initial state of a shot moment. */
-export function startShotMoment(setup: ShotMomentSetup): { context: ShotMomentContext; state: ShotMomentState } {
+export function startShotMoment(setup: ShotMomentSetup): {
+  context: ShotMomentContext;
+  state: ShotMomentState;
+} {
   const root = Rng.create(setup.seed);
   const keeperTuning = setup.keeper?.tuning ?? DEFAULT_KEEPER_TUNING;
   const keeperRng = root.fork('keeper');
   const jitter = setup.physics.surfaces[setup.surface].bounceJitter > 0;
   const context: ShotMomentContext = {
     setup,
-    flight: { params: setup.physics, surface: setup.surface, rng: jitter ? root.fork('bounces') : null },
+    flight: {
+      params: setup.physics,
+      surface: setup.surface,
+      rng: jitter ? root.fork('bounces') : null,
+    },
     keeperTuning,
     keeperRng,
   };
   const keeper = setup.keeper
-    ? createKeeper(keeperSetPosition(setup.ball.pos, setup.keeper.attributes, keeperTuning), setup.keeper.attributes, keeperTuning, keeperRng)
+    ? createKeeper(
+        keeperSetPosition(setup.ball.pos, setup.keeper.attributes, keeperTuning),
+        setup.keeper.attributes,
+        keeperTuning,
+        keeperRng,
+      )
     : null;
-  return { context, state: { tick: 0, flight: startFlight(setup.ball), keeper, outcome: null, parried: false } };
+  return {
+    context,
+    state: { tick: 0, flight: startFlight(setup.ball), keeper, outcome: null, parried: false },
+  };
 }
 
 export function stepShotMoment(
@@ -103,17 +129,37 @@ export function stepShotMoment(
   let parried = state.parried;
   if (keeper && keeperSetup) {
     const before = keeper.phase;
-    keeper = stepKeeper(keeper, tick, flight.ball, keeperSetup.attributes, context.keeperTuning, context.flight, context.keeperRng);
-    if (before === 'set' && keeper.phase !== 'set') events.push({ tick, type: 'keeper-react', target: keeper.target });
+    keeper = stepKeeper(
+      keeper,
+      tick,
+      flight.ball,
+      keeperSetup.attributes,
+      context.keeperTuning,
+      context.flight,
+      context.keeperRng,
+    );
+    if (before === 'set' && keeper.phase !== 'set')
+      events.push({ tick, type: 'keeper-react', target: keeper.target });
     if (before !== 'diving' && keeper.phase === 'diving' && keeper.target) {
       events.push({ tick, type: 'keeper-dive', side: keeper.diveSide, target: keeper.target });
     }
     // Only a live ball in front of the goal can be saved.
     if (state.outcome === null || state.outcome === 'stopped') {
-      const contact = keeperContact(keeper, tick, flight.ball, keeperSetup.attributes, context.keeperTuning, context.keeperRng);
+      const contact = keeperContact(
+        keeper,
+        tick,
+        flight.ball,
+        keeperSetup.attributes,
+        context.keeperTuning,
+        context.keeperRng,
+      );
       if (contact?.kind === 'catch') {
         keeper = holdingKeeper(keeper, tick);
-        flight = { ...flight, ball: { ...flight.ball, pos: keeper.hands, vel: { x: 0, y: 0, z: 0 } }, outcome: null };
+        flight = {
+          ...flight,
+          ball: { ...flight.ball, pos: keeper.hands, vel: { x: 0, y: 0, z: 0 } },
+          outcome: null,
+        };
         outcome = 'saved';
         events.push({ tick, type: 'save', kind: 'catch', pos: contact.pos, speed: contact.speed });
       } else if (contact?.kind === 'parry') {
@@ -139,7 +185,11 @@ export interface ShotMomentResult {
 }
 
 /** Runs a whole shot moment (tests, server validation, auto-resolution). */
-export function simulateShotMoment(setup: ShotMomentSetup, maxTicks = 720, ticksAfterOutcome = 0): ShotMomentResult {
+export function simulateShotMoment(
+  setup: ShotMomentSetup,
+  maxTicks = 720,
+  ticksAfterOutcome = 0,
+): ShotMomentResult {
   const { context, state: initial } = startShotMoment(setup);
   let state = initial;
   const states: ShotMomentState[] = [state];

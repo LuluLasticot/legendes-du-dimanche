@@ -233,16 +233,18 @@ const SELFTEST_KEEPER_TUNING: KeeperTuning = {
   reactionRange: [0.32, 0.13],
   readErrorRange: [0.9, 0.18],
   curlReadPenalty: 0.006,
-  diveReachRange: [1.4, 2.3],
+  diveReachRange: [1.2, 1.95],
   diveTimeRange: [0.62, 0.42],
-  shuffleSpeedRange: [2.8, 5],
+  shuffleSpeedRange: [1.6, 3],
   jumpRange: [0.25, 0.6],
-  lineDepthRange: [0.4, 1.4],
+  lineDepthRange: [0.3, 1],
   catchRange: [0.45, 0.92],
   catchSpeedFree: 12,
   catchSpeedPenalty: 0.03,
   catchStretchPenalty: 0.3,
   parryRestitution: 0.38,
+  lateAdjustRange: [0.05, 0.22],
+  maxShuffle: 0.5,
 };
 
 /** Whole shot moments against a keeper (reaction, read, dive, catch/parry draws). */
@@ -282,7 +284,8 @@ function momentSection(fp: Fingerprint): void {
       const b = state.flight.ball.pos;
       fp.f64(b.x).f64(b.y).f64(b.z);
       const k = state.keeper;
-      if (k) fp.str(k.phase).f64(k.hands.x).f64(k.hands.y).f64(k.hands.z).f64(k.feet.z).f64(k.head.y);
+      if (k)
+        fp.str(k.phase).f64(k.hands.x).f64(k.hands.y).f64(k.hands.z).f64(k.feet.z).f64(k.head.y);
     }
     for (const e of result.events) fp.u32(e.tick).str(e.type);
     fp.str(result.outcome ?? 'none');
