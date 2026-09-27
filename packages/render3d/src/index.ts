@@ -25,3 +25,10 @@ export {
   type QualityProfile,
 } from './core/quality.ts';
 export { mountPreviewScene, type PreviewHandle } from './scenes/preview.ts';
+export { mountBallSandbox, type SandboxHandle, type ShotReport } from './scenes/sandbox.ts';
+export {
+  defaultSandboxSettings,
+  toPhysicsParams,
+  toShotTuning,
+  type SandboxSettings,
+} from './scenes/sandbox-settings.ts';

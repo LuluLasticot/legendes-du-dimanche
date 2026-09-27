@@ -88,3 +88,12 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - **Qualité** : détection par appareil, résolution dynamique puis baisse de niveau automatique (machine à états pure `AdaptiveResolution`, testée) ; ombres désactivées en qualité basse.
 - **Secousse** par « trauma » (désactivée si `prefers-reduced-motion`), appliquée par-dessus la caméra de la scène puis retirée après le rendu.
 - Banc d'essai `/lab/render` (non indexé) : frappes du solveur jouées en boucle, affichage des stats. Mesuré dans le navigateur de développement : 60 i/s, 17 appels de dessin, ~2 000 triangles.
+
+## D-013 — Bac à sable du ballon `/lab/ball` (Phase 1, PR 4)
+
+- **Page de réglage** (règle du CLAUDE.md : tout ce qui touche au ressenti est réglable, rien en dur) : **Tweakpane 4**, chargé à la demande avec la scène. Réglables : stats du tireur, position du ballon, surface et vent, physique du vol et du sol, geste, frappe (plafonds, cône, pénalités), affichage. Les réglages sont conservés dans le navigateur (`localStorage`, validés par Zod à la relecture, repli sur les valeurs par défaut) et copiables en JSON pour les figer ensuite dans le code.
+- **Geste → cible** : la fin de la trace est projetée par raycast sur le plan de la ligne de but ; la trace est en unités « hauteurs d'écran » (isotrope : la courbure ne dépend pas du format de l'écran).
+- **Puissance = vitesse sur le temps de mouvement seulement** : garder le doigt immobile avant de lâcher (ou avant de partir) n'affaiblit pas la frappe. Découvert en test : sinon un joueur qui marque une pause obtient une frappe molle. Seuil d'immobilité réglable.
+- **Trajectoire prévue** pendant le tracé (même solveur, sans erreur d'exécution) et repère de cible ; trace réelle après la frappe ; vecteurs vitesse/effet en option.
+- **Ralenti par re-simulation** : on rejoue le même état initial avec la même graine de rebonds ; aucun enregistrement d'images.
+- La matrice de la caméra est mise à jour dès son placement : le raycast du geste ne doit pas dépendre d'une image déjà rendue.

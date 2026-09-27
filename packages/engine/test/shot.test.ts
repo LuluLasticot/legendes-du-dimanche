@@ -97,6 +97,24 @@ describe('analyzeGesture', () => {
     expect(fast.power).toBeLessThanOrEqual(1);
   });
 
+  it('holding the finger still before lifting it does not weaken the shot', () => {
+    const swipe = line(
+      [
+        [0.5, 0.9],
+        [0.5, 0.75],
+        [0.5, 0.6],
+        [0.5, 0.45],
+        [0.5, 0.3],
+      ],
+      3,
+    );
+    const held = [...swipe, { u: 0.5, v: 0.3, tick: 12 + 240 }];
+    const heldAtStart = [{ u: 0.5, v: 0.9, tick: -240 }, ...swipe];
+    const power = analyzeGesture(swipe)!.power;
+    expect(analyzeGesture(held)!.power).toBeCloseTo(power, 9);
+    expect(analyzeGesture(heldAtStart)!.power).toBeCloseTo(power, 9);
+  });
+
   it('ignores taps', () => {
     expect(
       analyzeGesture(

@@ -1,4 +1,4 @@
-// Gesture analysis: from the traced finger/mouse path (normalised screen coordinates, stamped in
+// Gesture analysis: from the traced finger/mouse path (screen coordinates in viewport heights, stamped in
 // ticks so it can be replayed and validated server-side) to the shot intent features.
 //
 // Like in Score! Hero, the player draws the path they want: an arc bowing to the right makes a
@@ -7,7 +7,10 @@
 import { clamp, hypot } from '../math/index.ts';
 import { TICK_RATE, type Tick } from '../time/index.ts';
 
-/** A point of the trace: u → right, v → down, both in [0, 1] of the viewport. */
+/**
+ * A point of the trace in viewport-height units (isotropic, so curvature does not depend on the
+ * aspect ratio): u → right, v → down, origin at the top-left corner.
+ */
 export interface GesturePoint {
   readonly u: number;
   readonly v: number;
@@ -21,12 +24,15 @@ export interface GestureTuning {
   readonly fullPowerSpeed: number;
   /** Traces shorter than this (viewport fraction) are ignored as taps. */
   readonly minLength: number;
+  /** Movement per tick (viewport heights) under which the finger counts as still. */
+  readonly stillThreshold: number;
 }
 
 export const DEFAULT_GESTURE_TUNING: GestureTuning = {
   fullBulgeRatio: 0.22,
   fullPowerSpeed: 2.2,
   minLength: 0.04,
+  stillThreshold: 0.0008,
 };
 
 export interface GestureFeatures {
@@ -63,14 +69,21 @@ export function analyzeGesture(
     if (Math.abs(d) > Math.abs(deviation)) deviation = d;
   }
 
+  // Speed over the moving time only: holding the finger still before lifting it (or before
+  // starting) must not weaken the shot.
   let pathLength = 0;
+  let movingTicks = 0;
   for (let i = 1; i < points.length; i++) {
     const a = points[i - 1] as GesturePoint;
     const b = points[i] as GesturePoint;
-    pathLength += hypot(b.u - a.u, b.v - a.v);
+    const segment = hypot(b.u - a.u, b.v - a.v);
+    const ticks = b.tick - a.tick;
+    pathLength += segment;
+    if (segment > tuning.stillThreshold * Math.max(1, ticks)) movingTicks += ticks;
+    else if (segment > 0) movingTicks += Math.min(ticks, 1);
   }
   const duration = Math.max(1, last.tick - first.tick);
-  const speed = pathLength / (duration / TICK_RATE);
+  const speed = pathLength / (Math.max(1, movingTicks) / TICK_RATE);
 
   return {
     bulge: clamp(deviation / (chord * tuning.fullBulgeRatio), -1, 1),
