@@ -39,12 +39,17 @@ pnpm dev            # http://localhost:3000
 
 ```
 apps/web            Next.js 16 (App Router), Tailwind v4, next-intl
-packages/engine     Cœur déterministe : PRNG, maths, physique, simulation (TS pur, zéro dépendance)
+packages/engine     Cœur déterministe : PRNG, maths, physique, frappes, simulation (TS pur, zéro dépendance)
+packages/render3d   Rendu Three.js impératif : Stage, post-traitement, qualité, caméra, scènes
 packages/shared     Postes, formations, tiers, divisions, schémas Zod, libellés FR
 packages/ui         Design tokens (CSS + TS), thème Tailwind
 supabase/           config, migrations, fonctions, seeds
 docs/               GDD, architecture, roadmap, données et légal, décisions
 ```
+
+## Labo
+
+- `/lab/render` : banc d'essai du rendu 3D (stats, budgets). Qualité forcée possible avec `?q=low|medium|high`.
 
 ## Déploiement (Vercel)
 

@@ -1,0 +1,25 @@
+{
+  "name": "@legendes/render3d",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Imperative Three.js rendering (stage, post-processing, quality, camera, scenes). Mounted by thin React components.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@legendes/engine": "workspace:*",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "fast-check": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
