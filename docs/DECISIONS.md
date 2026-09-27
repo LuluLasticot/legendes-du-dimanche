@@ -126,3 +126,19 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - **Contre** : réflexion sur le corps, perte de vitesse (40 % gardés) et ricochet tiré de la graine. Le ballon reste vivant : une déviation peut finir au fond. **Le gardien réagit de nouveau** après une déviation s'il n'a pas encore plongé (sinon il est pris à contre-pied). Issue `blocked` si le dernier à toucher le ballon est un défenseur.
 - Mesuré : la plupart des contres viennent d'un défenseur déjà sur la ligne de tir ; la vitesse et la défense ajoutent environ 40 % de contres « de justesse » (test statistique).
 - Bac à sable : nombre de joueurs dans le mur, défenseurs au marquage (distance, écart), attributs et tous les réglages ; silhouettes rouges (`PlayerFigure`, commune avec le gardien). Vérifié : coup franc enroulé par-dessus un mur de 4 → but dans la lucarne du premier poteau.
+
+## D-017 — Réalisateur de caméra v1 (Phase 1, PR 8)
+
+- **Plans décrits comme des fonctions de cadrage** (`render3d/camera/director.ts`, sans DOM, testé) :
+  - **visée** derrière le tireur ;
+  - **poursuite** du ballon, derrière et au-dessus, avec anticipation ; le but reste toujours dans le cadre ;
+  - **latéral** façon télé depuis la ligne de touche ;
+  - **contrechamp** depuis l'arrière du filet ;
+  - **plongée** ;
+  - **gros plan sur le gardien** après un arrêt, **orbite** autour du but après un but, **tenue** après un tir manqué.
+- **Choix automatique selon l'étape** : visée → poursuite → résultat. Des modes fixes permettent de juger chaque plan seul.
+- **Montage** : ressorts critiques (sans dépassement) pour les transitions continues (visée → poursuite) ; **coupes franches** pour le résultat et les replays. La caméra est lissée en temps réel, donc elle reste fluide pendant le ralenti.
+- **Ralenti** déclenché par le réalisateur quand un ballon encore en jeu arrive devant le but (0,28 s avant, ×0,3), et maintenu un instant après un but ou un arrêt. Le temps de simulation reste en ticks entiers : le ralenti ne change pas le résultat.
+- **Effets d'impact centralisés** (arrêt sur image, secousse, flash) pour la frappe (selon la puissance), le but, l'arrêt, le poteau et le contre ; atténués de moitié en replay.
+- **Replay par re-simulation**, rejoué automatiquement après un but, avec un angle qui change à chaque fois (contrechamp → latéral → plongée → poursuite).
+- Tous les paramètres sont dans le dossier « Caméra » du panneau de `/lab/ball` (règle du CLAUDE.md : le ressenti se règle, il n'est pas codé en dur).

@@ -13,7 +13,7 @@ Jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe, f
 
 ## Phase en cours
 
-**Phase 1 — Prototype d'action clé 3D** (Phase 0 terminée le 27/09/2026). Découpage validé : physics ✅ → shot ✅ → render3d/core ✅ → /lab ✅ → stade greybox ✅ → gardien ✅ / défenseurs ✅ → caméra → juice/audio → personnages → 3 situations → ambiance/perf.
+**Phase 1 — Prototype d'action clé 3D** (Phase 0 terminée le 27/09/2026). Découpage validé : physics ✅ → shot ✅ → render3d/core ✅ → /lab ✅ → stade greybox ✅ → gardien ✅ / défenseurs ✅ → caméra ✅ → juice/audio → personnages → 3 situations → ambiance/perf.
 Mettre à jour cette ligne à chaque changement de phase.
 
 ## Stack

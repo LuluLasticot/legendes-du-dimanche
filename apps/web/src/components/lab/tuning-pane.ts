@@ -108,6 +108,43 @@ export function createTuningPane(
   num(defenderTuning, settings.defenders, 'lungeHigh', 0, 1.2, 0.01);
   num(defenderTuning, settings.defenders, 'deflectRestitution', 0, 1, 0.01);
 
+  const cam = folder('camera', true);
+  const option = (keys: readonly string[], prefix: string): Record<string, string> =>
+    Object.fromEntries(keys.map((k) => [t(`${prefix}.${k}`), k] as const));
+  cam.addBinding(settings.camera, 'mode', {
+    label: t('cameraMode'),
+    options: option(['auto', 'behind', 'chase', 'side', 'reverse', 'high'], 'cameraModes'),
+  });
+  cam.addBinding(settings, 'cameraReplayAngle', {
+    label: t('cameraReplayAngle'),
+    options: option(['auto', 'reverse', 'side', 'high', 'chase'], 'cameraModes'),
+  });
+  cam.addBinding(settings.camera, 'autoReplay', { label: t('autoReplay') });
+  num(cam, settings.camera, 'slowMoScale', 0.05, 1, 0.01);
+  num(cam, settings.camera, 'slowMoWindow', 0, 1, 0.01);
+  num(cam, settings.camera, 'slowMoHold', 0, 2, 0.05);
+  const camTuning = folder('cameraTuning');
+  num(camTuning, settings.camera, 'chaseDistance', 1, 12, 0.1);
+  num(camTuning, settings.camera, 'chaseHeight', 0, 6, 0.1);
+  num(camTuning, settings.camera, 'chaseStiffness', 1, 20, 0.5);
+  num(camTuning, settings.camera, 'lookAhead', 0, 1.5, 0.05);
+  num(camTuning, settings.camera, 'fovChase', 20, 90, 1);
+  num(camTuning, settings.camera, 'aimDistance', 2, 10, 0.1);
+  num(camTuning, settings.camera, 'aimHeight', 0.5, 5, 0.1);
+  num(camTuning, settings.camera, 'fovAim', 20, 90, 1);
+  num(camTuning, settings.camera, 'sideDistance', 5, 40, 0.5);
+  num(camTuning, settings.camera, 'sideHeight', 1, 15, 0.5);
+  num(camTuning, settings.camera, 'fovSide', 15, 70, 1);
+  num(camTuning, settings.camera, 'reverseDistance', 2, 20, 0.5);
+  num(camTuning, settings.camera, 'reverseHeight', 0.5, 6, 0.1);
+  num(camTuning, settings.camera, 'fovReverse', 20, 90, 1);
+  num(camTuning, settings.camera, 'hitStopStrike', 0, 0.2, 0.005);
+  num(camTuning, settings.camera, 'hitStopGoal', 0, 0.3, 0.005);
+  num(camTuning, settings.camera, 'hitStopSave', 0, 0.3, 0.005);
+  num(camTuning, settings.camera, 'shakeStrike', 0, 1, 0.01);
+  num(camTuning, settings.camera, 'shakeGoal', 0, 1, 0.01);
+  num(camTuning, settings.camera, 'flashGoal', 0, 1, 0.01);
+
   const shot = folder('shot');
   shot.addBinding(settings.shot, 'lob', { label: t('lob') });
   num(shot, settings.shot, 'minSpeed', 2, 20, 0.5);

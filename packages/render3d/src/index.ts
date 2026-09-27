@@ -35,3 +35,11 @@ export {
 export { PlayerFigure, KEEPER_KIT, OPPONENT_KIT, type FigureKit } from './players/player-figure.ts';
 export { toKeeperAttributes, toKeeperTuning } from './scenes/sandbox-settings.ts';
 export { toDefenderSetups, toDefenderTuning } from './scenes/sandbox-settings.ts';
+export {
+  CameraDirector,
+  DEFAULT_DIRECTOR_SETTINGS,
+  REPLAY_ANGLES,
+  type CameraMode,
+  type DirectorSettings,
+  type ReplayAngle,
+} from './camera/director.ts';

@@ -5,7 +5,7 @@ import { physics } from '@legendes/engine';
 import type { SandboxSettings } from '@legendes/render3d';
 import { z } from 'zod';
 
-const STORAGE_KEY = 'ldd.lab.ball.v4';
+const STORAGE_KEY = 'ldd.lab.ball.v5';
 
 const n = (min: number, max: number) => z.number().min(min).max(max);
 
@@ -100,6 +100,34 @@ export const sandboxSettingsSchema = z.strictObject({
     lungeHigh: n(0, 1.5),
     deflectRestitution: n(0, 1),
   }),
+  camera: z.strictObject({
+    mode: z.enum(['auto', 'behind', 'chase', 'side', 'reverse', 'high']),
+    aimDistance: n(1, 15),
+    aimHeight: n(0.3, 10),
+    fovAim: n(15, 100),
+    chaseDistance: n(0.5, 20),
+    chaseHeight: n(0, 10),
+    chaseStiffness: n(0.5, 30),
+    lookAhead: n(0, 2),
+    fovChase: n(15, 100),
+    sideDistance: n(3, 60),
+    sideHeight: n(0.5, 30),
+    fovSide: n(10, 100),
+    reverseDistance: n(1, 30),
+    reverseHeight: n(0.3, 10),
+    fovReverse: n(15, 100),
+    slowMoScale: n(0.05, 1),
+    slowMoWindow: n(0, 2),
+    slowMoHold: n(0, 3),
+    hitStopStrike: n(0, 0.5),
+    hitStopGoal: n(0, 0.5),
+    hitStopSave: n(0, 0.5),
+    shakeStrike: n(0, 1),
+    shakeGoal: n(0, 1),
+    flashGoal: n(0, 2),
+    autoReplay: z.boolean(),
+  }),
+  cameraReplayAngle: z.enum(['auto', 'side', 'reverse', 'chase', 'high']),
   debug: z.strictObject({
     prediction: z.boolean(),
     vectors: z.boolean(),
