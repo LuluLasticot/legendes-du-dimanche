@@ -1,12 +1,20 @@
-// Determinism self-test: a canonical scenario exercising the PRNG, deterministic math and a
-// small 120 Hz ball integration, reduced to a bit-exact fingerprint. The same digest must be
+// Determinism self-test: a canonical scenario exercising the PRNG, deterministic math and real
+// ball flights at 120 Hz, reduced to a bit-exact fingerprint. The same digest must be
 // produced by every JavaScript runtime (browsers, Node, Deno). Tested in CI; can also be run
 // at server start-up before trusting the engine to validate matches.
 
 import { Fingerprint } from '../hash/index.ts';
 import * as m from '../math/index.ts';
 import { deriveSeed, Rng, type Seed } from '../rng/index.ts';
-import { TICK_DT } from '../time/index.ts';
+import {
+  BALL,
+  kickedBall,
+  PHYSICS_SURFACES,
+  PITCH,
+  simulateFlight,
+  v3,
+  type PhysicsParams,
+} from '../physics/index.ts';
 import { DETERMINISM_GOLDEN } from './golden.ts';
 
 export { DETERMINISM_GOLDEN };
@@ -69,60 +77,87 @@ function mathSection(fp: Fingerprint): void {
 }
 
 /**
- * Toy ball flight: gravity, quadratic drag, Magnus lift, decaying spin, wind and ground
- * bounces, stepped at the fixed tick rate. Stands in for the Phase 1 physics until it exists.
+ * Frozen physics parameters: the golden must change only when the integrator code changes,
+ * never when the default tuning (DEFAULT_PHYSICS, /lab) is adjusted.
  */
-function ballSection(fp: Fingerprint): void {
-  const rng = Rng.create('selftest:ball');
-  const g = -9.81;
-  const radius = 0.11;
-  const drag = 0.0125; // ½·ρ·Cd·A / m
-  const magnus = 0.0048;
-  const spinDecay = m.exp(-TICK_DT / 4);
+const SELFTEST_PHYSICS: PhysicsParams = {
+  air: {
+    gravity: 9.81,
+    airDensity: 1.2,
+    dragCoefficient: 0.25,
+    magnusCoefficient: 1,
+    spinDecayTime: 6,
+    wind: v3(0.8, 0, -1.3),
+  },
+  surfaces: {
+    grass: {
+      restitution: 0.6,
+      bounceFriction: 0.28,
+      rollingResistance: 0.06,
+      bounceJitter: 0,
+      rollThreshold: 0.6,
+    },
+    artificial: {
+      restitution: 0.68,
+      bounceFriction: 0.2,
+      rollingResistance: 0.035,
+      bounceJitter: 0,
+      rollThreshold: 0.6,
+    },
+    muddy: {
+      restitution: 0.32,
+      bounceFriction: 0.5,
+      rollingResistance: 0.18,
+      bounceJitter: 0.04,
+      rollThreshold: 0.9,
+    },
+    dirt: {
+      restitution: 0.62,
+      bounceFriction: 0.3,
+      rollingResistance: 0.07,
+      bounceJitter: 0.25,
+      rollThreshold: 0.6,
+    },
+  },
+  frame: { postRestitution: 0.72, netSpeedRetention: 0.02 },
+};
 
-  for (let shot = 0; shot < 6; shot++) {
+/** Real ball flights (air, bounces on every surface, goal frame, net) at the fixed tick rate. */
+function physicsSection(fp: Fingerprint): void {
+  const rng = Rng.create('selftest:physics');
+  for (let shot = 0; shot < 12; shot++) {
     const shotRng = rng.fork('shot', shot);
-    const speed = shotRng.range(14, 32);
-    const [sy, cy] = m.sinCos(shotRng.range(-0.5, 0.5)); // heading
-    const [sp, cp] = m.sinCos(shotRng.range(0.05, 0.6)); // pitch
-    let px = 0;
-    let py = radius;
-    let pz = 0;
-    let vx = speed * cp * cy;
-    let vy = speed * sp;
-    let vz = speed * cp * sy;
-    let wx = 0;
-    let wy = shotRng.range(-40, 40);
-    let wz = shotRng.range(-10, 10);
-    const windX = shotRng.normal(0, 1.5);
-    const windZ = shotRng.normal(0, 1.5);
-
-    for (let tick = 0; tick < 360; tick++) {
-      const rx = vx - windX;
-      const ry = vy;
-      const rz = vz - windZ;
-      const rel = m.hypot3(rx, ry, rz);
-      const ax = -drag * rel * rx + magnus * (wy * rz - wz * ry);
-      const ay = g - drag * rel * ry + magnus * (wz * rx - wx * rz);
-      const az = -drag * rel * rz + magnus * (wx * ry - wy * rx);
-      vx += ax * TICK_DT;
-      vy += ay * TICK_DT;
-      vz += az * TICK_DT;
-      px += vx * TICK_DT;
-      py += vy * TICK_DT;
-      pz += vz * TICK_DT;
-      wx *= spinDecay;
-      wy *= spinDecay;
-      wz *= spinDecay;
-      if (py < radius) {
-        py = radius;
-        vy = -vy * 0.6;
-        vx *= 0.82;
-        vz *= 0.82;
-      }
-      fp.f64(px).f64(py).f64(pz).f64(vx).f64(vy).f64(vz);
+    const surface = PHYSICS_SURFACES[shot % PHYSICS_SURFACES.length] ?? 'grass';
+    const from = v3(PITCH.goalLineX - shotRng.range(8, 30), BALL.radius, shotRng.range(-12, 12));
+    const target = v3(PITCH.goalLineX, shotRng.range(0.2, 3), shotRng.range(-5, 5));
+    const dx = target.x - from.x;
+    const dz = target.z - from.z;
+    const horizontal = m.hypot(dx, dz);
+    const speed = shotRng.range(15, 32);
+    const [sp, cp] = m.sinCos(shotRng.range(0.02, 0.3));
+    const ball = kickedBall(
+      from,
+      v3((dx / horizontal) * speed * cp, speed * sp, (dz / horizontal) * speed * cp),
+      v3(shotRng.range(-10, 10), shotRng.range(-60, 60), shotRng.range(-30, 30)),
+    );
+    const flight = simulateFlight(
+      ball,
+      { params: SELFTEST_PHYSICS, surface, rng: shotRng.fork('bounces') },
+      {
+        maxTicks: 900,
+        ticksAfterOutcome: 60,
+      },
+    );
+    for (const s of flight.samples) {
+      fp.f64(s.pos.x).f64(s.pos.y).f64(s.pos.z).f64(s.vel.x).f64(s.vel.y).f64(s.vel.z);
+      fp.f64(s.spin.x)
+        .f64(s.spin.y)
+        .f64(s.spin.z)
+        .u32(s.grounded ? 1 : 0);
     }
-    fp.f64(m.atan2(vz, vx)).f64(m.hypot(px, pz));
+    for (const e of flight.events)
+      fp.u32(e.tick).str(e.type).f64(e.pos.x).f64(e.pos.y).f64(e.pos.z);
+    fp.str(flight.outcome ?? 'none').u32(flight.outcomeTick ?? 0);
   }
 }
 
@@ -130,7 +165,7 @@ export function runDeterminismScenario(): DeterminismReport {
   const fp = new Fingerprint();
   rngSection(fp);
   mathSection(fp);
-  ballSection(fp);
+  physicsSection(fp);
   return { digest: fp.digest(), words: fp.size };
 }
 
