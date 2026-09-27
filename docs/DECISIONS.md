@@ -62,3 +62,11 @@ Postes (`GK`, `RB`, `CB`…), traits (`workhorse`, `late-arrival`…), surfaces 
 
 « Main Courante » (nom de code) était peu parlant pour les joueurs. Nouveau nom : **Légendes du Dimanche** (pilier « fierté » + foot amateur du dimanche), accroche **« Ton club. Ta carte. Ta légende. »**
 Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `legendes-du-dimanche`. Le dossier local reste `main-courante` (sans incidence). Recherche d'antériorité INPI et réservation du domaine à faire avant le lancement public.
+
+## D-010 — Physique du ballon (Phase 1, PR 1)
+
+- Repère monde : mètres, Y vers le haut, origine au point central, +X vers le but attaqué, +Z à droite de l'attaquant.
+- Euler semi-implicite à 120 Hz : gravité, traînée quadratique (Cd 0,25), portance de Magnus `a = ½·ρ·A·r·Cm/m · (ω × v)`, décroissance exponentielle de l'effet, vent. Le solveur de frappe utilisera le même intégrateur : ce que le joueur vise est exactement ce qui vole.
+- Sol : rebond (restitution, frottement tangentiel) puis roulement (résistance au roulement) sous un seuil d'impact ; paramètres par surface (pelouse, synthétique, terrain gras, stabilisé). Le stabilisé ajoute une dispersion des rebonds tirée du PRNG du moment (aléatoire mais rejouable).
+- Cadre du but : poteaux et barre modélisés comme des capsules, détection sur 4 sous-pas par tick (sinon un ballon à 25 m/s traverse le poteau). Filet : boîte qui absorbe la vitesse et émet des événements d'impact pour la déformation au rendu.
+- Tous les paramètres de ressenti sont dans `DEFAULT_PHYSICS` (réglables depuis `/lab`) ; le test de déterminisme utilise une **copie figée** de ces valeurs, pour que le réglage ne change pas l'empreinte de référence.

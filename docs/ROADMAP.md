@@ -27,6 +27,8 @@
 
 **Critère de fin :** `pnpm dev` lance l'app, la CI est verte, le test de déterminisme passe sous Node et Deno.
 
+✅ **Terminée le 27/09/2026** — CI verte (Node 22, Node 24, Deno 2), dépôt public [LuluLasticot/legendes-du-dimanche](https://github.com/LuluLasticot/legendes-du-dimanche).
+
 ---
 
 ## Phase 1 — Prototype d'action clé 3D (≈ 3-4 semaines) 🎯 RISQUE N° 1
