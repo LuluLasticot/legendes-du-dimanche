@@ -5,7 +5,7 @@
 import { moments, physics, Rng } from '@legendes/engine';
 import * as THREE from 'three';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
-import { buildNightPitch } from './environment.ts';
+import { Stadium } from '../stadium/stadium.ts';
 
 const { BALL, PITCH, DEFAULT_PHYSICS, kickedBall, startFlight, stepFlight } = physics;
 
@@ -25,7 +25,8 @@ export function mountPreviewScene(
 ): PreviewHandle {
   const stage = Stage.mount(canvas, { fov: 42, ...options });
   const { scene, camera } = stage;
-  buildNightPitch(scene, stage.profile.shadowMapSize);
+  const stadium = new Stadium(scene, { surface: 'grass', profile: stage.profile });
+  let simTime = 0;
 
   const ball = new THREE.Mesh(
     new THREE.SphereGeometry(BALL.radius, 24, 16),
@@ -79,6 +80,7 @@ export function mountPreviewScene(
           stage.postSettings.flash = 0.35;
         }
         if (event.type === 'frame') stage.shake.add(0.3);
+        if (event.type === 'net') stadium.netImpact(event.pos, event.speed, simTime);
       }
       if (flight.outcome !== null && ++restTicks > 150) newShot();
     }
@@ -92,6 +94,8 @@ export function mountPreviewScene(
     camera.position.set(from.x - 7, 2.2, from.z * 0.85);
     camera.lookAt(PITCH.goalLineX, 1.2, from.z * 0.25);
 
+    simTime += frame.simDt;
+    stadium.update(simTime);
     const post = stage.postSettings;
     post.flash = Math.max(0, post.flash - frame.wallDt * 2.5);
   });
@@ -103,6 +107,7 @@ export function mountPreviewScene(
     },
     dispose() {
       unsubscribe();
+      stadium.dispose();
       stage.dispose();
     },
   };

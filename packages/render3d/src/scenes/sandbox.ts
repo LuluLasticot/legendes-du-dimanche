@@ -2,10 +2,10 @@
 // while tracing, strike with the shooter's execution error, watch it fly, replay it in slow
 // motion by re-simulation. Every feel parameter comes from SandboxSettings (tuning panel).
 
-import { moments, physics, Rng, TICK_RATE } from '@legendes/engine';
+import { moments, physics, Rng, TICK_DT, TICK_RATE } from '@legendes/engine';
 import * as THREE from 'three';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
-import { buildNightPitch } from './environment.ts';
+import { Stadium } from '../stadium/stadium.ts';
 import { toPhysicsParams, toShotTuning, type SandboxSettings } from './sandbox-settings.ts';
 
 const { BALL, PITCH, kickedBall, restingBall, simulateFlight, startFlight, stepFlight } = physics;
@@ -92,7 +92,12 @@ export function mountBallSandbox(
 ): SandboxHandle {
   const stage = Stage.mount(canvas, { fov: 50, ...options });
   const { scene, camera } = stage;
-  buildNightPitch(scene, stage.profile.shadowMapSize);
+  const stadium = new Stadium(scene, {
+    surface: initialSettings.pitch.surface,
+    profile: stage.profile,
+  });
+  /** Simulated seconds since mount: drives the net animation (slow motion slows it too). */
+  let simTime = 0;
 
   const ball = new THREE.Mesh(
     new THREE.SphereGeometry(BALL.radius, 24, 16),
@@ -407,7 +412,10 @@ export function mountBallSandbox(
             }
           }
           if (event.type === 'frame') stage.shake.add(Math.min(0.5, event.speed * 0.02));
-          if (event.type === 'net') stage.shake.add(Math.min(0.2, event.speed * 0.01));
+          if (event.type === 'net') {
+            stage.shake.add(Math.min(0.2, event.speed * 0.01));
+            stadium.netImpact(event.pos, event.speed, simTime + (i + 1) * TICK_DT);
+          }
         }
       }
       if (settings.debug.trail) setLine(trail, samples, 2);
@@ -429,6 +437,8 @@ export function mountBallSandbox(
       ball.rotation.y += w.y * frame.simDt;
       ball.rotation.z += w.z * frame.simDt;
     }
+    simTime += frame.simDt;
+    stadium.update(simTime);
     stage.postSettings.flash = Math.max(0, stage.postSettings.flash - frame.wallDt * 2.5);
   });
 
@@ -440,6 +450,7 @@ export function mountBallSandbox(
       const spotChanged =
         next.spot.distance !== settings.spot.distance || next.spot.offset !== settings.spot.offset;
       settings = next;
+      stadium.setSurface(settings.pitch.surface);
       params = toPhysicsParams(settings);
       tuning = toShotTuning(settings);
       profile = moments.shooterProfile(settings.shooter, settings.shooter, tuning);
@@ -481,6 +492,7 @@ export function mountBallSandbox(
       canvas.removeEventListener('pointercancel', onPointerCancel);
       gestureListeners.clear();
       shotListeners.clear();
+      stadium.dispose();
       stage.dispose();
     },
   };
