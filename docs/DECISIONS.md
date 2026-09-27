@@ -97,3 +97,10 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - **Trajectoire prévue** pendant le tracé (même solveur, sans erreur d'exécution) et repère de cible ; trace réelle après la frappe ; vecteurs vitesse/effet en option.
 - **Ralenti par re-simulation** : on rejoue le même état initial avec la même graine de rebonds ; aucun enregistrement d'images.
 - La matrice de la caméra est mise à jour dès son placement : le raycast du geste ne doit pas dépendre d'une image déjà rendue.
+
+## D-014 — Stade amateur en blocs gris + première passe d'ambiance (Phase 1, PR 5)
+
+- **Kit procédural, sans asset** (`packages/render3d/src/stadium`) : terrain peint dans une texture canvas selon la surface (tontes sur pelouse, granulés sur synthétique, boue dans les surfaces de réparation et au rond central sur terrain gras, stabilisé ocre), tous les tracés réglementaires (module pur `markings.ts`, testé), **main courante** blanche, deux buts complets, tribune en tôle, vestiaires préfabriqués et **buvette éclairée**, 8 pylônes d'éclairage (coins + derrière chaque but) avec halos, ceinture d'arbres et maisons, ciel nocturne avec pollution lumineuse à l'horizon.
+- **Filets déformables** : grille de cordes (bords fixés au cadre et au sol), déformation = somme de bosses amorties déclenchées par les événements `net` du moteur (`net-field.ts`, pur et testé). Pilotée par le temps simulé : le ralenti fait onduler le filet au ralenti, et un replay rejoue la même déformation.
+- **Budgets** : éléments répétés instanciés (poteaux de la main courante, arbres, maisons, pylônes, projecteurs) ou fusionnés (buts, tribune, rails). Mesuré : **22 appels de dessin, 10 800 triangles** pour le stade complet.
+- Résolution de la texture du terrain selon la qualité (10 à 18 px/m), filtrage anisotrope ; une seule lumière portée (depuis un pylône), ombres désactivées en qualité basse.
