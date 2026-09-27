@@ -610,6 +610,14 @@ export function mountBallSandbox(
               confetti();
             }
           }
+          // Near miss: the stand goes "ouuuh".
+          if ((moment.outcome === 'wide' || moment.outcome === 'over') && !replaying) {
+            const p = moment.flight.ball.pos;
+            const besidePost = Math.abs(p.z) - physics.GOAL.width / 2 < 1.5 && p.y < 3.2;
+            const overBar =
+              p.y - physics.GOAL.height < 1.2 && Math.abs(p.z) < physics.GOAL.width / 2 + 1;
+            if (besidePost || overBar) audio.crowdReaction('ooh');
+          }
         }
       }
       if (settings.debug.trail) setLine(trail, samples, 2);

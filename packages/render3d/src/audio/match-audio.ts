@@ -390,22 +390,117 @@ export class MatchAudio {
     rattle.stop(t + duration + 0.1);
   }
 
-  /** Continuous murmur of a small stand (a few dozen people). */
+  /**
+   * A small choir of crowd voices: detuned sawtooth "vocal folds" with vibrato, shaped by three
+   * vowel formants. Much louder and more human than filtered noise (which the compressor was
+   * burying under the strike sounds).
+   */
+  private voices(options: {
+    count: number;
+    /** Vowel formants (Hz). */
+    formants: readonly [number, number, number];
+    pitch: readonly [number, number];
+    /** Pitch multiplier reached at the peak (glide up), then back to `fall`. */
+    rise: number;
+    fall: number;
+    peak: number;
+    attack: number;
+    hold: number;
+    release: number;
+    delay?: number;
+  }): void {
+    const c = this.ctx as AudioContext;
+    const t0 = c.currentTime + (options.delay ?? 0);
+    // Formant bank shared by all voices, with make-up gain.
+    const mix = c.createGain();
+    mix.gain.value = 1;
+    const out = c.createGain();
+    out.gain.setValueAtTime(0.0001, t0);
+    out.gain.exponentialRampToValueAtTime(options.peak, t0 + options.attack);
+    out.gain.setValueAtTime(options.peak, t0 + options.attack + options.hold);
+    out.gain.exponentialRampToValueAtTime(
+      0.0001,
+      t0 + options.attack + options.hold + options.release,
+    );
+    const [f1, f2, f3] = options.formants;
+    for (const [f, q, g] of [
+      [f1, 5, 1],
+      [f2, 7, 0.55],
+      [f3, 9, 0.25],
+    ] as const) {
+      const band = c.createBiquadFilter();
+      band.type = 'bandpass';
+      band.frequency.value = f;
+      band.Q.value = q;
+      const gain = c.createGain();
+      gain.gain.value = g * 4;
+      mix.connect(band);
+      band.connect(gain);
+      gain.connect(out);
+    }
+    this.out(out, this.crowd, 0, 0.45);
+    const end = t0 + options.attack + options.hold + options.release + 0.1;
+    for (let i = 0; i < options.count; i++) {
+      // Deterministic spread of pitches, onsets and pans across the stand.
+      const u = (i * 0.618034) % 1;
+      const base = options.pitch[0] + (options.pitch[1] - options.pitch[0]) * u;
+      const onset = t0 + ((i * 0.377) % 1) * 0.12;
+      const osc = c.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(base, onset);
+      osc.frequency.linearRampToValueAtTime(
+        base * options.rise,
+        onset + options.attack + options.hold * 0.4,
+      );
+      osc.frequency.linearRampToValueAtTime(base * options.fall, end);
+      const vibrato = c.createOscillator();
+      vibrato.frequency.value = 4.5 + u * 2;
+      const depth = c.createGain();
+      depth.gain.value = base * 0.025;
+      vibrato.connect(depth);
+      depth.connect(osc.frequency);
+      const voice = c.createGain();
+      voice.gain.value = 0.9 / options.count;
+      osc.connect(voice);
+      if (typeof c.createStereoPanner === 'function') {
+        const pan = c.createStereoPanner();
+        pan.pan.value = u * 1.4 - 0.7;
+        voice.connect(pan);
+        pan.connect(mix);
+      } else {
+        voice.connect(mix);
+      }
+      osc.start(onset);
+      vibrato.start(onset);
+      osc.stop(end);
+      vibrato.stop(end);
+    }
+  }
+
+  /** Continuous murmur of a small stand (a few dozen people chatting). */
   startMurmur(): void {
     if (!this.ready || this.murmur) return;
     const c = this.ctx as AudioContext;
-    const source = this.noiseSource(0.5);
+    const source = this.noiseSource(0.45);
     const filter = c.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 520;
-    filter.Q.value = 0.6;
+    filter.type = 'lowpass';
+    filter.frequency.value = 900;
+    filter.Q.value = 0.5;
+    // Slow swell, like conversations rising and falling.
+    const swell = c.createOscillator();
+    swell.frequency.value = 0.13;
+    const swellDepth = c.createGain();
+    swellDepth.gain.value = 0.05;
     const gain = c.createGain();
     gain.gain.value = 0.0001;
-    gain.gain.setTargetAtTime(0.06, c.currentTime, 0.8);
+    gain.gain.setTargetAtTime(0.16, c.currentTime, 1);
+    swell.connect(swellDepth);
+    swellDepth.connect(gain.gain);
     source.connect(filter);
     filter.connect(gain);
-    this.out(gain, this.crowd, 0, 0.3);
+    this.out(gain, this.crowd, 0, 0.35);
     source.start();
+    swell.start();
     this.murmur = { source, gain };
   }
 
@@ -417,67 +512,68 @@ export class MatchAudio {
     this.murmur = null;
   }
 
-  /** The stand reacts: a cheer with claps for a goal, an "ooh" for a save / post / near miss. */
+  /** The stand reacts: "ouais !" with claps for a goal, "ouuuh" for a save / post. */
   crowdReaction(kind: 'goal' | 'ooh'): void {
     if (!this.ready) return;
-    const c = this.ctx as AudioContext;
-    const t = c.currentTime;
     if (kind === 'goal') {
-      // Voices: a few formant bands swelling then fading.
-      for (const [f, q, amp] of [
-        [450, 1.2, 0.35],
-        [900, 1.5, 0.28],
-        [1800, 2, 0.14],
-      ] as const) {
-        const source = this.noiseSource(0.9);
-        const filter = c.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.value = f;
-        filter.Q.value = q;
-        const gain = c.createGain();
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(amp, t + 0.25);
-        gain.gain.setTargetAtTime(amp * 0.6, t + 0.6, 0.6);
-        gain.gain.setTargetAtTime(0.0001, t + 2.2, 0.5);
-        source.connect(filter);
-        filter.connect(gain);
-        this.out(gain, this.crowd, 0, 0.4);
-        source.start(t);
-        source.stop(t + 4.5);
-      }
-      // Scattered claps.
-      for (let i = 0; i < 26; i++) {
-        const delay = 0.3 + ((i * 0.618) % 1) * 2.4;
+      // "Ouais !" (open vowel), pitch rising with excitement, a second wave a bit later.
+      this.voices({
+        count: 14,
+        formants: [700, 1650, 2600],
+        pitch: [150, 290],
+        rise: 1.35,
+        fall: 1.05,
+        peak: 0.9,
+        attack: 0.12,
+        hold: 1.1,
+        release: 1.2,
+      });
+      this.voices({
+        count: 8,
+        formants: [650, 1500, 2500],
+        pitch: [170, 320],
+        rise: 1.2,
+        fall: 1,
+        peak: 0.45,
+        attack: 0.3,
+        hold: 0.8,
+        release: 1,
+        delay: 0.9,
+      });
+      // Breath / shouting noise under the voices.
+      this.burst(this.crowd, 'bandpass', 1200, 0.7, 0.35, 0.1, 2.2, 0, 0.4);
+      // Claps: irregular, spread across the stand, fading out.
+      for (let i = 0; i < 44; i++) {
+        const u = (i * 0.618034) % 1;
+        const delay = 0.35 + u * 2.8 + ((i * 0.173) % 1) * 0.05;
+        const fade = 1 - delay / 3.4;
         this.burst(
           this.crowd,
           'bandpass',
-          1500 + ((i * 331) % 900),
-          1.1,
-          0.12,
-          0.002,
-          0.04,
-          ((i * 0.37) % 1) * 1.2 - 0.6,
-          0.2,
+          1100 + ((i * 331) % 1400),
+          0.8,
+          0.55 * fade,
+          0.001,
+          0.05,
+          u * 1.6 - 0.8,
+          0.25,
           delay,
         );
       }
     } else {
-      const source = this.noiseSource(0.9);
-      const filter = c.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.Q.value = 3;
-      filter.frequency.setValueAtTime(380, t);
-      filter.frequency.linearRampToValueAtTime(620, t + 0.35);
-      filter.frequency.linearRampToValueAtTime(420, t + 1.1);
-      const gain = c.createGain();
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.4, t + 0.25);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
-      source.connect(filter);
-      filter.connect(gain);
-      this.out(gain, this.crowd, 0, 0.4);
-      source.start(t);
-      source.stop(t + 1.4);
+      // "Ouuuh": closed vowel, pitch gliding up then down, a collective breath.
+      this.voices({
+        count: 12,
+        formants: [330, 820, 2300],
+        pitch: [120, 230],
+        rise: 1.25,
+        fall: 0.9,
+        peak: 0.85,
+        attack: 0.18,
+        hold: 0.35,
+        release: 0.8,
+      });
+      this.burst(this.crowd, 'lowpass', 700, 0.7, 0.15, 0.15, 0.9, 0, 0.3);
     }
   }
 
