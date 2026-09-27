@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@legendes/engine": "workspace:*",
+    "@legendes/render3d": "workspace:*",
     "@legendes/shared": "workspace:*",
     "@legendes/ui": "workspace:*",
     "next": "16.3.6",

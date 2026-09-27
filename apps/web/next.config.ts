@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
   // Workspace packages are shipped as TypeScript sources.
-  transpilePackages: ['@legendes/engine', '@legendes/shared', '@legendes/ui'],
+  transpilePackages: ['@legendes/engine', '@legendes/render3d', '@legendes/shared', '@legendes/ui'],
 };
 
 export default withNextIntl(nextConfig);
