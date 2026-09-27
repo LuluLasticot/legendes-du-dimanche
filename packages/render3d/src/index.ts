@@ -43,3 +43,6 @@ export {
   type DirectorSettings,
   type ReplayAngle,
 } from './camera/director.ts';
+export { MatchAudio, DEFAULT_VOLUMES, type AudioVolumes } from './audio/match-audio.ts';
+export { BallTrail, trailColour } from './fx/trail.ts';
+export { ImpactParticles, surfaceParticles, type ParticleKind } from './fx/particles.ts';

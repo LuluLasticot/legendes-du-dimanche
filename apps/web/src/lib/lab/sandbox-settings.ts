@@ -5,7 +5,7 @@ import { physics } from '@legendes/engine';
 import type { SandboxSettings } from '@legendes/render3d';
 import { z } from 'zod';
 
-const STORAGE_KEY = 'ldd.lab.ball.v5';
+const STORAGE_KEY = 'ldd.lab.ball.v6';
 
 const n = (min: number, max: number) => z.number().min(min).max(max);
 
@@ -126,6 +126,20 @@ export const sandboxSettingsSchema = z.strictObject({
     shakeGoal: n(0, 1),
     flashGoal: n(0, 2),
     autoReplay: z.boolean(),
+  }),
+  juice: z.strictObject({
+    trail: z.boolean(),
+    trailLength: n(2, 64),
+    trailWidth: n(0.01, 0.6),
+    particles: z.boolean(),
+    particleAmount: n(0, 3),
+    confetti: z.boolean(),
+  }),
+  audio: z.strictObject({
+    enabled: z.boolean(),
+    master: n(0, 1),
+    effects: n(0, 1.5),
+    crowd: n(0, 1.5),
   }),
   cameraReplayAngle: z.enum(['auto', 'side', 'reverse', 'chase', 'high']),
   debug: z.strictObject({
