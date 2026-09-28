@@ -167,3 +167,10 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
   - **Gardien** : attente, pas chassés dans le bon sens, plongeon haut ou bas **choisi selon le sens réel de l'animation** (insensible aux fichiers inversés), prise en cloche, prise basse ou saut. La vitesse de chaque animation est ajustée pour que son extension coïncide avec celle du moteur, et **les gants sont ancrés sur les mains simulées**. Déception après un but encaissé.
   - **Défenseurs** : le mur saute avec le sommet synchronisé sur le moteur ; les marqueurs courent ou sprintent (cadence selon la vitesse), puis taclent en glissant.
 - Caméra de visée reculée (6 m, 2,2 m de haut) pour cadrer le tireur, le ballon et le but. Vérifié : course d'élan, contact, départ du ballon, but, confettis, déception du gardien.
+
+## D-020 — Personnages servis depuis un Vercel Blob privé
+
+- Les personnages convertis (dérivés de Mixamo) restent **hors du dépôt public**. Ils sont stockés dans un **Vercel Blob privé** (`characters/<version>/player.glb|player.meta.json`), envoyés par `pnpm --filter @legendes/web assets:upload` (jeton `BLOB_READ_WRITE_TOKEN` dans `apps/web/.env.local`, jamais commité).
+- Lecture par une route de l'application (`/api/assets/characters/[file]`), qui n'accepte que ces deux fichiers. Le jeton reste côté serveur (OIDC sur Vercel). Chemins versionnés (`CHARACTER_ASSETS_VERSION`) → **cache CDN d'un an** (`s-maxage`, `immutable`) : la fonction n'est presque jamais appelée.
+- Le client lit l'URL dans `NEXT_PUBLIC_CHARACTER_ASSETS_URL` : `/api/assets/characters/` sur Vercel, `/assets/characters/` en local par défaut. Sans stockage configuré, la route répond 404 et la scène garde les silhouettes provisoires.
+- Remarque : un joueur peut toujours télécharger ce que le jeu affiche ; l'objectif n'est pas de cacher le fichier aux joueurs, mais de **ne pas publier les fichiers bruts dans le dépôt**.
