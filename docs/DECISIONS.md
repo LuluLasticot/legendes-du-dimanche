@@ -152,3 +152,18 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
   - Tribune d'une trentaine de personnes : murmure continu, clameur et applaudissements épars sur un but, « ooh » sur un arrêt ou un poteau.
   - Volumes séparés (général, effets, public, GDD §12.6). Le son se débloque au premier geste, comme l'exigent les navigateurs mobiles.
 - Tout est réglable dans le dossier « Effets et son » de `/lab/ball`.
+
+## D-019 — Personnages animés (Mixamo) (Phase 1, PR 10)
+
+- **Sources** : 30 FBX Mixamo téléchargés par Lucas (personnage Y Bot + 29 animations : tireur, défenseurs, gardien, célébrations, réactions) dans `assets-src/mixamo/`, **hors git**. Les conditions d'Adobe autorisent l'usage dans un jeu, pas la redistribution des fichiers bruts, et le dépôt est public.
+- **Conversion** (`pnpm --filter @legendes/render3d convert:mixamo`) :
+  - FBX → glTF dans Node (FBXLoader et GLTFExporter de Three.js), un seul fichier `player.glb`, squelette partagé, 28 animations ;
+  - **déplacement du bassin retiré** : c'est le moteur qui place les joueurs ;
+  - maillage **simplifié** (55 000 → 8 300 triangles, meshoptimizer), animations rééchantillonnées, quantification et compression meshopt : **1,7 Mo** ;
+  - **métadonnées** calculées en rejouant chaque animation dans Node : instant et position du **contact pied-ballon**, **extension maximale des mains** dans les plongeons, sommet des sauts, déplacement retiré. Elles sont validées par Zod au chargement.
+  - Les fichiers convertis vont dans `apps/web/public/assets/characters/`, eux aussi **hors git**. **Sans eux (déploiement Vercel actuel), le jeu revient aux silhouettes provisoires**, sans erreur. Pour les servir en ligne : `NEXT_PUBLIC_CHARACTER_ASSETS_URL` vers un stockage privé (à décider).
+- **Le moteur décide, l'animation suit** (ARCHITECTURE §4.3) :
+  - **Tireur** : il attend au départ de sa course d'élan. Après le geste, la course d'élan (déplacement retiré restitué à vitesse constante) est **recalée** pour que le pied touche le ballon à l'instant du contact, et **la physique ne démarre qu'à ce moment-là**. Célébration (tirée de la graine) après un but, déception sinon.
+  - **Gardien** : attente, pas chassés dans le bon sens, plongeon haut ou bas **choisi selon le sens réel de l'animation** (insensible aux fichiers inversés), prise en cloche, prise basse ou saut. La vitesse de chaque animation est ajustée pour que son extension coïncide avec celle du moteur, et **les gants sont ancrés sur les mains simulées**. Déception après un but encaissé.
+  - **Défenseurs** : le mur saute avec le sommet synchronisé sur le moteur ; les marqueurs courent ou sprintent (cadence selon la vitesse), puis taclent en glissant.
+- Caméra de visée reculée (6 m, 2,2 m de haut) pour cadrer le tireur, le ballon et le but. Vérifié : course d'élan, contact, départ du ballon, but, confettis, déception du gardien.

@@ -4,6 +4,7 @@ import type { GesturePoint } from '@legendes/engine/moments';
 import type { SandboxHandle, SandboxSettings, ShotReport } from '@legendes/render3d';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
+import { publicEnv } from '@/env';
 import {
   clearSandboxSettings,
   loadSandboxSettings,
@@ -43,6 +44,7 @@ export function BallSandbox() {
         const initial = loadSandboxSettings(defaults);
         const handle = render3d.mountBallSandbox(canvas, initial, {
           quality: render3d.qualityFromQuery(window.location.search) ?? 'auto',
+          characterAssetsUrl: publicEnv.NEXT_PUBLIC_CHARACTER_ASSETS_URL ?? '/assets/characters/',
         });
         handleRef.current = handle;
         const offGesture = handle.onGesture((points) => setTrace(points ? [...points] : null));

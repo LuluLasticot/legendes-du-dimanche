@@ -35,3 +35,8 @@ supabase/.temp/
 .DS_Store
 *.log
 .idea/
+
+# Mixamo sources: usable in the game, not redistributable as raw files (public repo)
+assets-src/mixamo/
+# Converted character assets (derived from Mixamo): generated locally, see docs/DECISIONS.md D-019
+apps/web/public/assets/characters/

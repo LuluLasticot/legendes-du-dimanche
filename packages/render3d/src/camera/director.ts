@@ -49,8 +49,8 @@ export interface DirectorSettings {
 
 export const DEFAULT_DIRECTOR_SETTINGS: DirectorSettings = {
   mode: 'auto',
-  aimDistance: 4.5,
-  aimHeight: 1.9,
+  aimDistance: 6,
+  aimHeight: 2.2,
   fovAim: 50,
   chaseDistance: 4.2,
   chaseHeight: 1.5,

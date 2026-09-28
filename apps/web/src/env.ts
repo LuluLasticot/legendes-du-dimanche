@@ -6,6 +6,8 @@ import { z } from 'zod';
 const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url().optional(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
+  /** Where the converted character asset lives (default: served locally from /public). */
+  NEXT_PUBLIC_CHARACTER_ASSETS_URL: z.string().min(1).optional(),
 });
 
 const serverSchema = publicSchema.extend({
