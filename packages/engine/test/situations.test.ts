@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   applyExecutionError,
   applyPassError,
-  DEFAULT_RECEIVER_TUNING,
   defendersAfterPass,
   firstTimeDifficulty,
   markerSetups,
@@ -14,7 +13,7 @@ import {
   penaltyGauge,
   penaltyKeeperFeet,
   penaltySpot,
-  runTicks,
+  receptionTicks,
   shooterProfile,
   simulatePassMoment,
   simulateShotMoment,
@@ -102,12 +101,7 @@ describe('pass moment', () => {
   const pass = (seed: number, markers: number, targetZ = 3) => {
     const target = v3(PITCH.goalLineX - 11, 0, targetZ);
     const profile = passerProfile({ passing: 80, composure: 70 }, 0);
-    const run = runTicks(
-      Math.hypot(target.x - layout.receiver.x, target.z - layout.receiver.z),
-      80,
-      DEFAULT_RECEIVER_TUNING,
-      RECEIVER_RUN_SPEED,
-    );
+    const run = receptionTicks(layout.receiver, target, 80, RECEIVER_RUN_SPEED);
     const solution = solvePass(layout.ball, target, run, profile, DEFAULT_PHYSICS, 'grass');
     const velocity = applyPassError(solution.velocity, profile, Rng.create(seed));
     const defenders = markerSetups(layout, markers, MARKER);

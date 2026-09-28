@@ -64,9 +64,9 @@ export const PASS_LAYOUTS: readonly PassLayout[] = [
     markers: [v3(PITCH.goalLineX - 16, 0, 7), v3(PITCH.goalLineX - 6, 0, -4)],
   },
   {
-    ball: v3(PITCH.goalLineX - 32, 0, -3),
-    receiver: v3(PITCH.goalLineX - 23, 0, 10),
-    markers: [v3(PITCH.goalLineX - 20, 0, 8), v3(PITCH.goalLineX - 17, 0, -1)],
+    ball: v3(PITCH.goalLineX - 32, 0, 0),
+    receiver: v3(PITCH.goalLineX - 23, 0, 13),
+    markers: [v3(PITCH.goalLineX - 19, 0, 3), v3(PITCH.goalLineX - 19, 0, -5)],
   },
   {
     ball: v3(PITCH.goalLineX - 22, 0, 16),

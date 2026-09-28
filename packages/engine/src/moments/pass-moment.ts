@@ -98,6 +98,8 @@ export interface PassMomentContext {
   readonly defenderSetups: readonly DefenderSetup[];
 }
 
+/** Markers' reaction to a pass, relative to their reaction to a shot. */
+const PASS_READ_FACTOR = 1.6;
 /** Longest a pass moment lasts (s) before the ball counts as lost. */
 const MAX_SECONDS = 8;
 
@@ -153,8 +155,16 @@ export function startPassMoment(setup: PassMomentSetup): {
         keeperRng,
       )
     : null;
+  // Markers facing a shooter read his body shape; a pass from elsewhere is read later.
+  const reading: DefenderTuning = {
+    ...defenderTuning,
+    reactionRange: [
+      defenderTuning.reactionRange[0] * PASS_READ_FACTOR,
+      defenderTuning.reactionRange[1] * PASS_READ_FACTOR,
+    ],
+  };
   const defenders = setups.map((d) =>
-    createDefender(d.role, d.feet ?? setup.ball.pos, d.attributes, defenderTuning, defenderRng),
+    createDefender(d.role, d.feet ?? setup.ball.pos, d.attributes, reading, defenderRng),
   );
   const from = v3(setup.receiver.from.x, 0, setup.receiver.from.z);
   const speed = setup.receiver.speed ?? 0;

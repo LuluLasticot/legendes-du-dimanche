@@ -203,6 +203,27 @@ export function runTicks(distance: number, pace: number, tuning: ReceiverTuning,
   return ticks;
 }
 
+/**
+ * Ticks for the receiver to be in position at `target` (within control radius, with the planning
+ * margin): the pass should arrive then, not before.
+ */
+export function receptionTicks(
+  from: Vec3,
+  target: Vec3,
+  pace: number,
+  speed: number,
+  tuning: ReceiverTuning = DEFAULT_RECEIVER_TUNING,
+): Tick {
+  const d = sqrt(
+    (target.x - from.x) * (target.x - from.x) + (target.z - from.z) * (target.z - from.z),
+  );
+  return (
+    runTicks(Math.max(0, d - tuning.controlRadius), pace, tuning, speed) +
+    Math.ceil(tuning.planMargin / TICK_DT) +
+    2
+  );
+}
+
 export interface Reception {
   /** Tick (from the start of `path`) at which the receiver meets the ball. */
   readonly tick: Tick;
