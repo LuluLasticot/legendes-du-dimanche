@@ -26,7 +26,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.CI ? `pnpm start -p ${PORT}` : 'pnpm dev',
+    // The Next binary directly: a pnpm wrapper does not pass the stop signal on (hung teardown).
+    command: process.env.CI ? `./node_modules/.bin/next start -p ${PORT}` : 'pnpm dev',
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 5_000 },
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
