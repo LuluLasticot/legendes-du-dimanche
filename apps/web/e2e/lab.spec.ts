@@ -3,7 +3,8 @@ import { expect, test } from '@playwright/test';
 test('the ball lab mounts and switches situations', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/lab/ball');
+  // Low quality: the runners render WebGL in software.
+  await page.goto('/lab/ball?q=low');
 
   await expect(page.locator('canvas')).toBeVisible();
   const tabs = page.getByRole('tab');
