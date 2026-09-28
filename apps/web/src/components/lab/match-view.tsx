@@ -1,23 +1,11 @@
 'use client';
 
-import { sim } from '@legendes/engine';
+import { commentary, sim } from '@legendes/engine';
 import type { Phase, Pitch2DHandle, Stoppage, TeamLook } from '@legendes/render2d';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const SPEEDS = [1, 2, 3, 6] as const;
-const FEED_KINDS: readonly string[] = [
-  'goal',
-  'yellow',
-  'red',
-  'sub',
-  'injury',
-  'penalty',
-  'save',
-  'offside',
-  'half-time',
-  'full-time',
-];
 
 interface Hud {
   half: 1 | 2;
@@ -33,6 +21,7 @@ const key = (half: 1 | 2, t: number): number => (half === 1 ? t : 1e5 + t);
 /** Demo match (Phase 2 lab): the engine's timeline choreographed on the 2D pitch. */
 export function MatchView() {
   const t = useTranslations('lab.match');
+  const speaker = useTranslations('commentary');
   const hostRef = useRef<HTMLDivElement>(null);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(2);
   const speedRef = useRef(speed);
@@ -177,14 +166,11 @@ export function MatchView() {
     [0, 0],
   );
   const minute = Math.floor(hud.t / 60) + 1;
-  const name = (id: string | null): string => {
-    if (!id) return '';
-    const team = id.startsWith(setup.home.id) ? setup.home : setup.away;
-    return sim.playerById(team, id).name;
-  };
-  const feed = seen
-    .filter((e) => FEED_KINDS.includes(e.kind))
-    .slice(-5)
+  // The speaker's lines up to now, latest first.
+  const comments = useMemo(() => commentary.commentate(match.setup, match.result), [match]);
+  const spoken = comments
+    .filter((c) => key(c.half, c.t) <= key(hud.half, hud.t))
+    .slice(-4)
     .reverse();
   const teamName = (side: sim.Side): string => (side === 0 ? setup.home.name : setup.away.name);
   const showBanner =
@@ -220,19 +206,21 @@ export function MatchView() {
           </p>
         )}
       </div>
-      <ol className="pointer-events-none absolute bottom-16 left-3 w-[min(22rem,calc(100%-1.5rem))] space-y-1 text-xs text-chalk">
-        {feed.map((e, i) => (
+      <ol className="pointer-events-none absolute bottom-16 left-3 w-[min(24rem,calc(100%-1.5rem))] space-y-1 text-xs text-chalk">
+        {spoken.map((line, i) => (
           <li
-            key={`${e.half}-${e.t}-${i}`}
-            className="rounded bg-pitch-950/70 px-2 py-1 backdrop-blur-sm"
+            key={`${line.half}-${line.t}-${line.key}`}
+            className={`rounded px-2 py-1 backdrop-blur-sm ${
+              i === 0 ? 'bg-pitch-950/85 text-[13px]' : 'bg-pitch-950/60 opacity-80'
+            } ${line.category.startsWith('goal') && line.category !== 'goal-kick' ? 'text-floodlight-300' : ''}`}
           >
             <span className="mr-2 font-mono text-chalk-muted">
-              {Math.floor(e.t / 60) + 1}&apos;
+              {Math.floor(line.t / 60) + 1}&apos;
             </span>
-            {t(`events.${e.kind}` as Parameters<typeof t>[0], {
-              player: name(e.player),
-              other: name(e.other),
-            })}
+            {speaker(
+              line.key as Parameters<typeof speaker>[0],
+              line.params as Record<string, string | number>,
+            )}
           </li>
         ))}
       </ol>

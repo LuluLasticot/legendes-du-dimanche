@@ -15,7 +15,8 @@
     "./moments": "./src/moments/index.ts",
     "./sim": "./src/sim/index.ts",
     "./sim/positions": "./src/sim/positions.ts",
-    "./sim/formations": "./src/sim/formations.ts"
+    "./sim/formations": "./src/sim/formations.ts",
+    "./commentary": "./src/commentary/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",

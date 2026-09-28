@@ -33,6 +33,7 @@ import {
   v3,
   type PhysicsParams,
 } from '../physics/index.ts';
+import { commentate } from '../commentary/index.ts';
 import { demoTeam, simulateMatch } from '../sim/index.ts';
 import { DETERMINISM_GOLDEN } from './golden.ts';
 
@@ -492,12 +493,13 @@ function matchSection(fp: Fingerprint): void {
     { surface: 'muddy', rain: true, windSpeed: 7, windDirection: 40 },
   ] as const;
   conditions.forEach((c, i) => {
-    const result = simulateMatch({
+    const setup = {
       seed: 1000 + i,
       home: demoTeam(1000 + i, { id: 'home', name: 'Home', rating: 50 + i * 15 }),
       away: demoTeam(2000 + i, { id: 'away', name: 'Away', rating: 58 }),
       conditions: c,
-    });
+    };
+    const result = simulateMatch(setup);
     fp.u32(result.score[0]).u32(result.score[1]).u32(result.actions.length).f64(result.duration);
     for (const e of result.events)
       fp.f64(e.t)
@@ -507,6 +509,7 @@ function matchSection(fp: Fingerprint): void {
     result.actions.forEach((a, k) => {
       if (k % 10 === 0) fp.f64(a.t).str(a.kind).f64(a.ball.x).f64(a.ball.y);
     });
+    for (const line of commentate(setup, result)) fp.f64(line.t).str(line.key);
   });
 }
 
