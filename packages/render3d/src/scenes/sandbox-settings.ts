@@ -9,6 +9,22 @@ import {
 } from '../camera/director.ts';
 
 export interface SandboxSettings {
+  /** Playable situation: free shot, pass then first-time shot, free kick, penalty, keeper. */
+  situation: moments.Situation;
+  situations: {
+    /** Pass situation layout (index in moments.PASS_LAYOUTS). */
+    passLayout: number;
+    /** Passer (PAS) and his composure. */
+    passing: number;
+    passComposure: number;
+    /** Receiver's pace (VIT). */
+    receiverPace: number;
+    /** Penalty gauge sweeps per second at zero pressure. */
+    gaugeSpeed: number;
+    /** Time scale while the player keeps goal, at reflexes 1 / 99 (more time for good keepers). */
+    keeperSlowMoLow: number;
+    keeperSlowMoHigh: number;
+  };
   shooter: {
     shotPower: number;
     curve: number;
@@ -143,6 +159,16 @@ export function defaultSandboxSettings(surface: physics.PhysicsSurface = 'grass'
   const keeper = moments.DEFAULT_KEEPER_TUNING;
   const defender = moments.DEFAULT_DEFENDER_TUNING;
   return {
+    situation: 'free-kick',
+    situations: {
+      passLayout: 0,
+      passing: 78,
+      passComposure: 70,
+      receiverPace: 78,
+      gaugeSpeed: 0.9,
+      keeperSlowMoLow: 0.55,
+      keeperSlowMoHigh: 0.3,
+    },
     shooter: {
       shotPower: 80,
       curve: 75,
@@ -306,22 +332,67 @@ export function toDefenderTuning(s: SandboxSettings): moments.DefenderTuning {
   };
 }
 
+/** Where the ball starts in the current situation (ground position, y = ball radius). */
+export function situationSpot(s: SandboxSettings): physics.Vec3 {
+  const r = physics.BALL.radius;
+  if (s.situation === 'penalty') {
+    const p = moments.penaltySpot();
+    return physics.v3(p.x, r, p.z);
+  }
+  if (s.situation === 'pass') {
+    const p = moments.passLayout(s.situations.passLayout).ball;
+    return physics.v3(p.x, r, p.z);
+  }
+  return physics.v3(physics.PITCH.goalLineX - s.spot.distance, r, s.spot.offset);
+}
+
+/** The keeper of the situation: set position, on his line (penalty) or the player's (keeper). */
+export function toKeeperSetup(
+  s: SandboxSettings,
+  commands: readonly moments.KeeperCommand[] = [],
+): moments.KeeperSetup | null {
+  if (!s.keeper.enabled && s.situation !== 'keeper' && s.situation !== 'penalty') return null;
+  const base = { attributes: toKeeperAttributes(s), tuning: toKeeperTuning(s) };
+  if (s.situation === 'penalty')
+    return { ...base, feet: moments.penaltyKeeperFeet(), mode: 'penalty' };
+  if (s.situation === 'keeper') return { ...base, mode: 'player', commands };
+  return base;
+}
+
+/** Time scale while the player keeps goal (more time with better reflexes). */
+export function keeperSlowMo(s: SandboxSettings): number {
+  const t = (s.keeper.reflexes - 1) / 98;
+  return (
+    s.situations.keeperSlowMoLow +
+    (s.situations.keeperSlowMoHigh - s.situations.keeperSlowMoLow) * t
+  );
+}
+
+function defenderAttributes(s: SandboxSettings): moments.DefenderAttributes {
+  const d = s.defenders;
+  return { pace: d.pace, defending: d.defending, physical: d.physical, heightCm: d.heightCm };
+}
+
 /**
- * Defenders of the sandbox for a ball at `spot`: the wall (placed by the engine, only when there
- * is room for 9.15 m) then the markers, between the ball and the goal, alternating sides.
+ * Defenders of the sandbox for a ball at `spot`, by situation: none for penalties and the
+ * keeper's save, the wall a keeper would ask for on a free kick, the layout's markers on a pass;
+ * the free shot takes the panel's wall (only with room for 9.15 m) and markers, between the ball
+ * and the goal, alternating sides.
  */
 export function toDefenderSetups(s: SandboxSettings, spot: physics.Vec3): moments.DefenderSetup[] {
   const d = s.defenders;
-  const attributes: moments.DefenderAttributes = {
-    pace: d.pace,
-    defending: d.defending,
-    physical: d.physical,
-    heightCm: d.heightCm,
-  };
-  const out: moments.DefenderSetup[] = [];
-  if (physics.PITCH.goalLineX - spot.x > 11) {
-    for (let i = 0; i < d.wall; i++) out.push({ role: 'wall', attributes });
+  const attributes = defenderAttributes(s);
+  if (s.situation === 'penalty' || s.situation === 'keeper') return [];
+  if (s.situation === 'pass') {
+    const layout = moments.passLayout(s.situations.passLayout);
+    return moments.markerSetups(layout, layout.markers.length, attributes);
   }
+  const out: moments.DefenderSetup[] = [];
+  const distance = physics.PITCH.goalLineX - spot.x;
+  const wall =
+    s.situation === 'free-kick' ? moments.wallSize(distance, spot.z) : distance > 11 ? d.wall : 0;
+  for (let i = 0; i < wall; i++) out.push({ role: 'wall', attributes });
+  if (s.situation === 'free-kick') return out;
   const toGoal = physics.v3(physics.PITCH.goalLineX - spot.x, 0, -spot.z);
   const len = Math.hypot(toGoal.x, toGoal.z);
   const dir = physics.v3(toGoal.x / len, 0, toGoal.z / len);

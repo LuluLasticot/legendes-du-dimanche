@@ -1,15 +1,29 @@
 // Persistence of the sandbox settings (per-viewer convenience in localStorage), validated with Zod
 // at the storage boundary: anything malformed or from an older version falls back to defaults.
 
-import { physics } from '@legendes/engine';
+import { moments, physics } from '@legendes/engine';
 import type { SandboxSettings } from '@legendes/render3d';
 import { z } from 'zod';
 
-const STORAGE_KEY = 'ldd.lab.ball.v6';
+const STORAGE_KEY = 'ldd.lab.ball.v7';
 
 const n = (min: number, max: number) => z.number().min(min).max(max);
 
 export const sandboxSettingsSchema = z.strictObject({
+  situation: z.enum(moments.SITUATIONS),
+  situations: z.strictObject({
+    passLayout: z
+      .number()
+      .int()
+      .min(0)
+      .max(moments.PASS_LAYOUTS.length - 1),
+    passing: n(1, 99),
+    passComposure: n(1, 99),
+    receiverPace: n(1, 99),
+    gaugeSpeed: n(0.1, 5),
+    keeperSlowMoLow: n(0.05, 1),
+    keeperSlowMoHigh: n(0.05, 1),
+  }),
   shooter: z.strictObject({
     shotPower: n(1, 99),
     curve: n(1, 99),

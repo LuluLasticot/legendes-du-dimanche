@@ -7,7 +7,11 @@ import * as THREE from 'three';
 
 export type CameraMode = 'auto' | 'behind' | 'chase' | 'side' | 'reverse' | 'high';
 export type ReplayAngle = 'side' | 'reverse' | 'chase' | 'high';
-export type ShotName = 'aim' | 'chase' | 'side' | 'reverse' | 'high' | 'keeper' | 'orbit' | 'hold';
+export type ShotName =
+  'aim' | 'chase' | 'side' | 'reverse' | 'high' | 'keeper' | 'orbit' | 'hold' | 'pass' | 'goalie';
+
+/** Whose eyes the moment is seen through: the shooter, the passer, or the keeper (player). */
+export type MomentView = 'shooter' | 'pass' | 'keeper';
 
 export interface DirectorSettings {
   mode: CameraMode;
@@ -96,6 +100,10 @@ export interface DirectorInput {
   readonly goal: Point;
   readonly keeper: Point | null;
   readonly result: ResultKind;
+  /** Default 'shooter'. */
+  readonly view?: MomentView;
+  /** Pass view: where the pass is going (receiver's meeting point). */
+  readonly focus?: Point | null;
 }
 
 export interface CameraPose {
@@ -174,6 +182,11 @@ export class CameraDirector {
   /** Which shot frames the moment now. */
   pickShot(input: DirectorInput): ShotName {
     const mode = this.settings.mode;
+    const view = input.view ?? 'shooter';
+    if (!input.replay && input.phase !== 'result') {
+      if (view === 'keeper') return 'goalie';
+      if (view === 'pass') return 'pass';
+    }
     if (input.phase === 'aiming') return 'aim';
     if (input.replay) return input.replay;
     if (input.phase === 'result') {
@@ -261,6 +274,28 @@ export class CameraDirector {
           fov: 40,
         };
       }
+      case 'pass': {
+        // High behind the ball, the receiver's area ahead: room to trace the pass on the grass.
+        const focus = input.focus ? v(input.focus) : new THREE.Vector3(goal.x - 11, 0, 0);
+        const anchor = input.phase === 'aiming' ? spot : ball;
+        const dir = flatDir(anchor, focus);
+        return {
+          position: anchor.clone().addScaledVector(dir, -11).setY(6),
+          target: anchor.clone().lerp(focus, 0.25).setY(0),
+          fov: 55,
+        };
+      }
+      case 'goalie': {
+        // Over the keeper's shoulder, from inside the goal (under the bar): steady, so the swipe
+        // maps to the goal.
+        const target = spot.clone().setY(0.9);
+        if (input.phase === 'flying') target.lerp(ball, 0.2);
+        return {
+          position: new THREE.Vector3(goal.x + 1.4, 1.6, spot.z <= 0 ? 0.8 : -0.8),
+          target,
+          fov: 62,
+        };
+      }
       case 'orbit': {
         const radius = 9;
         return {
@@ -332,7 +367,7 @@ export class CameraDirector {
    */
   timeScale(input: DirectorInput): number {
     const s = this.settings;
-    if (input.replay || input.phase === 'aiming') return 1;
+    if (input.replay || input.phase === 'aiming' || input.view === 'pass') return 1;
     if (input.phase === 'result')
       return this.resultTime < s.slowMoHold && input.result !== 'miss' ? s.slowMoScale : 1;
     const vx = input.ballVel.x;
