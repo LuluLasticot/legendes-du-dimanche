@@ -271,7 +271,7 @@ export function BallSandbox() {
 
       {perf && (
         <p
-          className={`pointer-events-none absolute right-3 bottom-16 rounded-md bg-pitch-950/75 px-2 py-1 font-mono text-[10px] backdrop-blur-sm ${
+          className={`pointer-events-none absolute right-3 bottom-4 rounded-md bg-pitch-950/75 px-2 py-1 font-mono text-[10px] backdrop-blur-sm ${
             perf.drawCalls > 150 || perf.triangles > 300_000 || perf.fps < 30
               ? 'text-danger'
               : 'text-chalk-muted'
