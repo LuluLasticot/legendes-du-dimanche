@@ -210,6 +210,12 @@ export function mountBallSandbox(
     }
   };
 
+  /** The stand reacts, voice and body. */
+  const cheer = (kind: 'goal' | 'ooh' | 'dismay'): void => {
+    audio.crowdReaction(kind === 'goal' ? 'goal' : 'ooh');
+    stadium.crowdReaction(kind);
+  };
+
   const prediction = makeLine(0xffd166, 0.9);
   const trail = makeLine(0xf4f1e8, 0.35);
   scene.add(prediction, trail);
@@ -1016,7 +1022,7 @@ export function mountBallSandbox(
       emitShot(currentReport);
     }
     shooterCtrl?.react('miss', 0);
-    audio.crowdReaction('ooh');
+    cheer('ooh');
     emitStep();
   };
 
@@ -1145,7 +1151,7 @@ export function mountBallSandbox(
       applyEffects(director.impact('post', event.speed, replaying));
       particles.emit('glint', event.pos, 14, fxRng, { x: -1, y: 0.3, z: 0 }, 1);
       audio.post(event.speed, panOf(event.pos.z));
-      audio.crowdReaction('ooh');
+      cheer('ooh');
     }
     if (event.type === 'bounce') {
       particles.emit(
@@ -1178,7 +1184,7 @@ export function mountBallSandbox(
           emitShot(currentReport);
           applyEffects(director.impact('save', event.speed, replaying));
           audio.gloves(event.kind, event.speed, panOf(event.pos.z));
-          audio.crowdReaction(settings.situation === 'keeper' ? 'goal' : 'ooh');
+          cheer(settings.situation === 'keeper' ? 'goal' : 'ooh');
         } else if (event.type === 'block' && currentReport) {
           currentReport = { ...currentReport, save: 'block', replay: replaying };
           emitShot(currentReport);
@@ -1207,7 +1213,7 @@ export function mountBallSandbox(
           applyEffects(director.impact('goal', 1, replaying));
           if (!replaying) {
             // Conceding in the keeper situation: the away end is quieter than the home one.
-            audio.crowdReaction(keeperGame ? 'ooh' : 'goal');
+            cheer(keeperGame ? 'dismay' : 'goal');
             audio.whistle(0.45, 0.9);
             if (!keeperGame) confetti();
           }
@@ -1218,7 +1224,7 @@ export function mountBallSandbox(
           const besidePost = Math.abs(p.z) - physics.GOAL.width / 2 < 1.5 && p.y < 3.2;
           const overBar =
             p.y - physics.GOAL.height < 1.2 && Math.abs(p.z) < physics.GOAL.width / 2 + 1;
-          if (besidePost || overBar) audio.crowdReaction('ooh');
+          if (besidePost || overBar) cheer('ooh');
         }
         emitStep();
       }

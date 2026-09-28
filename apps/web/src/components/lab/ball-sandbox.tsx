@@ -31,6 +31,8 @@ export function BallSandbox() {
   const [step, setStep] = useState<SandboxStep | null>(null);
   const [gauge, setGauge] = useState<number | null>(null);
   const [situation, setSituation] = useState<Situation | null>(null);
+  /** Performance readout (?stats in the URL): frame rate and the key-moment budgets. */
+  const [perf, setPerf] = useState<SandboxHandle['stats'] | null>(null);
   const selectSituationRef = useRef<(situation: Situation) => void>(() => {});
 
   useEffect(() => {
@@ -60,6 +62,9 @@ export function BallSandbox() {
         const offShot = handle.onShot(setReport);
         const offStep = handle.onStep(setStep);
         const offGauge = handle.onGauge(setGauge);
+        const statsTimer = new URLSearchParams(window.location.search).has('stats')
+          ? window.setInterval(() => setPerf({ ...handle.stats }), 500)
+          : null;
         setSituation(initial.situation);
 
         const tp = (key: string): string => t(`panel.${key}` as Parameters<typeof t>[0]);
@@ -106,6 +111,7 @@ export function BallSandbox() {
           offShot();
           offStep();
           offGauge();
+          if (statsTimer !== null) window.clearInterval(statsTimer);
           current?.pane.dispose();
           handle.dispose();
           handleRef.current = null;
@@ -262,6 +268,25 @@ export function BallSandbox() {
           {t('reset')}
         </button>
       </div>
+
+      {perf && (
+        <p
+          className={`pointer-events-none absolute top-14 left-3 rounded-md sm:top-auto sm:right-3 sm:bottom-4 sm:left-auto bg-pitch-950/75 px-2 py-1 font-mono text-[10px] backdrop-blur-sm ${
+            perf.drawCalls > 150 || perf.triangles > 300_000 || perf.fps < 30
+              ? 'text-danger'
+              : 'text-chalk-muted'
+          }`}
+        >
+          {t('hud.perf', {
+            fps: perf.fps.toFixed(0),
+            ms: perf.frameMs.toFixed(1),
+            calls: perf.drawCalls,
+            tris: (perf.triangles / 1000).toFixed(0),
+            quality: perf.quality,
+            res: Math.round(perf.resolution * 100),
+          })}
+        </p>
+      )}
 
       {failed && (
         <p className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-chalk">

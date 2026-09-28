@@ -185,6 +185,11 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - **Déterminisme.** Toutes les entrées sont rejouables : cible et tick de passe, geste de frappe, jauge, tick et cible du plongeon. Le self-test de déterminisme couvre désormais passes, penalties et plongeons commandés (nouvelle empreinte `0111a5785a9ba051`).
 - Tout se règle dans le dossier « Situation » du panneau (schéma de passe, notes du passeur et du receveur, vitesse de la jauge, ralenti du gardien). Des onglets permettent de passer d'une situation à l'autre.
 
+## D-022 — Public en tribune et mesure de performance (Phase 1, PR 14)
+
+- **Public** : une trentaine de spectateurs *low-poly* (tribune, habitués accoudés à la main courante près de la buvette, quelques-uns derrière le but), en **3 maillages instanciés** (corps, têtes, bras) : 3 appels de dessin, environ 5k triangles, sans ombre portée. Ils se balancent en attendant, sautent les bras levés sur un but, mettent les mains sur la tête sur un « ouh » ou un but encaissé en mode gardien. Réactions décalées au hasard (0 à 0,3 s) pour ne pas bouger en bloc ; 60 % du public en qualité basse.
+- **Mesure** : `/lab/ball?stats` affiche images/s, durée d'image, appels de dessin, triangles, niveau de qualité et résolution dynamique ; le compteur passe en rouge hors budget. Relevé sur desktop (qualité haute, coup franc avec mur et personnages) : 60 i/s, **53 appels de dessin, 121k triangles**, soit une large marge sur les budgets (150 / 300k).
+
 ## D-023 — Gardien : animations au sol, aide au plongeon, caméra portrait (Phase 1, PR 16)
 
 - **Recalage des gants séparé** en horizontal et vertical (`Character.anchor(part, cible, poids, poidsVertical)`), et le corps n'est **jamais poussé sous la pelouse** : corrige le gardien à moitié enfoncé sur les ballons bas. Après une prise ou à la fin d'un plongeon, le vertical se relâche (0,35 s) : le gardien retombe au sol au lieu de rester suspendu là où il a capté ; le ballon capté est affiché dans ses gants.

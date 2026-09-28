@@ -7,6 +7,7 @@ import { physics, Rng } from '@legendes/engine';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { QualityProfile } from '../core/quality.ts';
+import { Crowd, type CrowdReaction } from './crowd.ts';
 import { pitchMarkings, MARKING } from './markings.ts';
 import { impactAmplitude, impactLifetime, netOffset, type NetImpact } from './net-field.ts';
 
@@ -19,6 +20,8 @@ const RAIL_SIDE = 3;
 const RAIL_END = 4.5;
 /** Grass beyond the lines that belongs to the painted surface. */
 const MARGIN = 5;
+/** The little metal stand along the far touchline. */
+const STAND = { x0: 6, length: 32, steps: 5, stepDepth: 0.85, stepHeight: 0.45 } as const;
 
 export interface StadiumOptions {
   readonly surface: physics.PhysicsSurface;
@@ -261,6 +264,8 @@ export class Stadium {
   private readonly nets: Readonly<Record<'attack' | 'defence', Net>>;
   private readonly profile: QualityProfile;
   private surface: physics.PhysicsSurface;
+  private readonly crowd: Crowd;
+  private lastUpdate: number | null = null;
 
   constructor(scene: THREE.Scene, options: StadiumOptions) {
     this.scene = scene;
@@ -322,6 +327,29 @@ export class Stadium {
     this.buildClubhouse();
     this.buildFloodlights();
     this.buildSurroundings();
+    this.crowd = new Crowd(
+      {
+        stand: { x0: STAND.x0, length: STAND.length, z0: HZ + RAIL_SIDE + 2 },
+        stepDepth: STAND.stepDepth,
+        stepHeight: STAND.stepHeight,
+        steps: STAND.steps,
+        railZ: -(HZ + RAIL_SIDE),
+        railX: [6, 34],
+        endX: HX + RAIL_END,
+      },
+      this.profile.level === 'low' ? 0.6 : 1,
+    );
+    this.root.add(this.crowd.group);
+  }
+
+  /** Spectators in the ground (for tests and stats). */
+  get crowdSize(): number {
+    return this.crowd.size;
+  }
+
+  /** The crowd reacts: a goal, a near miss ("ouh"), a goal conceded. */
+  crowdReaction(kind: CrowdReaction): void {
+    this.crowd.react(kind);
   }
 
   setSurface(surface: physics.PhysicsSurface): void {
@@ -343,8 +371,11 @@ export class Stadium {
     net.moving = true;
   }
 
-  /** Animates the nets; `now` is the same clock as the impacts (simulated seconds). */
+  /** Animates the nets and the crowd; `now` is the clock of the impacts (simulated seconds). */
   update(now: number): void {
+    const dt = this.lastUpdate === null ? 0 : Math.max(0, Math.min(0.1, now - this.lastUpdate));
+    this.lastUpdate = now;
+    this.crowd.update(dt);
     for (const net of [this.nets.attack, this.nets.defence]) {
       if (!net.moving) continue;
       const lifetime = impactLifetime();
@@ -461,16 +492,15 @@ export class Stadium {
   /** Small covered metal stand along the right touchline, facing the pitch. */
   private buildStand(): void {
     const z0 = HZ + RAIL_SIDE + 2;
-    const x0 = 6;
-    const length = 32;
+    const { x0, length, stepDepth, stepHeight } = STAND;
     const steps: THREE.BufferGeometry[] = [];
-    for (let i = 0; i < 5; i++) {
-      const h = 0.45 * (i + 1);
+    for (let i = 0; i < STAND.steps; i++) {
+      const h = stepHeight * (i + 1);
       steps.push(
-        new THREE.BoxGeometry(length, h, 0.85).translate(
+        new THREE.BoxGeometry(length, h, stepDepth).translate(
           x0 + length / 2,
           h / 2,
-          z0 + i * 0.85 + 0.425,
+          z0 + i * stepDepth + stepDepth / 2,
         ),
       );
     }
@@ -481,7 +511,7 @@ export class Stadium {
     concrete.receiveShadow = true;
     concrete.castShadow = true;
 
-    const depth = 5 * 0.85;
+    const depth = STAND.steps * stepDepth;
     const metal = new THREE.MeshStandardMaterial({
       color: 0x46505a,
       roughness: 0.6,
