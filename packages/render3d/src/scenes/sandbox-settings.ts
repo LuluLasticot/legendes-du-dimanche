@@ -106,6 +106,22 @@ export interface SandboxSettings {
     deflectRestitution: number;
   };
   camera: DirectorSettings;
+  juice: {
+    trail: boolean;
+    /** Trail length in samples (≈ frames). */
+    trailLength: number;
+    trailWidth: number;
+    particles: boolean;
+    /** Multiplier on particle bursts. */
+    particleAmount: number;
+    confetti: boolean;
+  };
+  audio: {
+    enabled: boolean;
+    master: number;
+    effects: number;
+    crowd: number;
+  };
   /** Replay angle: cycled automatically or fixed. */
   cameraReplayAngle: 'auto' | ReplayAngle;
   debug: {
@@ -203,6 +219,15 @@ export function defaultSandboxSettings(surface: physics.PhysicsSurface = 'grass'
       deflectRestitution: defender.deflectRestitution,
     },
     camera: { ...DEFAULT_DIRECTOR_SETTINGS },
+    juice: {
+      trail: true,
+      trailLength: 28,
+      trailWidth: 0.12,
+      particles: true,
+      particleAmount: 1,
+      confetti: true,
+    },
+    audio: { enabled: true, master: 0.8, effects: 1, crowd: 0.7 },
     cameraReplayAngle: 'auto',
     debug: {
       prediction: true,

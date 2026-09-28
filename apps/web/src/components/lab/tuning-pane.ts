@@ -145,6 +145,18 @@ export function createTuningPane(
   num(camTuning, settings.camera, 'shakeGoal', 0, 1, 0.01);
   num(camTuning, settings.camera, 'flashGoal', 0, 1, 0.01);
 
+  const juice = folder('juice');
+  juice.addBinding(settings.audio, 'enabled', { label: t('audioEnabled') });
+  num(juice, settings.audio, 'master', 0, 1, 0.01, 'volumeMaster');
+  num(juice, settings.audio, 'effects', 0, 1.5, 0.01, 'volumeEffects');
+  num(juice, settings.audio, 'crowd', 0, 1.5, 0.01, 'volumeCrowd');
+  juice.addBinding(settings.juice, 'trail', { label: t('ballTrail') });
+  num(juice, settings.juice, 'trailLength', 2, 64, 1);
+  num(juice, settings.juice, 'trailWidth', 0.02, 0.4, 0.01);
+  juice.addBinding(settings.juice, 'particles', { label: t('particles') });
+  num(juice, settings.juice, 'particleAmount', 0, 3, 0.05);
+  juice.addBinding(settings.juice, 'confetti', { label: t('confetti') });
+
   const shot = folder('shot');
   shot.addBinding(settings.shot, 'lob', { label: t('lob') });
   num(shot, settings.shot, 'minSpeed', 2, 20, 0.5);

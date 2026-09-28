@@ -142,3 +142,13 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - **Effets d'impact centralisés** (arrêt sur image, secousse, flash) pour la frappe (selon la puissance), le but, l'arrêt, le poteau et le contre ; atténués de moitié en replay.
 - **Replay par re-simulation**, rejoué automatiquement après un but, avec un angle qui change à chaque fois (contrechamp → latéral → plongée → poursuite).
 - Tous les paramètres sont dans le dossier « Caméra » du panneau de `/lab/ball` (règle du CLAUDE.md : le ressenti se règle, il n'est pas codé en dur).
+
+## D-018 — « Juice » et audio (Phase 1, PR 9)
+
+- **Traînée du ballon** : ruban orienté vers la caméra, qui s'amincit vers la queue, avec une couleur HDR selon la vitesse (craie → or projecteur → orange vif) pour que le bloom la fasse briller. Un seul appel de dessin.
+- **Particules d'impact** (un seul appel de dessin, simulation sur le processeur, taille selon la qualité) : herbe, granulés de synthétique, boue, poussière de stabilisé, bouffée de filet, étincelles sur le poteau, **confettis derrière le but**. Tirages issus de la graine de l'action : **un replay montre exactement les mêmes éclats**. Elles suivent le temps simulé, donc ralentissent avec le ralenti.
+- **Audio 100 % synthétisé** (WebAudio, port de Carte du Ciel : bus principal, compresseur, réverbération courte « plein air », contournement du bouton silencieux de l'iPhone). **Aucun fichier son**, donc aucune question de licence (DONNEES-ET-LEGAL §6).
+  - Sons du jeu : frappe différente selon la surface, rebonds, filet, « bong » du poteau, gants (capté / repoussé), contre, sifflet à roulette.
+  - Tribune d'une trentaine de personnes : murmure continu, clameur et applaudissements épars sur un but, « ooh » sur un arrêt ou un poteau.
+  - Volumes séparés (général, effets, public, GDD §12.6). Le son se débloque au premier geste, comme l'exigent les navigateurs mobiles.
+- Tout est réglable dans le dossier « Effets et son » de `/lab/ball`.

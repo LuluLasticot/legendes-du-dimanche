@@ -11,7 +11,10 @@ import {
   type ReplayAngle,
   type ResultKind,
 } from '../camera/director.ts';
+import { MatchAudio } from '../audio/match-audio.ts';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
+import { ImpactParticles, surfaceParticles } from '../fx/particles.ts';
+import { BallTrail } from '../fx/trail.ts';
 import { Stadium } from '../stadium/stadium.ts';
 import { KEEPER_KIT, OPPONENT_KIT, PlayerFigure } from '../players/player-figure.ts';
 import {
@@ -123,6 +126,40 @@ export function mountBallSandbox(
   );
   ball.castShadow = true;
   scene.add(ball);
+
+  // ─── Juice ──────────────────────────────────────────────────────────────────
+  const ballTrail = new BallTrail(64);
+  const particles = new ImpactParticles(Math.round(900 * stage.profile.particles));
+  scene.add(ballTrail.mesh, particles.points);
+  const audio = new MatchAudio();
+  /** Seeded source for particle bursts: a replay shows the same bursts. */
+  let fxRng = Rng.create(0);
+  const applyJuiceSettings = (): void => {
+    ballTrail.length = settings.juice.trailLength;
+    ballTrail.width = settings.juice.trailWidth;
+    ballTrail.mesh.visible = settings.juice.trail;
+    particles.amount = settings.juice.particles ? settings.juice.particleAmount : 0;
+    audio.setEnabled(settings.audio.enabled);
+    audio.setVolumes({
+      master: settings.audio.master,
+      effects: settings.audio.effects,
+      crowd: settings.audio.crowd,
+    });
+  };
+  const panOf = (z: number): number => THREE.MathUtils.clamp((z - camera.position.z) / 12, -1, 1);
+  const confetti = (): void => {
+    if (!settings.juice.confetti) return;
+    for (let i = 0; i < 6; i++) {
+      particles.emit(
+        'confetti',
+        { x: PITCH.goalLineX + 4.5, y: 1.2, z: -9 + i * 3.6 },
+        22,
+        fxRng,
+        { x: -0.6, y: 1, z: 0 },
+        0.7,
+      );
+    }
+  };
 
   const prediction = makeLine(0xffd166, 0.9);
   const trail = makeLine(0xf4f1e8, 0.35);
@@ -282,6 +319,7 @@ export function mountBallSandbox(
     velocityArrow.visible = false;
     spinArrow.visible = false;
     ballPos.set(spot.x, spot.y, spot.z);
+    ballTrail.clear();
     director.cut();
     applyCamera(0);
   };
@@ -377,6 +415,23 @@ export function mountBallSandbox(
       director.cut();
     }
     applyEffects(director.impact('strike', report.power, replay));
+    // Juice of the strike: same seed → same bursts in the replay.
+    fxRng = Rng.create(momentSeed).fork('fx');
+    ballTrail.clear();
+    const toGoal = new THREE.Vector3(
+      PITCH.goalLineX - initial.pos.x,
+      0,
+      -initial.pos.z,
+    ).normalize();
+    particles.emit(
+      surfaceParticles(settings.pitch.surface),
+      initial.pos,
+      10 + 16 * report.power,
+      fxRng,
+      { x: toGoal.x * 0.6, y: 1, z: toGoal.z * 0.6 },
+      0.6,
+    );
+    audio.strike(report.power, settings.pitch.surface);
 
     const v = initial.vel;
     const speed = length3(v);
@@ -452,6 +507,8 @@ export function mountBallSandbox(
     };
   };
   const onPointerDown = (event: PointerEvent): void => {
+    // Browsers only allow audio after a user gesture.
+    if (audio.unlock()) audio.startMurmur();
     if (phase !== 'aiming' || pointerId !== null) return;
     pointerId = event.pointerId;
     canvas.setPointerCapture(event.pointerId);
@@ -508,14 +565,35 @@ export function mountBallSandbox(
             currentReport = { ...currentReport, save: event.kind, replay: replaying };
             emitShot(currentReport);
             applyEffects(director.impact('save', event.speed, replaying));
+            audio.gloves(event.kind, event.speed, panOf(event.pos.z));
+            audio.crowdReaction('ooh');
           }
           if (event.type === 'block' && currentReport) {
             currentReport = { ...currentReport, save: 'block', replay: replaying };
             emitShot(currentReport);
             applyEffects(director.impact('block', event.speed, replaying));
+            audio.block(event.speed, panOf(event.pos.z));
           }
-          if (event.type === 'frame') applyEffects(director.impact('post', event.speed, replaying));
+          if (event.type === 'frame') {
+            applyEffects(director.impact('post', event.speed, replaying));
+            particles.emit('glint', event.pos, 14, fxRng, { x: -1, y: 0.3, z: 0 }, 1);
+            audio.post(event.speed, panOf(event.pos.z));
+            audio.crowdReaction('ooh');
+          }
+          if (event.type === 'bounce') {
+            particles.emit(
+              surfaceParticles(settings.pitch.surface),
+              event.pos,
+              Math.min(14, event.speed),
+              fxRng,
+              { x: 0, y: 1, z: 0 },
+              0.9,
+            );
+            audio.bounce(event.speed, settings.pitch.surface, panOf(event.pos.z));
+          }
           if (event.type === 'net') {
+            particles.emit('net', event.pos, 10, fxRng, { x: -1, y: 0.2, z: 0 }, 1);
+            audio.net(event.speed, panOf(event.pos.z));
             stage.shake.add(Math.min(0.2, event.speed * 0.01));
             stadium.netImpact(event.pos, event.speed, simTime + (i + 1) * TICK_DT);
           }
@@ -524,7 +602,22 @@ export function mountBallSandbox(
           currentReport = { ...currentReport, outcome: moment.outcome, replay: replaying };
           if (!replaying && lastShot) lastShot = { ...lastShot, report: currentReport };
           emitShot(currentReport);
-          if (moment.outcome === 'goal') applyEffects(director.impact('goal', 1, replaying));
+          if (moment.outcome === 'goal') {
+            applyEffects(director.impact('goal', 1, replaying));
+            if (!replaying) {
+              audio.crowdReaction('goal');
+              audio.whistle(0.45, 0.9);
+              confetti();
+            }
+          }
+          // Near miss: the stand goes "ouuuh".
+          if ((moment.outcome === 'wide' || moment.outcome === 'over') && !replaying) {
+            const p = moment.flight.ball.pos;
+            const besidePost = Math.abs(p.z) - physics.GOAL.width / 2 < 1.5 && p.y < 3.2;
+            const overBar =
+              p.y - physics.GOAL.height < 1.2 && Math.abs(p.z) < physics.GOAL.width / 2 + 1;
+            if (besidePost || overBar) audio.crowdReaction('ooh');
+          }
         }
       }
       if (settings.debug.trail) setLine(trail, samples, 2);
@@ -558,6 +651,16 @@ export function mountBallSandbox(
       stage.clock.setTimeScale(base * director.timeScale(directorInput()), 0.06);
     }
     applyCamera(frame.wallDt);
+
+    // Trail and particles follow simulated time (slow motion slows them too).
+    if (phase === 'flying' && moment.keeper?.phase !== 'holding') {
+      const v = moment.flight.ball.vel;
+      ballTrail.push(ballPos, Math.hypot(v.x, v.y, v.z), camera.position);
+    }
+    particles.update(frame.simDt);
+    particles.setViewportHeight(
+      (stage.stats.height * stage.stats.pixelRatio) / (2 * Math.tan((camera.fov * Math.PI) / 360)),
+    );
     if (phase === 'flying') {
       // Ball spin, for the eye only.
       const w = moment.flight.ball.spin;
@@ -577,6 +680,7 @@ export function mountBallSandbox(
     stage.postSettings.flash = Math.max(0, stage.postSettings.flash - frame.wallDt * 2.5);
   });
 
+  applyJuiceSettings();
   placeBall();
 
   return {
@@ -586,6 +690,7 @@ export function mountBallSandbox(
         next.spot.distance !== settings.spot.distance || next.spot.offset !== settings.spot.offset;
       settings = next;
       director.settings = settings.camera;
+      applyJuiceSettings();
       stadium.setSurface(settings.pitch.surface);
       params = toPhysicsParams(settings);
       tuning = toShotTuning(settings);
@@ -629,6 +734,7 @@ export function mountBallSandbox(
       canvas.removeEventListener('pointercancel', onPointerCancel);
       gestureListeners.clear();
       shotListeners.clear();
+      audio.dispose();
       stadium.dispose();
       stage.dispose();
     },

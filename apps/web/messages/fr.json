@@ -121,7 +121,7 @@
         "debug": "Affichage et débogage",
         "prediction": "trajectoire prévue",
         "vectors": "vecteurs",
-        "trail": "trace du ballon",
+        "trail": "trace du ballon (débogage)",
         "timeScale": "vitesse du temps",
         "replayScale": "vitesse du ralenti",
         "seed": "graine",
@@ -207,7 +207,18 @@
           "side": "latéral (télé)",
           "reverse": "contrechamp du but",
           "high": "plongée"
-        }
+        },
+        "juice": "Effets et son",
+        "audioEnabled": "son activé",
+        "volumeMaster": "volume général",
+        "volumeEffects": "volume des effets",
+        "volumeCrowd": "volume du public",
+        "trailLength": "longueur de la traînée",
+        "trailWidth": "largeur de la traînée",
+        "particles": "particules d’impact",
+        "particleAmount": "quantité de particules",
+        "confetti": "confettis sur les buts",
+        "ballTrail": "traînée lumineuse"
       },
       "surfaces": {
         "grass": "Pelouse",
