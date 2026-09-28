@@ -5,7 +5,7 @@ import { moments, physics } from '@legendes/engine';
 import type { SandboxSettings } from '@legendes/render3d';
 import { z } from 'zod';
 
-const STORAGE_KEY = 'ldd.lab.ball.v7';
+const STORAGE_KEY = 'ldd.lab.ball.v8';
 
 const n = (min: number, max: number) => z.number().min(min).max(max);
 
@@ -23,6 +23,10 @@ export const sandboxSettingsSchema = z.strictObject({
     gaugeSpeed: n(0.1, 5),
     keeperSlowMoLow: n(0.05, 1),
     keeperSlowMoHigh: n(0.05, 1),
+    keeperHoldLow: n(0, 1),
+    keeperHoldHigh: n(0, 1),
+    keeperAssistLow: n(0, 1),
+    keeperAssistHigh: n(0, 1),
   }),
   shooter: z.strictObject({
     shotPower: n(1, 99),

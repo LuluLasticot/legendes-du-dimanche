@@ -258,6 +258,8 @@ const SELFTEST_KEEPER_TUNING: KeeperTuning = {
   maxShuffle: 0.5,
   penaltyReaction: 0.06,
   penaltyReadRange: [0.28, 0.58],
+  playerHoldRange: [0.15, 0.4],
+  playerAssistRange: [0.3, 0.7],
 };
 
 /** Frozen copy of the defender tuning, for the same reason as SELFTEST_PHYSICS. */

@@ -169,21 +169,23 @@ export class Character {
 
   /**
    * Shifts the character so that `part` sits at `target`, blended by `weight` (0 = no change,
-   * 1 = exactly on target). Call after place() and update(). `vertical` also moves the root up/down.
+   * 1 = exactly on target) sideways and by `verticalWeight` up/down. Call after place() and
+   * update().
    */
   anchor(
     part: BodyPart,
     target: { x: number; y: number; z: number },
     weight: number,
-    vertical = true,
+    verticalWeight = weight,
   ): void {
-    if (weight <= 0) return;
+    if (weight <= 0 && verticalWeight <= 0) return;
     const current = this.part(part, this.tmp);
     const dx = (target.x - current.x) * weight;
-    const dy = vertical ? (target.y - current.y) * weight : 0;
+    const dy = (target.y - current.y) * verticalWeight;
     const dz = (target.z - current.z) * weight;
     this.root.position.x += dx;
-    this.root.position.y += dy;
+    // Never below the grass: reaching a low ball is the pose's job, not a sunken body.
+    this.root.position.y = Math.max(0, this.root.position.y + dy);
     this.root.position.z += dz;
     this.root.updateMatrixWorld(true);
   }

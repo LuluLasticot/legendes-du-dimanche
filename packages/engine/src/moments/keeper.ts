@@ -65,6 +65,14 @@ export interface KeeperTuning {
   readonly penaltyReaction: number;
   /** Penalty: probability of reading the right side at positioning 1 → 99 (else a guess). */
   readonly penaltyReadRange: Range;
+  /**
+   * Player's keeper: how early a swipe may come (s) and still be held until the right moment,
+   * at reflexes 1 → 99. A swipe earlier than that dives at once and lands too early.
+   */
+  readonly playerHoldRange: Range;
+  /** Player's keeper: share of the way from the swiped spot to the ball, on the right side,
+   * at positioning 1 → 99. */
+  readonly playerAssistRange: Range;
 }
 
 export type KeeperMode = 'react' | 'penalty' | 'player';
@@ -87,6 +95,8 @@ export const DEFAULT_KEEPER_TUNING: KeeperTuning = {
   maxShuffle: 0.5,
   penaltyReaction: 0.06,
   penaltyReadRange: [0.28, 0.58],
+  playerHoldRange: [0.15, 0.4],
+  playerAssistRange: [0.3, 0.7],
 };
 
 const BODY_RADIUS = 0.2;
@@ -126,6 +136,13 @@ export interface KeeperState {
   /** −1 dives to his left side (−Z), +1 right (+Z), 0 no dive. */
   readonly diveSide: -1 | 0 | 1;
   readonly lastContactTick: Tick;
+  /** Player's keeper: the swiped dive, held until `startTick` (then the dive starts). */
+  readonly command: {
+    readonly target: Vec3;
+    readonly startTick: Tick;
+    readonly crossing: Vec3 | null;
+    readonly arrivalTick: Tick | null;
+  } | null;
 }
 
 export type KeeperContact =
@@ -207,6 +224,7 @@ export function createKeeper(
     diveTicks: 0,
     diveSide: 0,
     lastContactTick: -1000,
+    command: null,
   };
 }
 
@@ -313,6 +331,43 @@ function commitTo(
   };
 }
 
+/**
+ * The player's swipe, made playable: on the right side, the target is pulled towards the ball
+ * (positioning); a swipe a little early is held until the dive meets the ball (reflexes).
+ */
+function playerCommand(
+  keeper: KeeperState,
+  tick: Tick,
+  swiped: Vec3,
+  ball: BallState,
+  attributes: KeeperAttributes,
+  tuning: KeeperTuning,
+  flight: FlightContext,
+  rng: Rng,
+): NonNullable<KeeperState['command']> {
+  const read = readShot(ball, tick, keeper, attributes, tuning, flight, rng);
+  if (read === null) return { target: swiped, startTick: tick, crossing: null, arrivalTick: null };
+  const toSwipe = swiped.z - keeper.feet.z;
+  const toBall = read.crossing.z - keeper.feet.z;
+  const rightSide = toSwipe * toBall > 0 || Math.abs(toBall) < 0.5;
+  const assist = rightSide ? pick(tuning.playerAssistRange, attributes.positioning) : 0;
+  const target = v3(
+    swiped.x,
+    lerp(swiped.y, read.crossing.y, assist),
+    lerp(swiped.z, read.crossing.z, assist),
+  );
+  const reachable = reachableTarget(target, keeper.feet, attributes, tuning);
+  const duration = diveDuration(length(sub(reachable, keeper.hands)), attributes, tuning);
+  const ideal = read.arrivalTick - duration - 1;
+  const hold = secondsToTicks(pick(tuning.playerHoldRange, attributes.reflexes));
+  return {
+    target,
+    startTick: Math.max(tick, Math.min(ideal, tick + hold)),
+    crossing: read.crossing,
+    arrivalTick: read.arrivalTick,
+  };
+}
+
 /** Penalty: at the kick, the keeper reads the right side (positioning) or guesses one. */
 function penaltyCommit(
   keeper: KeeperState,
@@ -385,18 +440,15 @@ export function stepKeeper(
   }
 
   if (keeper.phase === 'set' && keeper.mode === 'player') {
-    if (command === null) return keeper;
-    // The crossing is known to the late correction only (reflexes), never to the commitment.
-    const read = readShot(ball, tick, keeper, attributes, tuning, flight, rng);
-    return commitTo(
-      keeper,
-      tick,
-      command,
-      read?.crossing ?? null,
-      read?.arrivalTick ?? null,
-      attributes,
-      tuning,
-    );
+    if (keeper.command === null && command !== null) {
+      keeper = {
+        ...keeper,
+        command: playerCommand(keeper, tick, command, ball, attributes, tuning, flight, rng),
+      };
+    }
+    const c = keeper.command;
+    if (c === null || tick < c.startTick) return keeper;
+    return commitTo(keeper, tick, c.target, c.crossing, c.arrivalTick, attributes, tuning);
   }
 
   if (keeper.phase === 'set' && keeper.mode === 'penalty') {

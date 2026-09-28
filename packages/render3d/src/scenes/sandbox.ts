@@ -464,6 +464,7 @@ export function mountBallSandbox(
       keeper: now.keeper ? now.keeper.head : null,
       result: resultKind(),
       view: view(),
+      aspect: camera.aspect,
       focus:
         pass?.state.receiver.meet?.feet ??
         passFocus ??
@@ -1312,6 +1313,9 @@ export function mountBallSandbox(
     const p0 = before.ball.pos;
     const p1 = now.ball.pos;
     ball.position.set(p0.x + (p1.x - p0.x) * a, p0.y + (p1.y - p0.y) * a, p0.z + (p1.z - p0.z) * a);
+    // Caught: the ball sits in the gloves on screen (the pose may not reach the engine's hands).
+    if (now.keeper?.phase === 'holding' && keeperCtrl)
+      keeperCtrl.character.part('hands', ball.position);
     ballPos.copy(ball.position);
 
     // Director: camera every frame (real time, fluid in slow motion) and slow motion.
