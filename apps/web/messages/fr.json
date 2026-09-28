@@ -326,5 +326,230 @@
         "set-piece": "Arrêt de jeu"
       }
     }
+  },
+  "commentary": {
+    "kickoff": {
+      "0": "C'est parti au stade ! Le ballon roule, la buvette aussi.",
+      "1": "Coup d'envoi donné par {team}. Le speaker vous souhaite un bon match, et un bon sandwich.",
+      "2": "L'arbitre siffle : le match commence, et la pelouse tient le coup pour l'instant.",
+      "3": "Les équipes sont en place, le vent aussi. À vous la main courante !"
+    },
+    "kickoff-second": {
+      "0": "C'est reparti pour la deuxième période, les jambes sont un peu plus lourdes.",
+      "1": "Retour des vestiaires : les causeries ont fait leur effet, on va voir ça.",
+      "2": "La seconde mi-temps commence, les coachs ont changé deux ou trois choses."
+    },
+    "goal": {
+      "0": "BUT de {player} ! {team} fait trembler les filets !",
+      "1": "{player} ne tremble pas : le ballon au fond, et la tribune explose !",
+      "2": "Oh, quel but ! {player} l'envoie tout droit dans les mailles de {opponent}.",
+      "3": "Ça fait but, {player} ! Ça sent la tournée générale.",
+      "4": "{player} conclut, {keeper} ne peut rien : {team} score !",
+      "5": "Le ballon file au fond ! {player} lève les bras, les copains lui sautent dessus."
+    },
+    "goal-opener": {
+      "0": "Ouverture du score ! {player} débloque le compteur pour {team}.",
+      "1": "Premier but du match : {player} met {team} devant, et tout le bord du terrain se réveille.",
+      "2": "{player} ouvre la marque ! Les supporters de {team} ont posé leur bière pour applaudir.",
+      "3": "Enfin un but ! {player} récompense {team} de son début de match.",
+      "4": "C'est {player} qui allume la première mèche : {team} mène 1 à 0."
+    },
+    "goal-equaliser": {
+      "0": "Égalisation ! {player} remet {team} à hauteur, le match repart à zéro.",
+      "1": "{player} plante l'égalisation : {score}, tout est à refaire !",
+      "2": "Ça y est, {team} est revenu ! {player} égalise et la tribune tremble.",
+      "3": "{player} n'a pas dit son dernier mot : {team} recolle au score.",
+      "4": "Égalité parfaite, merci {player} ! {opponent} avait pourtant cru tenir le coup."
+    },
+    "goal-late": {
+      "0": "Dans le money-time, {player} frappe fort : but à la {minute}e minute !",
+      "1": "À la {minute}e, {player} sort de sa boîte : {team} marque au bout du suspense !",
+      "2": "Un but tardif de {player} : les vestiaires vont sentir la joie, ou la rancune.",
+      "3": "{player} à la {minute}e minute ! Les jambes fatiguent, mais pas son pied droit.",
+      "4": "Quel timing, {player} ! À la {minute}e, le stade retient son souffle puis explose."
+    },
+    "goal-longrange": {
+      "0": "Mais quelle frappe de loin de {player} ! Le gardien n'a rien vu partir.",
+      "1": "{player} envoie une mine de trente mètres : les filets n'en reviennent pas.",
+      "2": "De très loin, {player} tente sa chance… et ça rentre ! On ne l'a pas volé, ou si peu.",
+      "3": "Une lucarne signée {player} ! Le but de la semaine, direction la buvette pour fêter ça."
+    },
+    "goal-header": {
+      "0": "De la tête, {player} ! Le centre était parfait, la reprise aussi.",
+      "1": "{player} s'élève plus haut que tout le monde et place sa tête : but !",
+      "2": "Un coup de tête vainqueur de {player}, le gardien est battu sur toute la ligne.",
+      "3": "Sur ce centre, {player} devance la défense et pique le ballon de la tête : {team} marque !"
+    },
+    "goal-penalty": {
+      "0": "{player} ne tremble pas sur le point de penalty : but !",
+      "1": "Penalty transformé par {player}, {keeper} plonge du bon côté mais trop tard.",
+      "2": "Sang-froid total : {player} envoie le ballon au fond sur penalty.",
+      "3": "{player} pose le ballon, prend son temps, et marque : le penalty fait mouche."
+    },
+    "goal-freekick": {
+      "0": "Coup franc magnifique de {player} ! Le mur a sauté, le ballon est passé dessus !",
+      "1": "Sur coup franc, {player} enroule sa frappe : but, et la sono se met à chanter.",
+      "2": "Le coup franc de {player} trouve la lucarne ! Les supporters n'en croient pas leurs yeux.",
+      "3": "{player} au coup franc, et c'est but ! Le gardien peut regretter son placement."
+    },
+    "save": {
+      "0": "Belle parade de {keeper} devant {player} !",
+      "1": "{keeper} est là ! Il détourne la frappe de {player} avec les deux mains.",
+      "2": "Arrêt décisif de {keeper} : {player} n'en revient pas.",
+      "3": "{player} frappe fort, {keeper} répond présent. Le gardien mérite son sandwich.",
+      "4": "Quelle intervention de {keeper} ! {opponent} devra encore attendre son but.",
+      "5": "{keeper} plonge et sauve son équipe, le public l'applaudit.",
+      "6": "Sur la frappe de {player}, {keeper} s'interpose : impeccable.",
+      "7": "{keeper} sort le grand jeu : l'arrêt du week-end, peut-être."
+    },
+    "miss": {
+      "0": "{player} frappe… dans les arbres ! Qui va chercher le ballon ?",
+      "1": "Ça passe à côté, {player} regarde le ciel.",
+      "2": "{player} tire au-dessus : le ballon finit peut-être chez le voisin.",
+      "3": "Frappe non cadrée de {player}, le gardien n'a même pas eu à bouger.",
+      "4": "{player} rate le cadre, un soupir s'échappe de la tribune.",
+      "5": "Le ballon de {player} rebondit sur la buvette. Non, vraiment, c'est loin des cages.",
+      "6": "Tir de {player} : ni cadré, ni dangereux, mais l'intention y était.",
+      "7": "{player} ajuste… et envoie le ballon dans le parking !"
+    },
+    "post": {
+      "0": "Le poteau ! {player} a le ballon au bout du pied, mais le bois dit non.",
+      "1": "Sur le poteau ! {player} n'en revient pas.",
+      "2": "La barre transversale sauve {opponent} ! {player} se tient la tête.",
+      "3": "{player} trouve le montant : ça tremble, mais ça ne rentre pas.",
+      "4": "Dong ! Le poteau résonne, {player} aussi.",
+      "5": "Un centimètre de plus et c'était but : {player} touche le poteau."
+    },
+    "block": {
+      "0": "{player} se jette et contre la frappe de {other} !",
+      "1": "Contre héroïque de {player} : {other} est stoppé net.",
+      "2": "La défense de {team} dresse un mur : {player} dévie la frappe.",
+      "3": "{player} met le corps devant, {other} enrage.",
+      "4": "Un défenseur au bon endroit : {player} bloque le tir, corner à la clé."
+    },
+    "foul": {
+      "0": "Faute de {player} sur {other}. L'arbitre siffle.",
+      "1": "{player} a été un peu rude avec {other} : coup franc.",
+      "2": "Ça tacle sec ! {player} touche {other}, l'arbitre n'a pas hésité.",
+      "3": "Coup de sifflet : {player} a mis le pied de trop sur {other}.",
+      "4": "{other} reste au sol, {player} lève les mains en signe d'innocence.",
+      "5": "Faute évidente de {player}. Sauf pour {player}, qui proteste.",
+      "6": "L'arbitre siffle une faute sur {other}, la tribune râle."
+    },
+    "yellow": {
+      "0": "Carton jaune pour {player} : l'arbitre note son nom dans le carnet.",
+      "1": "{player} prend un jaune, il va falloir se calmer.",
+      "2": "Jaune ! {player} discute un peu trop avec l'arbitre.",
+      "3": "Avertissement pour {player}, qui n'a pas trop apprécié.",
+      "4": "Le carton jaune sort de la poche : {player} est prévenu.",
+      "5": "{player} écope d'un jaune, et d'un regard noir du coach."
+    },
+    "red": {
+      "0": "Carton rouge pour {player} ! {team} va jouer à dix.",
+      "1": "Expulsion de {player} ! Direction les vestiaires, {team} est en difficulté.",
+      "2": "Rouge direct ! {player} sort, et {team} devra serrer les rangs.",
+      "3": "{player} voit rouge, littéralement. {team} se retrouve en infériorité.",
+      "4": "L'arbitre n'hésite pas : {player} est expulsé, la tribune n'en revient pas."
+    },
+    "injury": {
+      "0": "{player} reste au sol, le soigneur arrive avec l'éponge magique.",
+      "1": "Petit bobo pour {player}, qui se relève en boitant.",
+      "2": "{player} se tient la cheville : ce n'est peut-être rien, mais le coach s'inquiète.",
+      "3": "Le soigneur entre sur le terrain pour {player}, la bombe de froid fait son effet.",
+      "4": "{player} grimace, il ne finira sans doute pas le match."
+    },
+    "free-kick": {
+      "0": "Coup franc pour {team}, {player} se place derrière le ballon.",
+      "1": "Le mur se met en place, {player} regarde les cages.",
+      "2": "Coup franc bien placé : {player} va tenter sa chance.",
+      "3": "Ça se bouscule dans la surface, {player} est prêt à frapper.",
+      "4": "Coup franc pour {team}, l'arbitre fait reculer le mur de deux pas."
+    },
+    "penalty": {
+      "0": "Penalty ! {player} s'avance sous les sifflets.",
+      "1": "L'arbitre désigne le point de penalty : {player} prend ses responsabilités.",
+      "2": "Tout le stade retient son souffle : {player} face à {keeper}.",
+      "3": "Penalty pour {team} ! {player} pose le ballon, {keeper} se prépare.",
+      "4": "Le penalty est accordé, {opponent} conteste mais l'arbitre ne change pas d'avis.",
+      "5": "Ambiance électrique : {player} va tirer le penalty."
+    },
+    "corner": {
+      "0": "Corner pour {team}, {player} va le tirer.",
+      "1": "Le ballon sort derrière le but, corner : tous les grands montent.",
+      "2": "{player} se place au corner, la surface est pleine.",
+      "3": "Corner ! Ça se bouscule dans la surface, l'arbitre surveille.",
+      "4": "Corner pour {team}, on va voir si les têtes vont parler.",
+      "5": "Un corner de plus pour {team} : {player} le botte, ça sent le danger."
+    },
+    "offside": {
+      "0": "Hors-jeu de {player} : le drapeau se lève.",
+      "1": "L'arbitre assistant lève son drapeau : {player} était hors-jeu.",
+      "2": "{player} part trop tôt, hors-jeu !",
+      "3": "Le hors-jeu est signalé, {player} secoue la tête.",
+      "4": "Hors-jeu de {player}, la défense de {opponent} a bien remonté sa ligne.",
+      "5": "Drapeau levé : c'est hors-jeu pour {player}, coup franc pour {opponent}."
+    },
+    "throw-in": {
+      "0": "Touche pour {team}, {player} va la jouer vite.",
+      "1": "Le ballon sort en touche, {player} remet en jeu à la main.",
+      "2": "Touche pour {team}. Prière de ne pas mettre le ballon sur le toit du club-house.",
+      "3": "{player} prend la touche, il cherche un partenaire.",
+      "4": "Ballon sorti, touche pour {team}, ça respire un peu."
+    },
+    "goal-kick": {
+      "0": "Sortie de but pour {team}, {player} relance long.",
+      "1": "{player} dégage au pied depuis les six mètres.",
+      "2": "Le gardien remet en jeu : {player} cherche son attaquant.",
+      "3": "Sortie de but, {player} regarde autour de lui avant de dégager.",
+      "4": "{player} dégage loin devant : pourvu que ça retombe dans le bon camp."
+    },
+    "sub": {
+      "0": "Changement chez {team} : {player} entre, {other} sort.",
+      "1": "{player} remplace {other}, le coach change de plan.",
+      "2": "Le remplaçant {player} entre en jeu, {other} rejoint le banc sous les applaudissements.",
+      "3": "{team} change : {other} sort fatigué, {player} entre frais.",
+      "4": "{player} fait son entrée, {other} a donné tout ce qu'il pouvait."
+    },
+    "half-time": {
+      "0": "Mi-temps : les joueurs rejoignent les vestiaires, la buvette rouvre ses portes.",
+      "1": "Coup de sifflet, c'est la pause. Café ou bière ? Le speaker hésite.",
+      "2": "Fin de la première période : le score est {score}, tout reste possible.",
+      "3": "C'est la mi-temps, {score} : les coachs vont avoir des choses à dire.",
+      "4": "Pause de mi-temps : les vestiaires en préfabriqué sentent déjà la menthe forte."
+    },
+    "full-time-win": {
+      "0": "Fin du match ! {team} s'impose face à {opponent}, {score}.",
+      "1": "Coup de sifflet final : victoire de {team}, {score}. Les vestiaires vont chanter.",
+      "2": "{team} l'emporte {score}, et {opponent} rentre la tête basse.",
+      "3": "C'est terminé ! {team} gagne {score}, le président peut payer une tournée."
+    },
+    "full-time-draw": {
+      "0": "Fin du match : match nul {score}, chacun repart avec un point et des regrets.",
+      "1": "L'arbitre siffle la fin, {score} : personne ne gagne, personne ne perd, tout le monde râle.",
+      "2": "Match nul {score} entre {team} et {opponent}, un partage équitable.",
+      "3": "Ça se termine sur un {score} : les deux équipes se serrent la main."
+    },
+    "full-time-goalless": {
+      "0": "Fin du match, 0 à 0 : les gardiens ont fait leur travail, les attaquants un peu moins.",
+      "1": "Zéro-zéro : la buvette a été plus prolifique que les attaquants.",
+      "2": "Aucun but au tableau d'affichage, mais quel courage dans la défense !"
+    },
+    "spell": {
+      "0": "{team} fait tourner le ballon, patient, sans se presser.",
+      "1": "Longue possession pour {team} : {opponent} court après le ballon.",
+      "2": "{team} garde le ballon, les passes s'enchaînent sur la pelouse.",
+      "3": "Ça joue court chez {team}, {opponent} regarde passer le ballon.",
+      "4": "Le ballon circule bien : {team} contrôle le jeu."
+    },
+    "fatigue": {
+      "0": "Les jambes commencent à piquer : le rythme baisse sur la pelouse.",
+      "1": "On sent la fatigue, les remplaçants s'échauffent le long de la main courante.",
+      "2": "Le temps passe et les crampes s'annoncent : ça va être long pour les organismes."
+    },
+    "rain": {
+      "0": "Il pleut sur le stade : le ballon glisse et les tacles aussi.",
+      "1": "Sous la pluie, le terrain devient lourd, la buvette n'a jamais été aussi pleine.",
+      "2": "La pluie complique tout : passes hasardeuses et gardiens prudents."
+    }
   }
 }
