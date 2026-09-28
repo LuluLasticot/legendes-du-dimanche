@@ -291,40 +291,7 @@
       "gauge": "Puissance"
     },
     "match": {
-      "title": "Match (démo)",
-      "events": {
-        "goal": "But de {player} !",
-        "yellow": "Carton jaune pour {player}",
-        "red": "Carton rouge pour {player}",
-        "sub": "Changement : {player} remplace {other}",
-        "injury": "{player} reste au sol",
-        "penalty": "Penalty ! {player} s'avance",
-        "save": "Arrêt de {player} devant {other}",
-        "half-time": "Mi-temps",
-        "full-time": "Fin du match",
-        "offside": "Hors-jeu de {player}"
-      },
-      "stoppage": {
-        "kickoff": "Engagement",
-        "throw-in": "Touche",
-        "corner": "Corner",
-        "goal-kick": "Sortie de but",
-        "free-kick": "Coup franc",
-        "penalty": "Penalty !",
-        "foul": "Faute",
-        "offside": "Hors-jeu",
-        "goal": "BUT !",
-        "half-time": "Mi-temps",
-        "full-time": "Fin du match"
-      },
-      "phase": {
-        "kickoff": "Engagement",
-        "buildup": "Relance",
-        "progress": "Construction",
-        "attack": "Attaque placée",
-        "transition": "Transition",
-        "set-piece": "Arrêt de jeu"
-      }
+      "title": "Match"
     }
   },
   "commentary": {
@@ -550,6 +517,103 @@
       "0": "Il pleut sur le stade : le ballon glisse et les tacles aussi.",
       "1": "Sous la pluie, le terrain devient lourd, la buvette n'a jamais été aussi pleine.",
       "2": "La pluie complique tout : passes hasardeuses et gardiens prudents."
+    }
+  },
+  "match": {
+    "webglError": "WebGL 2 n'est pas disponible : l'action sera résolue par le coach.",
+    "prematch": {
+      "title": "Avant-match",
+      "rating": "note {rating}",
+      "formation": "Formation",
+      "style": "Style de jeu",
+      "mentality": "Mentalité",
+      "surface": "Terrain",
+      "rain": "Pluie",
+      "play": "Jouer les actions clés en 3D",
+      "playHint": "3 à 6 actions clés par match : tu traces la frappe, la passe, le penalty, ou tu plonges dans les cages.",
+      "autoHint": "Le coach résout les actions clés à ta place, un peu moins bien qu'un geste réussi.",
+      "start": "Coup d'envoi"
+    },
+    "style": {
+      "balanced": "Équilibré",
+      "possession": "Possession",
+      "counter": "Contre-attaque",
+      "long-ball": "Jeu long",
+      "high-press": "Pressing haut",
+      "low-block": "Bloc bas"
+    },
+    "mentality": {
+      "-2": "Ultra-défensive",
+      "-1": "Défensive",
+      "0": "Équilibrée",
+      "1": "Offensive",
+      "2": "Ultra-offensive"
+    },
+    "surface": {
+      "grass": "Pelouse",
+      "artificial": "Synthétique",
+      "muddy": "Terrain gras",
+      "dirt": "Stabilisé"
+    },
+    "moment": {
+      "shot": "Occasion ! {player} peut frapper",
+      "pass-shot": "Passe puis frappe : {player} est lancé",
+      "free-kick": "Coup franc de {player}",
+      "penalty": "Penalty ! {player} s'avance",
+      "keeper": "Face-à-face : c'est toi dans les cages",
+      "auto": "Laisser le coach jouer"
+    },
+    "phase": {
+      "kickoff": "Engagement",
+      "buildup": "Relance",
+      "progress": "Construction",
+      "attack": "Attaque placée",
+      "transition": "Transition",
+      "set-piece": "Arrêt de jeu"
+    },
+    "stoppage": {
+      "kickoff": "Engagement",
+      "throw-in": "Touche",
+      "corner": "Corner",
+      "goal-kick": "Sortie de but",
+      "free-kick": "Coup franc",
+      "penalty": "Penalty !",
+      "foul": "Faute",
+      "offside": "Hors-jeu",
+      "goal": "BUT !",
+      "half-time": "Mi-temps",
+      "full-time": "Fin du match"
+    },
+    "halftime": {
+      "title": "Mi-temps",
+      "pressing": "Pressing (1–5)",
+      "line": "Hauteur de la ligne (1–5)",
+      "subs": "Remplacements : {left} restants",
+      "out": "Sort",
+      "in": "Entre",
+      "substitute": "Remplacer",
+      "resume": "Deuxième mi-temps"
+    },
+    "fulltime": {
+      "win": "Victoire !",
+      "draw": "Match nul",
+      "loss": "Défaite",
+      "motm": "Homme du match : {player} ({rating})",
+      "replay": "Rejouer avec les mêmes entrées",
+      "again": "Nouveau match",
+      "replayOk": "Même match, à l'identique : {score}. Déterministe.",
+      "replayKo": "Le rejeu diffère : anomalie de déterminisme."
+    },
+    "stats": {
+      "title": "Statistiques du match",
+      "possession": "Possession",
+      "shots": "Tirs",
+      "onTarget": "Cadrés",
+      "xg": "Buts attendus",
+      "passes": "Passes réussies",
+      "corners": "Corners",
+      "fouls": "Fautes",
+      "cards": "Cartons jaunes / rouges"
     }
   }
 }

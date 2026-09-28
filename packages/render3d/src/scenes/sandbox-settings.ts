@@ -1,7 +1,7 @@
 // Settings of the ball sandbox (/lab/ball): everything that shapes the feel, exposed to the
 // tuning panel. Plain data (JSON-serialisable) mapped to engine parameters by `toEngine…`.
 
-import { moments, physics } from '@legendes/engine';
+import { moments, physics, sim } from '@legendes/engine';
 import {
   DEFAULT_DIRECTOR_SETTINGS,
   type DirectorSettings,
@@ -423,4 +423,54 @@ export function toDefenderSetups(s: SandboxSettings, spot: physics.Vec3): moment
     });
   }
   return out;
+}
+
+const MOMENT_SITUATION: Readonly<Record<sim.MomentKind, moments.Situation>> = {
+  shot: 'free',
+  'pass-shot': 'pass',
+  'free-kick': 'free-kick',
+  penalty: 'penalty',
+  keeper: 'keeper',
+};
+
+/** Sandbox settings for a key moment of a match: the players' cards, the spot, the weather. */
+export function settingsForMoment(
+  request: sim.MomentRequest,
+  conditions: sim.MatchConditions,
+): SandboxSettings {
+  const base = defaultSandboxSettings(conditions.surface);
+  const shot = sim.momentShotAttributes(request);
+  const keeper = request.keeper.keeper;
+  const spot = sim.momentSpot(request);
+  return {
+    ...base,
+    situation: MOMENT_SITUATION[request.kind],
+    situations: { ...base.situations, passLayout: request.seed % moments.PASS_LAYOUTS.length },
+    shooter: {
+      ...base.shooter,
+      ...shot,
+      weakFoot: false,
+      weakFootStars: request.shooter.weakFoot,
+      pressure: request.kind === 'penalty' ? 0.6 : 0.3,
+    },
+    spot: { distance: physics.PITCH.goalLineX - spot.x, offset: spot.z },
+    pitch: {
+      surface: conditions.surface,
+      windSpeed: conditions.windSpeed,
+      windDirection: conditions.windDirection,
+    },
+    keeper: {
+      ...base.keeper,
+      enabled: true,
+      diving: keeper.diving,
+      handling: keeper.handling,
+      reflexes: keeper.reflexes,
+      speed: keeper.speed,
+      positioning: keeper.positioning,
+      heightCm: keeper.heightCm,
+    },
+    defenders: { ...base.defenders, wall: 0, markers: request.kind === 'shot' ? 1 : 0 },
+    camera: { ...base.camera, autoReplay: false },
+    debug: { ...base.debug, seed: request.seed },
+  };
 }

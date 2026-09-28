@@ -27,6 +27,7 @@ export {
 export { mountPreviewScene, type PreviewHandle } from './scenes/preview.ts';
 export {
   mountBallSandbox,
+  type MomentResult,
   type SandboxHandle,
   type SandboxOutcome,
   type SandboxStep,
@@ -45,7 +46,11 @@ export {
   OPPONENT_KIT,
   type FigureKit,
 } from './players/player-figure.ts';
-export { toKeeperAttributes, toKeeperTuning } from './scenes/sandbox-settings.ts';
+export {
+  toKeeperAttributes,
+  toKeeperTuning,
+  settingsForMoment,
+} from './scenes/sandbox-settings.ts';
 export { toDefenderSetups, toDefenderTuning } from './scenes/sandbox-settings.ts';
 export {
   CameraDirector,
