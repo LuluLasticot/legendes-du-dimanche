@@ -33,6 +33,7 @@ import {
   v3,
   type PhysicsParams,
 } from '../physics/index.ts';
+import { demoTeam, simulateMatch } from '../sim/index.ts';
 import { DETERMINISM_GOLDEN } from './golden.ts';
 
 export { DETERMINISM_GOLDEN };
@@ -484,6 +485,31 @@ function situationSection(fp: Fingerprint): void {
   }
 }
 
+/** Whole matches: phases, duels, cards, fatigue, substitutions, conditions. */
+function matchSection(fp: Fingerprint): void {
+  const conditions = [
+    { surface: 'grass', rain: false, windSpeed: 0, windDirection: 0 },
+    { surface: 'muddy', rain: true, windSpeed: 7, windDirection: 40 },
+  ] as const;
+  conditions.forEach((c, i) => {
+    const result = simulateMatch({
+      seed: 1000 + i,
+      home: demoTeam(1000 + i, { id: 'home', name: 'Home', rating: 50 + i * 15 }),
+      away: demoTeam(2000 + i, { id: 'away', name: 'Away', rating: 58 }),
+      conditions: c,
+    });
+    fp.u32(result.score[0]).u32(result.score[1]).u32(result.actions.length).f64(result.duration);
+    for (const e of result.events)
+      fp.f64(e.t)
+        .str(e.kind)
+        .u32(e.team)
+        .str(e.player ?? '-');
+    result.actions.forEach((a, k) => {
+      if (k % 10 === 0) fp.f64(a.t).str(a.kind).f64(a.ball.x).f64(a.ball.y);
+    });
+  });
+}
+
 export function runDeterminismScenario(): DeterminismReport {
   const fp = new Fingerprint();
   rngSection(fp);
@@ -492,6 +518,7 @@ export function runDeterminismScenario(): DeterminismReport {
   shotSection(fp);
   momentSection(fp);
   situationSection(fp);
+  matchSection(fp);
   return { digest: fp.digest(), words: fp.size };
 }
 

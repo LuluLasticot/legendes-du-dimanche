@@ -8,13 +8,14 @@
 import { clamp, exp, hypot } from '../math/index.ts';
 import { Rng } from '../rng/index.ts';
 import { FORMATION_SLOTS } from './formations.ts';
-import type { MatchPlayer, MatchSetup, MatchTeam, PlayerAttributes } from './model.ts';
+import type { MatchPlayer, MatchSetup, MatchTeam, PlayerAttributes, Tactic } from './model.ts';
 import { POSITION_LINE, type Position } from './positions.ts';
 import { teamShape, toAbsolute, toTeamFrame, type Point } from './shape.ts';
 import {
   collectifs,
   effectiveAttributes,
   lineupPlayers,
+  playerById,
   playerRating,
   teamRating,
 } from './team.ts';
@@ -65,7 +66,11 @@ export type MatchEventKind =
   | 'penalty'
   | 'chance'
   | 'half-time'
-  | 'full-time';
+  | 'full-time'
+  | 'yellow'
+  | 'red'
+  | 'injury'
+  | 'sub';
 
 export interface MatchEvent {
   /** Match clock (seconds; 45:00 again at the start of the second half). */
@@ -89,6 +94,9 @@ export interface TeamStats {
   passesCompleted: number;
   corners: number;
   fouls: number;
+  yellows: number;
+  reds: number;
+  subs: number;
   /** Seconds with the ball. */
   possession: number;
 }
@@ -105,12 +113,25 @@ type Restart = 'kickoff' | 'throw-in' | 'corner' | 'goal-kick' | 'free-kick' | '
 
 interface SideState {
   readonly team: MatchTeam;
-  readonly players: readonly MatchPlayer[];
+  tactic: Tactic;
+  /** On the pitch, by formation slot (substitutions replace entries). */
+  readonly players: MatchPlayer[];
   readonly slots: readonly Position[];
-  readonly attributes: readonly PlayerAttributes[];
+  /** Attributes in the slot with collectifs, before fatigue. */
+  readonly base: PlayerAttributes[];
+  readonly collectif: readonly number[];
+  /** Energy 100 → 0 (fatigue), knocks (−20 %), cards. */
+  readonly energy: number[];
+  readonly knocked: boolean[];
+  readonly booked: boolean[];
+  readonly sentOff: boolean[];
+  readonly bench: MatchPlayer[];
   readonly keeperRating: number;
   readonly stats: TeamStats;
 }
+
+/** Substitutions per team (GDD §7.6). */
+export const MAX_SUBS = 5;
 
 const HALF = 45 * 60;
 const logistic = (x: number): number => 1 / (1 + exp(-x));
@@ -151,6 +172,7 @@ export class MatchSim {
   private finished = false;
   /** Amateur football: the lower the level, the more mistakes, the more goals. */
   private readonly levelFactor: number;
+  private readonly lastSub: [number, number] = [-Infinity, -Infinity];
 
   constructor(setup: MatchSetup) {
     this.setup = setup;
@@ -171,6 +193,7 @@ export class MatchSim {
   step(): boolean {
     if (this.finished) return false;
     const rng = this.rng.fork('phase', this.phase++);
+    this.autoSubstitutions();
     if (this.restart !== null) this.playRestart(rng);
     // Open play: a few actions until a shot, a stop or a turnover.
     for (let i = 0; i < 6 && this.restart === null && !this.clockCheck(); i++) {
@@ -203,17 +226,25 @@ export class MatchSim {
     const players = lineupPlayers(team);
     const slots = FORMATION_SLOTS[team.formation].map((s) => s.position);
     const points = collectifs(team);
-    const attributes = players.map((p, i) =>
-      effectiveAttributes(p, slots[i] ?? 'CM', points[i] ?? 0),
-    );
+    const base = players.map((p, i) => effectiveAttributes(p, slots[i] ?? 'CM', points[i] ?? 0));
     const keeper = players[0];
     return {
       team,
+      tactic: team.tactic,
       players,
       slots,
-      attributes,
+      base,
+      collectif: points,
+      energy: players.map(() => 100),
+      knocked: players.map(() => false),
+      booked: players.map(() => false),
+      sentOff: players.map(() => false),
+      bench: team.bench.map((id) => playerById(team, id)),
       keeperRating: keeper ? playerRating(keeper, 'GK') : 40,
       stats: {
+        yellows: 0,
+        reds: 0,
+        subs: 0,
         shots: 0,
         onTarget: 0,
         xg: 0,
@@ -236,6 +267,89 @@ export class MatchSim {
   private tick(seconds: number): void {
     this.t += seconds;
     this.sides[this.possession].stats.possession += seconds;
+    for (const s of this.sides) {
+      const press = 1 + (s.tactic.pressing - 3) * 0.12;
+      s.players.forEach((p, i) => {
+        const rate = 0.55 * (1.6 - p.stamina / 100) * press;
+        s.energy[i] = Math.max(0, (s.energy[i] ?? 100) - (seconds / 60) * rate);
+      });
+    }
+  }
+
+  /** Attributes of a player now: fatigue slows the legs first, a knock costs 20 %. */
+  private attr(side: Side, slot: number): PlayerAttributes {
+    const s = this.sides[side];
+    const b = s.base[slot] as PlayerAttributes;
+    const e = (s.energy[slot] ?? 100) / 100;
+    const k = s.knocked[slot] ? 0.8 : 1;
+    const legs = (0.8 + 0.2 * e) * k;
+    const head = (0.9 + 0.1 * e) * k;
+    return {
+      pace: b.pace * legs,
+      shooting: b.shooting * head,
+      passing: b.passing * head,
+      dribbling: b.dribbling * head,
+      defending: b.defending * head,
+      physical: b.physical * legs,
+    };
+  }
+
+  /** Players a side is missing (red cards). */
+  private missing(side: Side): number {
+    return this.sides[side].sentOff.filter(Boolean).length;
+  }
+
+  // ─── Player controls (half-time, the match screen) ─────────────────────────
+
+  /** Changes a team's tactic from now on. */
+  setTactic(side: Side, tactic: Tactic): void {
+    this.sides[side].tactic = tactic;
+  }
+
+  /** Replaces the player `outId` by the substitute `inId`; false if not allowed. */
+  substitute(side: Side, outId: string, inId: string): boolean {
+    const s = this.sides[side];
+    const slot = s.players.findIndex((p) => p.id === outId);
+    const bench = s.bench.findIndex((p) => p.id === inId);
+    if (slot < 0 || bench < 0 || s.sentOff[slot] || s.stats.subs >= MAX_SUBS) return false;
+    const incoming = s.bench[bench] as MatchPlayer;
+    s.bench.splice(bench, 1);
+    s.players[slot] = incoming;
+    s.base[slot] = effectiveAttributes(incoming, s.slots[slot] ?? 'CM', s.collectif[slot] ?? 0);
+    s.energy[slot] = 100;
+    s.knocked[slot] = false;
+    s.booked[slot] = false;
+    s.stats.subs++;
+    this.event('sub', side, inId, outId);
+    return true;
+  }
+
+  /** Coach's changes: a knocked player comes off, then the most tired after the hour. */
+  private autoSubstitutions(): void {
+    this.sides.forEach((s, index) => {
+      const side = index as Side;
+      if (s.stats.subs >= MAX_SUBS || s.bench.length === 0) return;
+      let slot = s.knocked.findIndex((k, i) => k && !s.sentOff[i]);
+      // Tired legs after the hour: one change every five minutes, the last one kept for knocks.
+      const fresh = this.t - (this.lastSub[side] ?? -Infinity) >= 5 * 60;
+      if (slot < 0 && this.half === 2 && this.t > 60 * 60 && fresh && s.stats.subs < MAX_SUBS - 1) {
+        let lowest = 70;
+        s.energy.forEach((e, i) => {
+          if (i > 0 && !s.sentOff[i] && e < lowest) {
+            lowest = e;
+            slot = i;
+          }
+        });
+      }
+      if (slot < 0) return;
+      const line = POSITION_LINE[s.slots[slot] ?? 'CM'];
+      const incoming =
+        s.bench.find((p) => POSITION_LINE[p.positions[0] ?? 'CM'] === line) ??
+        s.bench.find((p) => p.positions[0] !== 'GK');
+      const out = s.players[slot];
+      if (incoming && out && this.substitute(side, out.id, incoming.id))
+        this.lastSub[side] = this.t;
+    });
   }
 
   /** Handles half-time and full-time; true when play stopped. */
@@ -326,11 +440,11 @@ export class MatchSim {
     outfield = true,
   ): number {
     const s = this.sides[side];
-    const shape = teamShape(s.team.formation, s.team.tactic, p, inPossession);
+    const shape = teamShape(s.team.formation, s.tactic, p, inPossession);
     let best = outfield ? 1 : 0;
     let bestD = Infinity;
     for (let i = outfield ? 1 : 0; i < shape.length; i++) {
-      if (i === except) continue;
+      if (i === except || s.sentOff[i]) continue;
       const q = shape[i] as Point;
       const d = (q.x - p.x) * (q.x - p.x) + (q.y - p.y) * (q.y - p.y);
       if (d < bestD) {
@@ -384,7 +498,7 @@ export class MatchSim {
       case 'corner': {
         a.stats.corners++;
         this.ball = { x: rng.chance(0.5) ? 0 : 1, y: 1 };
-        this.carrier = this.taker(a, a.team.tactic.takers.corner, 'passing');
+        this.carrier = this.taker(a, a.tactic.takers.corner, 'passing');
         this.tick(rng.range(20, 35));
         this.record('corner', null, true);
         this.event('corner', this.possession, this.id(this.possession, this.carrier));
@@ -396,7 +510,7 @@ export class MatchSim {
         const danger = this.ball.y > 0.68 && Math.abs(this.ball.x - 0.5) < 0.25;
         this.event('free-kick', this.possession, this.id(this.possession, this.carrier));
         if (danger && rng.chance(0.65)) {
-          this.carrier = this.taker(a, a.team.tactic.takers.freeKick, 'shooting');
+          this.carrier = this.taker(a, a.tactic.takers.freeKick, 'shooting');
           this.record('free-kick', null, true);
           this.shoot(rng, 'free-kick');
         } else {
@@ -405,7 +519,7 @@ export class MatchSim {
         return;
       }
       case 'penalty': {
-        this.carrier = this.taker(a, a.team.tactic.takers.penalty, 'shooting');
+        this.carrier = this.taker(a, a.tactic.takers.penalty, 'shooting');
         this.ball = { x: 0.5, y: 1 - 11 / PITCH_L };
         this.tick(rng.range(40, 70));
         this.event('penalty', this.possession, this.id(this.possession, this.carrier));
@@ -428,8 +542,9 @@ export class MatchSim {
     const designated = id === undefined ? -1 : s.players.findIndex((p) => p.id === id);
     if (designated > 0) return designated;
     let best = 1;
-    for (let i = 1; i < s.attributes.length; i++) {
-      if ((s.attributes[i]?.[key] ?? 0) > (s.attributes[best]?.[key] ?? 0)) best = i;
+    for (let i = 1; i < s.base.length; i++) {
+      if (s.sentOff[i]) continue;
+      if ((s.base[i]?.[key] ?? 0) > (s.base[best]?.[key] ?? 0)) best = i;
     }
     return best;
   }
@@ -439,11 +554,11 @@ export class MatchSim {
   /** One decision of the carrier; false when the phase ends (turnover, shot, stop). */
   private playAction(rng: Rng): boolean {
     const a = this.attack();
-    const tactic = a.team.tactic;
+    const tactic = a.tactic;
     const surface = this.setup.conditions.surface;
     const y = this.ball.y;
     const wide = this.ball.x < 0.22 || this.ball.x > 0.78;
-    const attr = a.attributes[this.carrier] as PlayerAttributes;
+    const attr = this.attr(this.possession, this.carrier);
     const xgHere = shotXg(this.ball);
 
     // Utility of each option (ARCHITECTURE §4.2), then a seeded weighted pick.
@@ -500,24 +615,33 @@ export class MatchSim {
     const d = this.defence();
     const spot = toTeamFrame(this.ball, false, false);
     const slot = this.nearest(this.other(this.possession), spot, false);
-    const at = d.attributes[slot] as PlayerAttributes;
-    const pressing = (d.team.tactic.pressing - 3) * 2;
+    const at = this.attr(this.other(this.possession), slot);
+    const pressing = (d.tactic.pressing - 3) * 2;
+    // Down to ten: the others have more ground to cover.
+    const short = (this.missing(this.other(this.possession)) - this.missing(this.possession)) * 4;
     return {
       slot,
-      value: at[key] * 0.75 + at.pace * 0.25 + pressing + this.home(this.other(this.possession)),
+      value:
+        at[key] * 0.75 + at.pace * 0.25 + pressing + this.home(this.other(this.possession)) - short,
     };
   }
 
   private duel(rng: Rng, kind: 'pass' | 'dribble' | ActionKind): boolean {
     const a = this.attack();
-    const attr = a.attributes[this.carrier] as PlayerAttributes;
+    const attr = this.attr(this.possession, this.carrier);
     const isPass = kind === 'pass';
     const skill =
       (isPass ? attr.passing : attr.dribbling * 0.75 + attr.pace * 0.25) +
       this.home(this.possession);
     const defender = this.contest('defending');
     // Harder the closer to the opposing goal (the block is tighter there).
-    const base = (isPass ? 1.9 : 0.35) - this.ball.y * 0.9;
+    const { surface, rain } = this.setup.conditions;
+    const base =
+      (isPass ? 1.9 : 0.35) -
+      this.ball.y * 0.9 -
+      (isPass && surface === 'dirt' ? 0.15 : 0) -
+      (isPass && rain ? 0.1 : 0) -
+      (!isPass && surface === 'muddy' ? 0.25 : 0);
     const success = rng.chance(logistic(base + (skill - defender.value) * SKILL));
     this.tick(isPass ? rng.range(3, 7) : rng.range(3, 6));
     if (isPass) a.stats.passes++;
@@ -546,16 +670,17 @@ export class MatchSim {
   /** Ball lost to `winner`: maybe a foul (free kick / penalty) instead. */
   private lose(rng: Rng, kind: 'interception' | 'tackle', winner: number): boolean {
     const d = this.defence();
-    const foulChance = (kind === 'tackle' ? 0.2 : 0.06) + (d.team.tactic.pressing - 3) * 0.02;
+    const foulChance = (kind === 'tackle' ? 0.2 : 0.06) + (d.tactic.pressing - 3) * 0.02;
     if (rng.chance(foulChance)) {
       d.stats.fouls++;
       const fouled = this.id(this.possession, this.carrier);
-      this.event(
-        'foul',
-        this.other(this.possession),
-        this.id(this.other(this.possession), winner),
-        fouled,
-      );
+      const offender = this.other(this.possession);
+      this.event('foul', offender, this.id(offender, winner), fouled);
+      this.discipline(rng, offender, winner, kind === 'tackle' ? 0.13 : 0.04);
+      if (rng.chance(0.025)) {
+        this.attack().knocked[this.carrier] = true;
+        this.event('injury', this.possession, fouled);
+      }
       const inBox = this.ball.y > 0.84 && Math.abs(this.ball.x - 0.5) < 0.2;
       this.restart = inBox && rng.chance(0.3) ? 'penalty' : 'free-kick';
       return false;
@@ -567,10 +692,32 @@ export class MatchSim {
     return false;
   }
 
+  /** Cards after a foul: yellow, second yellow, or (rarely) a straight red. */
+  private discipline(rng: Rng, side: Side, slot: number, yellow: number): void {
+    const s = this.sides[side];
+    const id = this.id(side, slot);
+    const straight = rng.chance(0.003);
+    // Once booked, a player goes into his tackles more carefully.
+    if (!straight && !rng.chance(s.booked[slot] ? yellow * 0.4 : yellow)) return;
+    if (!straight && !s.booked[slot]) {
+      s.booked[slot] = true;
+      s.stats.yellows++;
+      this.event('yellow', side, id);
+      return;
+    }
+    if (!straight) {
+      s.stats.yellows++;
+      this.event('yellow', side, id);
+    }
+    s.sentOff[slot] = true;
+    s.stats.reds++;
+    this.event('red', side, id);
+  }
+
   /** Long ball forward (or a clearance, `from` y): won in the air or lost. */
   private longBall(rng: Rng, minY = 0): boolean {
     const a = this.attack();
-    const attr = a.attributes[this.carrier] as PlayerAttributes;
+    const attr = this.attr(this.possession, this.carrier);
     a.stats.passes++;
     const target: Point = {
       x: clamp(this.ball.x + rng.normal(0, 0.25), 0.05, 0.95),
@@ -578,9 +725,15 @@ export class MatchSim {
     };
     this.tick(rng.range(4, 8));
     const receiver = this.nearest(this.possession, target, true, this.carrier);
-    const aerial = (a.attributes[receiver] as PlayerAttributes).physical;
+    const aerial = this.attr(this.possession, receiver).physical;
     const defender = this.contest('pace');
-    const p = logistic(-0.2 + (attr.passing * 0.5 + aerial * 0.5 - defender.value) * SKILL);
+    // A high line leaves space behind it; wind carries long balls away.
+    const behind = target.y > 0.7 ? (this.defence().tactic.lineHeight - 3) * 4 : 0;
+    const p = logistic(
+      -0.2 -
+        this.setup.conditions.windSpeed * 0.02 +
+        (attr.passing * 0.5 + aerial * 0.5 - defender.value + behind) * SKILL,
+    );
     this.ball = target;
     if (rng.chance(p)) {
       a.stats.passesCompleted++;
@@ -601,15 +754,14 @@ export class MatchSim {
 
   /** Cross into the box: a header or a volley, or cleared. */
   private cross(rng: Rng): void {
-    const a = this.attack();
-    const attr = a.attributes[this.carrier] as PlayerAttributes;
+    const attr = this.attr(this.possession, this.carrier);
     this.tick(rng.range(3, 6));
     const target: Point = {
       x: clamp(0.5 + rng.normal(0, 0.1), 0.3, 0.7),
       y: rng.range(0.86, 0.95),
     };
     const receiver = this.nearest(this.possession, target, true, this.carrier);
-    const aerial = a.attributes[receiver] as PlayerAttributes;
+    const aerial = this.attr(this.possession, receiver);
     const defender = this.contest('defending');
     const p = logistic(
       -0.9 + (attr.passing * 0.5 + aerial.physical * 0.5 - defender.value) * SKILL,
@@ -646,7 +798,7 @@ export class MatchSim {
     const a = this.attack();
     const d = this.defence();
     const side = this.possession;
-    const shooter = a.attributes[this.carrier] as PlayerAttributes;
+    const shooter = this.attr(this.possession, this.carrier);
     const player = a.players[this.carrier] as MatchPlayer;
     let xg =
       kind === 'penalty'
