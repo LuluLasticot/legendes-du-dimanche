@@ -23,7 +23,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:deno": "deno test --no-config --no-lock test/determinism.deno.ts",
-    "determinism:update": "node scripts/update-golden.ts"
+    "determinism:update": "node scripts/update-golden.ts",
+    "stats": "node scripts/match-stats.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
