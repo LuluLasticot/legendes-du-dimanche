@@ -43,6 +43,8 @@ export class ShooterController {
     velocity: THREE.Vector3;
     final: THREE.Vector3;
     elapsed: number;
+    /** Clip time the strike started at (first-time strikes start close to contact). */
+    from: number;
     locked: THREE.Vector3 | null;
   } | null = null;
   private rest: { position: THREE.Vector3; yaw: number } | null = null;
@@ -87,15 +89,39 @@ export class ShooterController {
   }
 
   /**
-   * Starts the run-up and strike towards `direction`. Returns the real-time delay (seconds at
-   * rate 1 of the scene) until the foot meets the ball: the physics must start exactly then.
+   * Running (receiver's run): feet on the engine's position, facing the run (or `look` when
+   * standing), run or sprint cycle by speed.
    */
-  startStrike(ball: Point, direction: Point, power: number): number {
-    const clip = 'player_penalty_kick';
+  follow(feet: Point, vel: Point, look: Point): void {
+    const speed = Math.hypot(vel.x, vel.z);
+    const yaw =
+      speed > 0.5
+        ? Character.yawFacing(vel.x, vel.z)
+        : Character.yawFacing(look.x - feet.x, look.z - feet.z);
+    this.strike = null;
+    this.rest = { position: new THREE.Vector3(feet.x, 0, feet.z), yaw };
+    if (speed > 6) this.character.loop('player_sprint', 0.15, speed / 8);
+    else if (speed > 0.5) this.character.loop('player_run', 0.15, speed / 5.5);
+    else this.character.loop('player_idle', 0.25);
+  }
+
+  /**
+   * Starts the strike towards `direction`: full run-up by default, or (`lead`, seconds) only the
+   * last part of the swing, for a first-time shot on a moving ball. Returns the real-time delay
+   * (seconds at rate 1 of the scene) until the foot meets the ball: the physics starts then.
+   */
+  startStrike(
+    ball: Point,
+    direction: Point,
+    power: number,
+    options: { clip?: string; lead?: number } = {},
+  ): number {
+    const clip = options.clip ?? 'player_penalty_kick';
     const meta = this.character.clipMeta(clip);
     const contact = meta?.contact;
     if (!meta || !contact) return 0;
     const rate = 1.15 + power * 0.25;
+    const from = options.lead === undefined ? 0 : Math.max(0, contact.time - options.lead * rate);
     const yaw = Character.yawFacing(direction.x, direction.z);
     const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
     // Removed run-up travel, as a constant velocity through the clip.
@@ -118,11 +144,12 @@ export class ShooterController {
       yaw,
       velocity,
       final,
-      elapsed: 0,
+      elapsed: from,
+      from,
       locked: null,
     };
-    this.character.play(clip, { fade: 0.12, timeScale: rate });
-    return contact.time / rate;
+    this.character.play(clip, { fade: from > 0 ? 0.05 : 0.12, timeScale: rate, startAt: from });
+    return (contact.time - from) / rate;
   }
 
   react(kind: ShooterReaction, pick: number): void {
@@ -147,7 +174,7 @@ export class ShooterController {
     s.elapsed += dt * s.rate;
     const t = Math.min(c.time, s.elapsed);
     const base = s.final.clone().addScaledVector(s.velocity, t - s.contactTime);
-    if (this.rest) base.lerp(this.rest.position, 1 - smooth(t / 0.25));
+    if (this.rest) base.lerp(this.rest.position, 1 - smooth((t - s.from) / 0.25));
     c.place(base, s.yaw);
     c.update(dt);
     if (s.locked) {
@@ -155,7 +182,7 @@ export class ShooterController {
       c.root.updateMatrixWorld(true);
     } else {
       // Recalage: the run-up bends towards the ball so the toe meets it exactly at contact.
-      const w = smooth(t / s.contactTime);
+      const w = smooth((t - s.from) / Math.max(1e-3, s.contactTime - s.from));
       const before = c.root.position.clone();
       c.anchor('rightToe', s.ball, w, false);
       if (t >= s.contactTime) s.locked = c.root.position.clone().sub(before);

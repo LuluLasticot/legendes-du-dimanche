@@ -5,6 +5,10 @@
 //    (positioning; curl makes it harder).
 // 3. Action: shuffle (close balls) or dive, bounded by a reach envelope (diving, height).
 // 4. Contact: catch or parry, probability from handling, ball speed and stretch (seeded draw).
+//
+// Modes: 'react' (open play and free kicks, above), 'penalty' (on his line, commits at the kick:
+// right side read or a guess) and 'player' (the dive is commanded by the player's swipe; the
+// attributes still set reach, speed, late correction and handling).
 
 import { clamp, lerp, sqrt } from '../math/index.ts';
 import type { BallState } from '../physics/ball.ts';
@@ -57,7 +61,13 @@ export interface KeeperTuning {
   readonly lateAdjustRange: Range;
   /** Furthest the keeper can shuffle from his set position before diving (m): a step or two. */
   readonly maxShuffle: number;
+  /** Penalty: delay (s) between the kick and the keeper's commitment. */
+  readonly penaltyReaction: number;
+  /** Penalty: probability of reading the right side at positioning 1 → 99 (else a guess). */
+  readonly penaltyReadRange: Range;
 }
+
+export type KeeperMode = 'react' | 'penalty' | 'player';
 
 export const DEFAULT_KEEPER_TUNING: KeeperTuning = {
   reactionRange: [0.32, 0.13],
@@ -75,6 +85,8 @@ export const DEFAULT_KEEPER_TUNING: KeeperTuning = {
   parryRestitution: 0.38,
   lateAdjustRange: [0.05, 0.22],
   maxShuffle: 0.5,
+  penaltyReaction: 0.06,
+  penaltyReadRange: [0.28, 0.58],
 };
 
 const BODY_RADIUS = 0.2;
@@ -87,6 +99,7 @@ const CONTACT_COOLDOWN = 12;
 export type KeeperPhase = 'set' | 'tracking' | 'diving' | 'grounded' | 'holding';
 
 export interface KeeperState {
+  readonly mode: KeeperMode;
   readonly phase: KeeperPhase;
   /** Feet position on the ground. */
   readonly feet: Vec3;
@@ -171,9 +184,13 @@ export function createKeeper(
   attributes: KeeperAttributes,
   tuning: KeeperTuning,
   rng: Rng,
+  mode: KeeperMode = 'react',
 ): KeeperState {
-  const reaction = pick(tuning.reactionRange, attributes.reflexes) * (1 + rng.normal(0, 0.08));
+  const base =
+    mode === 'penalty' ? tuning.penaltyReaction : pick(tuning.reactionRange, attributes.reflexes);
+  const reaction = base * (1 + rng.normal(0, 0.08));
   return {
+    mode,
     phase: 'set',
     feet,
     setFeet: feet,
@@ -264,7 +281,86 @@ function easeOutQuad(t: number): number {
   return 1 - (1 - t) * (1 - t);
 }
 
-/** Advances the keeper by one tick (before contact resolution). */
+/** Dive towards `target` (hands), starting now; a close target is taken standing. */
+function commitTo(
+  keeper: KeeperState,
+  tick: Tick,
+  target: Vec3,
+  crossing: Vec3 | null,
+  arrivalTick: Tick | null,
+  attributes: KeeperAttributes,
+  tuning: KeeperTuning,
+): KeeperState {
+  const reachable = reachableTarget(target, keeper.feet, attributes, tuning);
+  const gap = length(sub(reachable, keeper.hands));
+  const read = {
+    ...keeper,
+    crossing,
+    arrivalTick,
+    readTick: tick,
+    readOffset: v3(0, 0, 0),
+    target: reachable,
+  };
+  // Close ball: stay up and track it with the hands.
+  if (gap < 0.55) return { ...read, phase: 'tracking' };
+  return {
+    ...read,
+    phase: 'diving',
+    diveFrom: keeper.hands,
+    diveStartTick: tick,
+    diveTicks: diveDuration(gap, attributes, tuning),
+    diveSide: reachable.z < keeper.feet.z ? -1 : 1,
+  };
+}
+
+/** Penalty: at the kick, the keeper reads the right side (positioning) or guesses one. */
+function penaltyCommit(
+  keeper: KeeperState,
+  tick: Tick,
+  ball: BallState,
+  attributes: KeeperAttributes,
+  tuning: KeeperTuning,
+  flight: FlightContext,
+  rng: Rng,
+): KeeperState {
+  const read = readShot(ball, tick, keeper, attributes, tuning, flight, rng);
+  if (read === null) return { ...keeper, phase: 'tracking' };
+  const readsIt = rng.chance(pick(tuning.penaltyReadRange, attributes.positioning));
+  const stays = rng.chance(0.12);
+  const side = rng.chance(0.5) ? -1 : 1;
+  const height = 0.3 + rng.float() * 1.3;
+  const guess = stays
+    ? v3(handsPlaneX(keeper.feet), 1.1, keeper.feet.z)
+    : v3(handsPlaneX(keeper.feet), height, keeper.feet.z + side * 2.6);
+  const target = readsIt ? add(read.crossing, scale(read.offset, 1.5)) : guess;
+  return commitTo(keeper, tick, target, read.crossing, read.arrivalTick, attributes, tuning);
+}
+
+/** Keeper's move before the shot (e.g. during a pass): back to the set position for `ballPos`. */
+export function keeperFollow(
+  keeper: KeeperState,
+  ballPos: Vec3,
+  attributes: KeeperAttributes,
+  tuning: KeeperTuning,
+): KeeperState {
+  const wanted = keeperSetPosition(ballPos, attributes, tuning);
+  const step = pick(tuning.shuffleSpeedRange, attributes.speed) * 1.4 * TICK_DT;
+  const d = sub(wanted, keeper.feet);
+  const gap = length(d);
+  const feet = gap <= step ? wanted : add(keeper.feet, scale(d, step / gap));
+  return {
+    ...keeper,
+    feet,
+    setFeet: feet,
+    hands: restingHands(feet),
+    head: restingHead(feet, attributes),
+  };
+}
+
+/**
+ * Advances the keeper by one tick (before contact resolution). In 'player' mode, `command` is
+ * the dive target swiped by the player this tick (null otherwise).
+ */
 export function stepKeeper(
   current: KeeperState,
   tick: Tick,
@@ -273,6 +369,7 @@ export function stepKeeper(
   tuning: KeeperTuning,
   flight: FlightContext,
   rng: Rng,
+  command: Vec3 | null = null,
 ): KeeperState {
   let keeper = current;
   if (keeper.phase === 'holding') return keeper;
@@ -285,6 +382,26 @@ export function stepKeeper(
       hands: v3(keeper.hands.x, Math.max(0.25, keeper.hands.y - fall), keeper.hands.z),
       head: v3(keeper.head.x, Math.max(0.3, keeper.head.y - fall), keeper.head.z),
     };
+  }
+
+  if (keeper.phase === 'set' && keeper.mode === 'player') {
+    if (command === null) return keeper;
+    // The crossing is known to the late correction only (reflexes), never to the commitment.
+    const read = readShot(ball, tick, keeper, attributes, tuning, flight, rng);
+    return commitTo(
+      keeper,
+      tick,
+      command,
+      read?.crossing ?? null,
+      read?.arrivalTick ?? null,
+      attributes,
+      tuning,
+    );
+  }
+
+  if (keeper.phase === 'set' && keeper.mode === 'penalty') {
+    if (tick < keeper.reactionTick) return keeper;
+    return penaltyCommit(keeper, tick, ball, attributes, tuning, flight, rng);
   }
 
   if (keeper.phase === 'set') {

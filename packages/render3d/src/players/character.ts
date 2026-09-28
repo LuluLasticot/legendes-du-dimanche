@@ -80,6 +80,17 @@ export class Character {
     });
   }
 
+  /** See-through body (e.g. the keeper seen over his shoulder): 1 = opaque. */
+  setOpacity(opacity: number): void {
+    const transparent = opacity < 1;
+    for (const material of this.materials) {
+      if (material.transparent !== transparent) material.needsUpdate = true;
+      material.transparent = transparent;
+      material.opacity = opacity;
+      material.depthWrite = !transparent;
+    }
+  }
+
   clipMeta(name: string): ClipMeta | undefined {
     return this.asset.meta.clips[name];
   }

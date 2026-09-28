@@ -6,11 +6,20 @@
 import { Fingerprint } from '../hash/index.ts';
 import {
   applyExecutionError,
+  applyPassError,
+  firstTimeDifficulty,
+  passBall,
+  passerProfile,
+  penaltyGauge,
   shooterProfile,
+  simulatePassMoment,
   simulateShotMoment,
+  solvePass,
   solveShot,
   type DefenderTuning,
   type KeeperTuning,
+  type PassTuning,
+  type ReceiverTuning,
   type ShotTuning,
 } from '../moments/index.ts';
 import * as m from '../math/index.ts';
@@ -180,6 +189,7 @@ const SELFTEST_SHOT_TUNING: ShotTuning = {
   pressurePenalty: 1,
   lobBackspin: 25,
   paceErrorRatio: 0.6,
+  difficultyPenalty: 1.5,
 };
 
 /** Shot solver + seeded execution error. */
@@ -246,6 +256,8 @@ const SELFTEST_KEEPER_TUNING: KeeperTuning = {
   parryRestitution: 0.38,
   lateAdjustRange: [0.05, 0.22],
   maxShuffle: 0.5,
+  penaltyReaction: 0.06,
+  penaltyReadRange: [0.28, 0.58],
 };
 
 /** Frozen copy of the defender tuning, for the same reason as SELFTEST_PHYSICS. */
@@ -329,6 +341,147 @@ function momentSection(fp: Fingerprint): void {
   }
 }
 
+/** Frozen copies of the pass and receiver tunings, for the same reason as SELFTEST_PHYSICS. */
+const SELFTEST_PASS_TUNING: PassTuning = {
+  maxSpeedRange: [17, 26],
+  minSpeed: 5,
+  minArrivalSpeed: 5,
+  errorDegRange: [7, 1],
+  pressurePenalty: 0.8,
+  paceErrorRatio: 0.8,
+};
+const SELFTEST_RECEIVER_TUNING: ReceiverTuning = {
+  speedRange: [6, 8.8],
+  accelerationTime: 0.5,
+  controlRadius: 0.55,
+  maxHeight: 1.1,
+  planMargin: 0.15,
+};
+
+/** Situations: pass moments (receiver, markers, keeper shifting), penalties, player dives. */
+function situationSection(fp: Fingerprint): void {
+  const rng = Rng.create('selftest:situations');
+  const keeper = (r: Rng) => ({
+    diving: r.int(30, 95),
+    handling: r.int(30, 95),
+    reflexes: r.int(30, 95),
+    speed: r.int(30, 95),
+    positioning: r.int(30, 95),
+    heightCm: r.int(175, 198),
+  });
+  for (let i = 0; i < 6; i++) {
+    const r = rng.fork('pass', i);
+    const from = v3(PITCH.goalLineX - r.range(6, 30), 0, r.range(-20, 20));
+    const receiver = v3(PITCH.goalLineX - r.range(16, 24), 0, r.range(-8, 8));
+    const target = v3(PITCH.goalLineX - r.range(8, 16), 0, r.range(-6, 6));
+    const profile = passerProfile(
+      { passing: r.int(30, 95), composure: r.int(30, 95) },
+      r.float(),
+      SELFTEST_PASS_TUNING,
+    );
+    const solution = solvePass(from, target, r.int(60, 200), profile, SELFTEST_PHYSICS, 'grass');
+    const velocity = applyPassError(solution.velocity, profile, r.fork('error'));
+    fp.f64(velocity.x)
+      .f64(velocity.z)
+      .u32(solution.arrivalTicks ?? 0);
+    const result = simulatePassMoment({
+      ball: passBall(from, velocity),
+      physics: SELFTEST_PHYSICS,
+      surface: PHYSICS_SURFACES[i % PHYSICS_SURFACES.length] ?? 'grass',
+      receiver: {
+        from: receiver,
+        pace: r.int(30, 95),
+        speed: r.range(0, 6),
+        tuning: SELFTEST_RECEIVER_TUNING,
+      },
+      keeper: { attributes: keeper(r), tuning: SELFTEST_KEEPER_TUNING },
+      defenders: [
+        {
+          role: 'marker',
+          feet: v3(target.x + r.range(-5, 5), 0, target.z + r.range(-5, 5)),
+          attributes: {
+            pace: r.int(30, 95),
+            defending: r.int(30, 95),
+            physical: 70,
+            heightCm: 182,
+          },
+        },
+      ],
+      defenderTuning: SELFTEST_DEFENDER_TUNING,
+      seed: r.nextU32(),
+    });
+    for (const state of result.states) {
+      const b = state.flight.ball.pos;
+      fp.f64(b.x).f64(b.z).f64(state.receiver.feet.x).f64(state.receiver.feet.z);
+      if (state.keeper) fp.f64(state.keeper.feet.z);
+      for (const d of state.defenders) fp.f64(d.feet.x).f64(d.feet.z);
+    }
+    for (const e of result.events) fp.u32(e.tick).str(e.type);
+    fp.str(result.outcome ?? 'none');
+    const last = result.states[result.states.length - 1];
+    if (last) fp.f64(firstTimeDifficulty(last.flight.ball, v3(1, 0, 0)));
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const r = rng.fork('keeper-mode', i);
+    const penalty = i % 2 === 0;
+    const from = penalty
+      ? v3(PITCH.goalLineX - 11, BALL.radius, 0)
+      : v3(PITCH.goalLineX - r.range(12, 22), BALL.radius, r.range(-6, 6));
+    const gauge = penaltyGauge(r.float());
+    fp.f64(gauge.power).f64(gauge.difficulty);
+    const profile = shooterProfile(
+      { shotPower: r.int(30, 95), curve: 60, finishing: r.int(30, 95), composure: 60 },
+      { weakFoot: false, weakFootStars: 3, pressure: r.float(), difficulty: gauge.difficulty },
+      SELFTEST_SHOT_TUNING,
+    );
+    const target = v3(PITCH.goalLineX, r.range(0.2, 2.2), r.range(-3.3, 3.3));
+    const solution = solveShot(
+      from,
+      { target, power: gauge.power, bulge: r.range(-0.5, 0.5), lob: false },
+      profile,
+      SELFTEST_PHYSICS,
+      'grass',
+      { tuning: SELFTEST_SHOT_TUNING },
+    );
+    const struck = applyExecutionError(
+      solution,
+      profile,
+      r.fork('execution'),
+      SELFTEST_SHOT_TUNING,
+    );
+    const result = simulateShotMoment({
+      ball: kickedBall(from, struck.velocity, struck.spin),
+      physics: SELFTEST_PHYSICS,
+      surface: 'grass',
+      keeper: penalty
+        ? {
+            attributes: keeper(r),
+            tuning: SELFTEST_KEEPER_TUNING,
+            feet: v3(PITCH.goalLineX - 0.1, 0, 0),
+            mode: 'penalty',
+          }
+        : {
+            attributes: keeper(r),
+            tuning: SELFTEST_KEEPER_TUNING,
+            mode: 'player',
+            commands: [
+              { tick: r.int(1, 90), target: v3(PITCH.goalLineX, r.range(0.2, 2), r.range(-3, 3)) },
+            ],
+          },
+      seed: r.nextU32(),
+    });
+    for (const state of result.states) {
+      const b = state.flight.ball.pos;
+      fp.f64(b.x).f64(b.y).f64(b.z);
+      const k = state.keeper;
+      if (k) fp.str(k.phase).f64(k.hands.x).f64(k.hands.y).f64(k.hands.z);
+    }
+    for (const e of result.events) fp.u32(e.tick).str(e.type);
+    fp.str(result.outcome ?? 'none');
+  }
+}
+
 export function runDeterminismScenario(): DeterminismReport {
   const fp = new Fingerprint();
   rngSection(fp);
@@ -336,6 +489,7 @@ export function runDeterminismScenario(): DeterminismReport {
   physicsSection(fp);
   shotSection(fp);
   momentSection(fp);
+  situationSection(fp);
   return { digest: fp.digest(), words: fp.size };
 }
 

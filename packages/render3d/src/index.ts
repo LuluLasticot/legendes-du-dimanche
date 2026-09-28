@@ -25,14 +25,26 @@ export {
   type QualityProfile,
 } from './core/quality.ts';
 export { mountPreviewScene, type PreviewHandle } from './scenes/preview.ts';
-export { mountBallSandbox, type SandboxHandle, type ShotReport } from './scenes/sandbox.ts';
+export {
+  mountBallSandbox,
+  type SandboxHandle,
+  type SandboxOutcome,
+  type SandboxStep,
+  type ShotReport,
+} from './scenes/sandbox.ts';
 export {
   defaultSandboxSettings,
   toPhysicsParams,
   toShotTuning,
   type SandboxSettings,
 } from './scenes/sandbox-settings.ts';
-export { PlayerFigure, KEEPER_KIT, OPPONENT_KIT, type FigureKit } from './players/player-figure.ts';
+export {
+  PlayerFigure,
+  HOME_KIT,
+  KEEPER_KIT,
+  OPPONENT_KIT,
+  type FigureKit,
+} from './players/player-figure.ts';
 export { toKeeperAttributes, toKeeperTuning } from './scenes/sandbox-settings.ts';
 export { toDefenderSetups, toDefenderTuning } from './scenes/sandbox-settings.ts';
 export {

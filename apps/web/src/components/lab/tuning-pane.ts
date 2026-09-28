@@ -1,6 +1,6 @@
 // Tweakpane tuning panel for the ball sandbox (imperative DOM widget, loaded on demand).
 
-import { physics } from '@legendes/engine';
+import { moments, physics } from '@legendes/engine';
 import type { SandboxSettings } from '@legendes/render3d';
 import { Pane, type FolderApi } from 'tweakpane';
 
@@ -39,6 +39,23 @@ export function createTuningPane(
   ): void => {
     f.addBinding(obj, key, { label: t(labelKey), min, max, step });
   };
+
+  const situation = folder('situation');
+  situation.addBinding(settings, 'situation', {
+    label: t('situationKind'),
+    options: Object.fromEntries(moments.SITUATIONS.map((k) => [t(`situationNames.${k}`), k])),
+  });
+  situation.addBinding(settings.situations, 'passLayout', {
+    label: t('passLayout'),
+    options: Object.fromEntries(
+      moments.PASS_LAYOUTS.map((_, i) => [t(`passLayouts.${i}`), i] as const),
+    ),
+  });
+  for (const key of ['passing', 'passComposure', 'receiverPace'] as const)
+    num(situation, settings.situations, key, 1, 99, 1);
+  num(situation, settings.situations, 'gaugeSpeed', 0.2, 3, 0.05);
+  num(situation, settings.situations, 'keeperSlowMoLow', 0.05, 1, 0.01);
+  num(situation, settings.situations, 'keeperSlowMoHigh', 0.05, 1, 0.01);
 
   const shooter = folder('shooter', true);
   for (const key of ['shotPower', 'curve', 'finishing', 'composure'] as const)

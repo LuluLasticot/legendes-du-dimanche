@@ -18,6 +18,7 @@ export interface FigureKit {
 
 export const KEEPER_KIT: FigureKit = { shirt: 0xd4ff3a, shorts: 0x1b1f24, gloves: true };
 export const OPPONENT_KIT: FigureKit = { shirt: 0xc4302b, shorts: 0xf2f2ee, gloves: false };
+export const HOME_KIT: FigureKit = { shirt: 0x0f5132, shorts: 0xf4f1e8, gloves: false };
 
 const UP = new THREE.Vector3(0, 1, 0);
 

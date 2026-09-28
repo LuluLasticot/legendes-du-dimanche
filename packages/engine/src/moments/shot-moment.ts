@@ -37,6 +37,7 @@ import {
   parriedKeeper,
   stepKeeper,
   type KeeperAttributes,
+  type KeeperMode,
   type KeeperState,
   type KeeperTuning,
 } from './keeper.ts';
@@ -75,12 +76,29 @@ export interface DefenderSetup {
   readonly attributes: DefenderAttributes;
 }
 
+/** A dive swiped by the player (keeper in 'player' mode), in ticks of the moment. */
+export interface KeeperCommand {
+  readonly tick: Tick;
+  /** Where the hands go (a point on the goal plane). */
+  readonly target: Vec3;
+}
+
+export interface KeeperSetup {
+  readonly attributes: KeeperAttributes;
+  readonly tuning?: KeeperTuning;
+  /** Feet position; set position on the bisector when omitted. */
+  readonly feet?: Vec3;
+  readonly mode?: KeeperMode;
+  /** 'player' mode only: the first command at or after tick 1 is the dive. */
+  readonly commands?: readonly KeeperCommand[];
+}
+
 export interface ShotMomentSetup {
   /** Ball at the instant of the strike (after execution error). */
   readonly ball: BallState;
   readonly physics: PhysicsParams;
   readonly surface: PhysicsSurface;
-  readonly keeper: { readonly attributes: KeeperAttributes; readonly tuning?: KeeperTuning } | null;
+  readonly keeper: KeeperSetup | null;
   readonly defenders?: readonly DefenderSetup[];
   readonly defenderTuning?: DefenderTuning;
   /** Sub-seed of the moment: keeper reaction/read/catch draws and bounce jitter. */
@@ -134,10 +152,12 @@ export function startShotMoment(setup: ShotMomentSetup): {
   };
   const keeper = setup.keeper
     ? createKeeper(
-        keeperSetPosition(setup.ball.pos, setup.keeper.attributes, keeperTuning),
+        setup.keeper.feet ??
+          keeperSetPosition(setup.ball.pos, setup.keeper.attributes, keeperTuning),
         setup.keeper.attributes,
         keeperTuning,
         keeperRng,
+        setup.keeper.mode ?? 'react',
       )
     : null;
   const wallSlots = wallPositions(
@@ -160,6 +180,13 @@ export function startShotMoment(setup: ShotMomentSetup): {
       lastTouch: null,
     },
   };
+}
+
+/** The player's dive target for this tick: the first command, applied at max(1, its tick). */
+function keeperCommandAt(setup: KeeperSetup, tick: Tick): Vec3 | null {
+  const first = setup.commands?.[0];
+  if (first === undefined) return null;
+  return Math.max(1, first.tick) === tick ? first.target : null;
 }
 
 export function stepShotMoment(
@@ -238,6 +265,7 @@ export function stepShotMoment(
       context.keeperTuning,
       context.flight,
       context.keeperRng,
+      keeperCommandAt(keeperSetup, tick),
     );
     if (before === 'set' && keeper.phase !== 'set')
       events.push({ tick, type: 'keeper-react', target: keeper.target });

@@ -60,7 +60,6 @@
     },
     "ball": {
       "title": "Bac à sable du ballon",
-      "hint": "Trace ta frappe depuis le ballon vers le but : la courbe de ton geste donne l'effet, sa vitesse donne la puissance.",
       "replay": "Rejouer au ralenti",
       "reset": "Replacer le ballon",
       "hud": {
@@ -73,7 +72,9 @@
         "outcome": "issue",
         "replay": "ralenti",
         "shot": "tir n° {index}",
-        "save": "gardien"
+        "save": "gardien",
+        "difficulty": "difficulté",
+        "situation": "situation"
       },
       "panel": {
         "title": "Réglages",
@@ -218,7 +219,28 @@
         "particles": "particules d’impact",
         "particleAmount": "quantité de particules",
         "confetti": "confettis sur les buts",
-        "ballTrail": "traînée lumineuse"
+        "ballTrail": "traînée lumineuse",
+        "situation": "Situation",
+        "situationKind": "Type",
+        "situationNames": {
+          "free": "Frappe libre",
+          "pass": "Passe et reprise",
+          "free-kick": "Coup franc",
+          "penalty": "Penalty",
+          "keeper": "Gardien"
+        },
+        "passLayout": "Schéma de passe",
+        "passLayouts": {
+          "0": "Centre en retrait",
+          "1": "Passe en profondeur",
+          "2": "Passe latérale"
+        },
+        "passing": "Passe du passeur",
+        "passComposure": "Sang-froid du passeur",
+        "receiverPace": "Vitesse du receveur",
+        "gaugeSpeed": "Vitesse de la jauge",
+        "keeperSlowMoLow": "Ralenti gardien (réflexes 1)",
+        "keeperSlowMoHigh": "Ralenti gardien (réflexes 99)"
       },
       "surfaces": {
         "grass": "Pelouse",
@@ -234,14 +256,34 @@
         "stopped": "Arrêté",
         "none": "—",
         "saved": "Arrêt",
-        "blocked": "Contré"
+        "blocked": "Contré",
+        "intercepted": "Passe interceptée",
+        "lost": "Passe perdue"
       },
       "webglError": "WebGL 2 n'est pas disponible sur cet appareil ou ce navigateur.",
       "saves": {
         "catch": "capté",
         "parry": "repoussé",
         "block": "contré par un défenseur"
-      }
+      },
+      "hints": {
+        "aim-shot": "Trace ta frappe depuis le ballon vers le but : la courbe de ton geste donne l'effet, sa vitesse donne la puissance.",
+        "aim-pass": "Trace ta passe sur la pelouse, là où ton coéquipier doit la recevoir. Il y court, elle arrive dans sa course.",
+        "aim-first-time": "Il est lancé ! Trace la reprise vers le but. Plus la balle arrive vite et de travers, plus c'est dur.",
+        "aim-penalty": "Vise un coin : ton geste donne la direction et l'effet. La puissance se dose ensuite avec la jauge.",
+        "gauge": "Tape pour doser ta frappe. Trop fort, et le ballon finit dans le parking.",
+        "keeper-ready": "Tu es dans les cages. Tape pour que l'attaquant s'élance, puis glisse vers le coin où tu plonges.",
+        "keeper-dive": "Glisse vers le coin : ton gardien plonge là où ton doigt se lève.",
+        "playing": ""
+      },
+      "situations": {
+        "free": "Frappe libre",
+        "pass": "Passe et reprise",
+        "free-kick": "Coup franc",
+        "penalty": "Penalty",
+        "keeper": "Gardien"
+      },
+      "gauge": "Puissance"
     }
   }
 }
