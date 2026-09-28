@@ -24,7 +24,8 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tweakpane": "^4.0.5",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@legendes/render2d": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

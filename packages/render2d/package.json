@@ -1,0 +1,23 @@
+{
+  "name": "@legendes/render2d",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Imperative PixiJS top-down match view (pitch, players, ball, passes), mounted by thin React components.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@legendes/engine": "workspace:*",
+    "pixi.js": "^8.21.0"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
