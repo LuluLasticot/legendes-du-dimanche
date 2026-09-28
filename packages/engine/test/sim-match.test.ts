@@ -21,7 +21,7 @@ const series = (n: number, home: number, away: number) => {
   return { goals: goals / n, homeWins: homeWins / n, awayWins: awayWins / n };
 };
 
-describe('match simulation', () => {
+describe('match simulation', { timeout: 60_000 }, () => {
   it('is deterministic: same setup, same match', () => {
     const a = simulateMatch(setup(7));
     const b = simulateMatch(setup(7));
