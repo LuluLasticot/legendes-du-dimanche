@@ -289,6 +289,20 @@
         "keeper": "Gardien"
       },
       "gauge": "Puissance"
+    },
+    "match": {
+      "title": "Match (démo)",
+      "events": {
+        "goal": "But de {player} !",
+        "yellow": "Carton jaune pour {player}",
+        "red": "Carton rouge pour {player}",
+        "sub": "Changement : {player} remplace {other}",
+        "injury": "{player} reste au sol",
+        "penalty": "Penalty ! {player} s'avance",
+        "save": "Arrêt de {player} devant {other}",
+        "half-time": "Mi-temps",
+        "full-time": "Fin du match"
+      }
     }
   }
 }
