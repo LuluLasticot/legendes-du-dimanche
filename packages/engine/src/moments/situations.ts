@@ -111,12 +111,14 @@ export function opponentShot(
   surface: PhysicsSurface,
   rng: Rng,
   tuning: ShotTuning = DEFAULT_SHOT_TUNING,
+  /** Share of the goal width the shooter dares to aim for (1 = the corners). */
+  reach = 1,
 ): { velocity: Vec3; spin: Vec3; target: Vec3 } {
   const halfWidth = GOAL.width / 2 - 0.35;
   const side = rng.chance(0.5) ? -1 : 1;
   // Bias towards the posts: |z| = halfWidth · (1 − u²).
   const u = rng.float();
-  const z = side * halfWidth * (1 - u * u * 0.9);
+  const z = side * halfWidth * (1 - u * u * 0.9) * reach;
   const high = rng.chance(0.4);
   const y = high ? 1.4 + rng.float() * 0.75 : 0.2 + rng.float() * 0.6;
   const target = v3(PITCH.goalLineX, y, z);

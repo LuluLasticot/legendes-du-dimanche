@@ -204,3 +204,10 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - Le moteur produit des **positions cibles et des événements** par phase ; `render2d` interpole. La scène 3D du labo devient une scène réutilisable `mountMoment(setup)` pilotée par la simulation.
 - **Règles d'équipe** (GDD §6) : efficacité hors poste (100 % / 95 % secondaire / 85 % même ligne / 70 % / 40 % pour le poste de gardien), collectifs 0–3 par joueur (club 2/4/7, district et ligue 3/5/8, +1 si 4 de la même division, rien hors poste), jusqu'à **+5 sur tous les attributs** à 3 points (simplification : pas seulement les attributs clés du poste), note d'équipe = moyenne des onze + excédent moyen au-dessus de la moyenne.
 - Équipes de démonstration à graine (joueurs fictifs) pour les tests et le labo ; les vrais générateurs arrivent en Phase 3 (`packages/data`).
+
+## D-025 — Actions clés dans le match (Phase 2)
+
+- La simulation **se met en pause** sur une situation à enjeu jouable (`MatchSim.pendingMoment`) et reprend avec son issue (`resolveMoment('goal' | 'save-catch' | 'save-parry' | 'block' | 'post' | 'miss')`). Les issues jouées sont les entrées du joueur : même graine + mêmes issues ⇒ même match.
+- Situations jouables (3 à 6 par match) : pour l'équipe du joueur, penalty, coup franc dangereux, occasion à xG ≥ 0,2 (« passe puis frappe » si l'action précédente est une passe ou un centre réussis, sinon « frappe ») ; pour l'adversaire, penalty ou occasion à xG ≥ 0,25 → **gardien joué**. Moins de trois actions à la 60e minute : le seuil tombe à 0,1.
+- L'action 3D démarre **entre 12 et 30 m du but** (la simulation place les grosses occasions à 5–9 m, où le gardien 3D n'a pas le temps de réagir) avec un défenseur au marquage, le mur sur coup franc, personne sur penalty.
+- **Résolution automatique** par la même micro-simulation (tireur IA qui vise à 70 % de la largeur, pression, gardien IA) : environ 40–46 % de buts sur les occasions, 42 % sur les tirs adverses, 22 % sur coup franc direct (un peu haut, à revoir avec les données de jeu), 62–75 % sur penalty.
