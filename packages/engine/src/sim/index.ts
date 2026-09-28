@@ -3,3 +3,5 @@ export * from './formations.ts';
 export * from './model.ts';
 export * from './team.ts';
 export * from './demo-teams.ts';
+export * from './shape.ts';
+export * from './match.ts';
