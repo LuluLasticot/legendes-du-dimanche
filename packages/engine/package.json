@@ -12,7 +12,10 @@
     "./time": "./src/time/index.ts",
     "./selftest": "./src/selftest/index.ts",
     "./physics": "./src/physics/index.ts",
-    "./moments": "./src/moments/index.ts"
+    "./moments": "./src/moments/index.ts",
+    "./sim": "./src/sim/index.ts",
+    "./sim/positions": "./src/sim/positions.ts",
+    "./sim/formations": "./src/sim/formations.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
