@@ -196,3 +196,11 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
 - **Timing des plongeons** : l'instant d'extension des clips se déduit désormais du déplacement de la racine (85 % du vol), et non des mains (qui, sur les plongeons bas, s'étirent au sol bien après l'arrêt) ; les plongeons bas étaient joués environ 4,5 fois trop vite. Personnages reconvertis en **v2** (chaque reconversion change de version, car le CDN met en cache une version pour toujours).
 - **Gardien joué, plus lisible et plus juste** : un glissement un peu trop tôt est **retenu jusqu'au bon moment** (0,15 → 0,4 s selon les réflexes) ; du bon côté, la cible est **tirée vers le ballon** (30 → 70 % selon le placement). Le mauvais côté ou un plongeon trop tard restent des buts. Réglable dans le dossier « Situation ».
 - **Caméra de face-à-face en portrait** : elle recule et monte jusqu'à ce que le but et un plongeon complet (±4,6 m) tiennent dans la largeur.
+
+## D-024 — Architecture du moteur de match (Phase 2)
+
+- `packages/engine/src/sim/` : simulation pure, déterministe, **sans dépendance** (Deno exécute les sources). Les **postes et formations** (données pures) y déménagent ; `@legendes/shared` les ré-exporte (une seule source de vérité, et le moteur n'importe pas `shared`, qui dépend de Zod).
+- **Un match = données sérialisables** : `{ graine, équipes figées, conditions }` + les entrées du joueur horodatées (gestes des actions clés, au format déjà consommé par les situations de la Phase 1, et changements de mi-temps). Rejouer ces entrées reproduit le match au bit près.
+- Le moteur produit des **positions cibles et des événements** par phase ; `render2d` interpole. La scène 3D du labo devient une scène réutilisable `mountMoment(setup)` pilotée par la simulation.
+- **Règles d'équipe** (GDD §6) : efficacité hors poste (100 % / 95 % secondaire / 85 % même ligne / 70 % / 40 % pour le poste de gardien), collectifs 0–3 par joueur (club 2/4/7, district et ligue 3/5/8, +1 si 4 de la même division, rien hors poste), jusqu'à **+5 sur tous les attributs** à 3 points (simplification : pas seulement les attributs clés du poste), note d'équipe = moyenne des onze + excédent moyen au-dessus de la moyenne.
+- Équipes de démonstration à graine (joueurs fictifs) pour les tests et le labo ; les vrais générateurs arrivent en Phase 3 (`packages/data`).
