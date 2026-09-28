@@ -23,7 +23,8 @@
     "*.mjs",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "scripts"
+    "scripts",
+    "e2e"
   ],
   "exclude": ["node_modules"]
 }

@@ -27,7 +27,12 @@ export function DeterminismBadge() {
         : 'bg-danger shadow-[0_0_12px_var(--ld-color-danger)]';
 
   return (
-    <p className="inline-flex items-center gap-2.5 text-xs text-chalk-muted" aria-live="polite">
+    <p
+      className="inline-flex items-center gap-2.5 text-xs text-chalk-muted"
+      aria-live="polite"
+      data-testid="determinism"
+      data-state={status.state === 'pending' ? 'pending' : status.ok ? 'ok' : 'mismatch'}
+    >
       <span className={`size-2 shrink-0 rounded-pill ${tone}`} aria-hidden />
       <span>
         {status.state === 'pending' ? t('pending') : status.ok ? t('ok') : t('mismatch')}

@@ -40,3 +40,6 @@ supabase/.temp/
 assets-src/mixamo/
 # Converted character assets (derived from Mixamo): generated locally, see docs/DECISIONS.md D-019
 apps/web/public/assets/characters/
+
+/test-results/
+/playwright-report/

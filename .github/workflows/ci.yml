@@ -68,3 +68,27 @@ jobs:
       - if: matrix.runtime == 'deno-2'
         working-directory: packages/engine
         run: deno test --no-config --no-lock test/determinism.deno.ts
+
+  # Browser runs of the production build: the engine self-test must match the golden in
+  # Chromium, Firefox and WebKit, and the ball lab must mount (desktop and phone).
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @legendes/web build
+      - run: pnpm --filter @legendes/web exec playwright install --with-deps chromium firefox webkit
+      - run: pnpm --filter @legendes/web e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: apps/web/test-results
+          retention-days: 7

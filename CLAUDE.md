@@ -51,7 +51,7 @@ pnpm + Turborepo · Next.js (App Router) + React + TypeScript strict · Tailwind
 
 - `pnpm dev` (app web, http://localhost:3000) · `pnpm build`
 - `pnpm check` = format:check + lint + typecheck + test + test:deno (ce que vérifie la CI)
-- `pnpm test` (Vitest) · `pnpm test:deno` (déterminisme sous Deno) · `pnpm --filter @legendes/engine test:watch`
+- `pnpm --filter @legendes/web e2e` (Playwright : déterminisme Chromium/Firefox/WebKit + labo ; réutilise `pnpm dev`) · `pnpm test` (Vitest) · `pnpm test:deno` (déterminisme sous Deno) · `pnpm --filter @legendes/engine test:watch`
 - `pnpm determinism:update` : régénère l'empreinte de référence du moteur, **uniquement volontairement** (casse les replays)
 - `pnpm db:start|stop|reset` (Supabase local, Docker requis) · `pnpm db:new <nom>` (migration)
 - `pnpm --filter @legendes/render3d convert:mixamo` : convertit `assets-src/mixamo/*.fbx` (hors git) en `apps/web/public/assets/characters/` (hors git)

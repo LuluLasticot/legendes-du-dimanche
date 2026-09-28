@@ -10,7 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "assets:upload": "node --env-file=.env.local scripts/upload-character-assets.ts"
+    "assets:upload": "node --env-file=.env.local scripts/upload-character-assets.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@legendes/engine": "workspace:*",
@@ -26,6 +27,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tweakpane/core": "^2.0.5",
     "@types/node": "catalog:",
