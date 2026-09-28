@@ -168,6 +168,13 @@ Code : scope npm `@legendes/*`, préfixe des variables CSS `--ld-`, dépôt `leg
   - **Défenseurs** : le mur saute avec le sommet synchronisé sur le moteur ; les marqueurs courent ou sprintent (cadence selon la vitesse), puis taclent en glissant.
 - Caméra de visée reculée (6 m, 2,2 m de haut) pour cadrer le tireur, le ballon et le but. Vérifié : course d'élan, contact, départ du ballon, but, confettis, déception du gardien.
 
+## D-020 — Personnages servis depuis un Vercel Blob privé (Phase 1, PR 12)
+
+- Les personnages convertis (dérivés de Mixamo) restent **hors du dépôt public**. Ils sont stockés dans un **Vercel Blob privé** (`characters/<version>/player.glb|player.meta.json`), envoyés par `pnpm --filter @legendes/web assets:upload` (jeton `BLOB_READ_WRITE_TOKEN` dans `apps/web/.env.local`, jamais commité).
+- Lecture par une route de l'application (`/api/assets/characters/[file]`), qui n'accepte que ces deux fichiers. Le jeton reste côté serveur (OIDC sur Vercel). Chemins versionnés (`CHARACTER_ASSETS_VERSION`) → **cache CDN d'un an** (`s-maxage`, `immutable`) : la fonction n'est presque jamais appelée.
+- Le client passe toujours par cette route (`NEXT_PUBLIC_CHARACTER_ASSETS_URL` ne sert qu'à la surcharger). Sans stockage configuré (développement local sans jeton), la route redirige vers la copie locale de `public/` ; si elle n'existe pas, la scène garde les silhouettes provisoires. Aucune variable à régler côté Vercel : la connexion du stockage au projet suffit.
+- Remarque : un joueur peut toujours télécharger ce que le jeu affiche ; l'objectif n'est pas de cacher le fichier aux joueurs, mais de **ne pas publier les fichiers bruts dans le dépôt**.
+
 ## D-021 — Les trois situations, puis le gardien joué (Phase 1, PR 13)
 
 - **Passe puis reprise.** Le joueur trace la passe sur la pelouse. Le passeur la dose pour qu'elle arrive **quand le receveur y est** (sa course est déjà lancée à 5 m/s), jamais avant, et encore en mouvement (≥ 5 m/s) ; l'erreur d'exécution dépend de la note de passe et du sang-froid sous pression. Le receveur court vers le **premier point de la trajectoire réelle qu'il peut atteindre**, avec une petite marge. Les défenseurs tentent l'interception (ils lisent une passe **1,6× plus lentement** qu'une frappe qu'ils ont en face) ; le gardien se replace pendant la passe.

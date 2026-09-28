@@ -52,7 +52,8 @@ export function BallSandbox() {
         const initial = loadSandboxSettings(defaults);
         const handle = render3d.mountBallSandbox(canvas, initial, {
           quality: render3d.qualityFromQuery(window.location.search) ?? 'auto',
-          characterAssetsUrl: publicEnv.NEXT_PUBLIC_CHARACTER_ASSETS_URL ?? '/assets/characters/',
+          characterAssetsUrl:
+            publicEnv.NEXT_PUBLIC_CHARACTER_ASSETS_URL ?? '/api/assets/characters/',
         });
         handleRef.current = handle;
         const offGesture = handle.onGesture((points) => setTrace(points ? [...points] : null));

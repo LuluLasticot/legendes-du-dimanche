@@ -6,7 +6,11 @@
     "allowJs": false,
     "incremental": true,
     "types": ["node"],
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -18,7 +22,8 @@
     "*.ts",
     "*.mjs",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "scripts"
   ],
   "exclude": ["node_modules"]
 }
