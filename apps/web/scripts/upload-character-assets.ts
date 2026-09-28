@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { put } from '@vercel/blob';
 
-const version = process.env.CHARACTER_ASSETS_VERSION ?? 'v1';
+const version = process.env.CHARACTER_ASSETS_VERSION ?? 'v2';
 const files = [
   ['player.glb', 'model/gltf-binary'],
   ['player.meta.json', 'application/json'],

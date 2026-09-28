@@ -240,7 +240,11 @@
         "receiverPace": "Vitesse du receveur",
         "gaugeSpeed": "Vitesse de la jauge",
         "keeperSlowMoLow": "Ralenti gardien (réflexes 1)",
-        "keeperSlowMoHigh": "Ralenti gardien (réflexes 99)"
+        "keeperSlowMoHigh": "Ralenti gardien (réflexes 99)",
+        "keeperHoldLow": "Plongeon anticipé toléré, s (réflexes 1)",
+        "keeperHoldHigh": "Plongeon anticipé toléré, s (réflexes 99)",
+        "keeperAssistLow": "Aide à la visée du plongeon (placement 1)",
+        "keeperAssistHigh": "Aide à la visée du plongeon (placement 99)"
       },
       "surfaces": {
         "grass": "Pelouse",

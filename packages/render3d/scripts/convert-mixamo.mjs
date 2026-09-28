@@ -188,6 +188,20 @@ function handsExtension(frames) {
   return { time: round(f.t), hands: vec(f.hands) };
 }
 
+/**
+ * Dive extension from the (removed) root travel: the moment the body has covered 85 % of its
+ * sideways flight. The hands alone mislead here: on low dives they reach furthest once the
+ * keeper is already lying on the ground, seconds after the save.
+ */
+function diveExtension(frames, rootPath) {
+  const travel = (i) => Math.hypot(rootPath.x[i], rootPath.z[i]);
+  const total = travel(rootPath.times.length - 1);
+  const i = rootPath.times.findIndex((_, k) => travel(k) >= total * 0.85);
+  const t = rootPath.times[Math.max(0, i)];
+  const f = frames.reduce((best, fr) => (Math.abs(fr.t - t) < Math.abs(best.t - t) ? fr : best));
+  return { time: round(f.t), hands: vec(f.hands) };
+}
+
 function highestHead(frames) {
   let best = frames[0];
   for (const f of frames) if (f.head.y > best.head.y) best = f;
@@ -215,7 +229,8 @@ for (const [name, options] of Object.entries(CLIPS)) {
     rest: { hands: vec(frames[0].hands), head: vec(frames[0].head), hips: vec(frames[0].hips) },
   };
   if (/shot|penalty|pass|tackle/.test(name)) entry.contact = strikeContact(frames);
-  if (/^gk_(dive|catch|scoop|jump|body)/.test(name)) entry.extension = handsExtension(frames);
+  if (/^gk_dive/.test(name) && rootPath) entry.extension = diveExtension(frames, rootPath);
+  else if (/^gk_(catch|scoop|jump|body)/.test(name)) entry.extension = handsExtension(frames);
   if (/header|jump/.test(name)) entry.apex = highestHead(frames);
   meta.clips[name] = entry;
   clips.push(clip);

@@ -184,13 +184,16 @@ export class ShooterController {
       // Recalage: the run-up bends towards the ball so the toe meets it exactly at contact.
       const w = smooth((t - s.from) / Math.max(1e-3, s.contactTime - s.from));
       const before = c.root.position.clone();
-      c.anchor('rightToe', s.ball, w, false);
+      c.anchor('rightToe', s.ball, w, 0);
       if (t >= s.contactTime) s.locked = c.root.position.clone().sub(before);
     }
   }
 }
 
 // ─── Goalkeeper ───────────────────────────────────────────────────────────────
+
+/** Ticks for a keeper to come back down after a catch. */
+const LAND_TICKS = Math.round(0.35 / TICK_DT);
 
 /** The keeper faces the field (−X). */
 const KEEPER_YAW = Character.yawFacing(-1, 0);
@@ -203,6 +206,8 @@ export class KeeperController {
   private diveStart = 0;
   private diveTicks = 1;
   private reacted = false;
+  /** Tick of the catch: afterwards the keeper comes back down to the ground, ball in hand. */
+  private holdTick: number | null = null;
 
   constructor(character: Character) {
     this.character = character;
@@ -212,6 +217,7 @@ export class KeeperController {
     this.lastPhase = null;
     this.action = 'idle';
     this.reacted = false;
+    this.holdTick = null;
     this.character.loop('gk_idle', 0.2);
   }
 
@@ -258,7 +264,7 @@ export class KeeperController {
     if (phase !== this.lastPhase) {
       if (phase === 'diving' && current.target) {
         const target = current.target;
-        const low = target.y < 0.8;
+        const low = target.y < 1.1;
         const high = target.y > 1.9 && Math.abs(target.z - current.feet.z) < 1.1;
         const clip = high ? 'gk_jump_catch' : this.diveClip(target.z > current.feet.z, low);
         const extension = c.clipMeta(clip)?.extension?.time ?? 0.8;
@@ -310,11 +316,22 @@ export class KeeperController {
     c.place(new THREE.Vector3(feet.x, 0, feet.z), KEEPER_YAW);
     c.update(dt);
     // Gloves on the engine's hands while saving (what you see is what was simulated).
+    // Once the ball is held, or the dive is over, the height lets go: he lands instead of
+    // hanging where the ball was caught.
+    if (phase === 'holding' && this.holdTick === null) this.holdTick = tick;
+    const landing = (from: number, ticks: number): number =>
+      1 - smooth((tick - from) / Math.max(1, ticks));
     if (this.action === 'dive') {
       const p = (tick - this.diveStart) / this.diveTicks;
-      c.anchor('hands', hands, smooth(p * 1.3));
+      const w = smooth(p * 1.3);
+      const release = Math.min(
+        landing(this.diveStart + this.diveTicks, this.diveTicks * 0.6),
+        this.holdTick === null ? 1 : landing(this.holdTick, LAND_TICKS),
+      );
+      c.anchor('hands', hands, w, w * release);
     } else if (this.action === 'standing' || this.action === 'holding') {
-      c.anchor('hands', hands, 0.85);
+      const release = this.holdTick === null ? 1 : landing(this.holdTick, LAND_TICKS);
+      c.anchor('hands', hands, 0.85, 0.85 * release);
     }
   }
 }

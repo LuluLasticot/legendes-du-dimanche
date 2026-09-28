@@ -281,9 +281,14 @@ describe('keeper controlled by the player', () => {
     expect(wrong.outcome).toBe('goal');
   });
 
-  it('timing matters: too early he is already on the ground, too late he does not get there', () => {
-    expect(simulateShotMoment(setup([{ tick: 1, target: lowCorner }])).outcome).toBe('goal');
+  it('a swipe a little early is held until the right moment; too late is still a goal', () => {
+    expect(simulateShotMoment(setup([{ tick: 1, target: lowCorner }])).outcome).not.toBe('goal');
     expect(simulateShotMoment(setup([{ tick: 80, target: lowCorner }])).outcome).toBe('goal');
+  });
+
+  it('on the right side, a rough swipe is pulled towards the ball', () => {
+    const rough = v3(PITCH.goalLineX, 1.2, -1.6);
+    expect(simulateShotMoment(setup([{ tick: 30, target: rough }])).outcome).not.toBe('goal');
   });
 });
 

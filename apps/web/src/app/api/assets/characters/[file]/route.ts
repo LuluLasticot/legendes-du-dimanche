@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ fil
     return local;
   }
 
-  const version = process.env.CHARACTER_ASSETS_VERSION ?? 'v1';
+  const version = process.env.CHARACTER_ASSETS_VERSION ?? 'v2';
   let result: Awaited<ReturnType<typeof get>>;
   try {
     result = await get(`characters/${version}/${file}`, { access: 'private' });

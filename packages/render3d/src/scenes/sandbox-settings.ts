@@ -24,6 +24,12 @@ export interface SandboxSettings {
     /** Time scale while the player keeps goal, at reflexes 1 / 99 (more time for good keepers). */
     keeperSlowMoLow: number;
     keeperSlowMoHigh: number;
+    /** Early swipe held until the right moment (s) at reflexes 1 / 99. */
+    keeperHoldLow: number;
+    keeperHoldHigh: number;
+    /** Pull of a right-side swipe towards the ball at positioning 1 / 99. */
+    keeperAssistLow: number;
+    keeperAssistHigh: number;
   };
   shooter: {
     shotPower: number;
@@ -168,6 +174,10 @@ export function defaultSandboxSettings(surface: physics.PhysicsSurface = 'grass'
       gaugeSpeed: 0.9,
       keeperSlowMoLow: 0.55,
       keeperSlowMoHigh: 0.3,
+      keeperHoldLow: moments.DEFAULT_KEEPER_TUNING.playerHoldRange[0],
+      keeperHoldHigh: moments.DEFAULT_KEEPER_TUNING.playerHoldRange[1],
+      keeperAssistLow: moments.DEFAULT_KEEPER_TUNING.playerAssistRange[0],
+      keeperAssistHigh: moments.DEFAULT_KEEPER_TUNING.playerAssistRange[1],
     },
     shooter: {
       shotPower: 80,
@@ -316,6 +326,8 @@ export function toKeeperTuning(s: SandboxSettings): moments.KeeperTuning {
     parryRestitution: k.parryRestitution,
     lateAdjustRange: [k.lateAdjustLow, k.lateAdjustHigh],
     maxShuffle: k.maxShuffle,
+    playerHoldRange: [s.situations.keeperHoldLow, s.situations.keeperHoldHigh],
+    playerAssistRange: [s.situations.keeperAssistLow, s.situations.keeperAssistHigh],
   };
 }
 

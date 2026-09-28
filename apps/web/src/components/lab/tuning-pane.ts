@@ -56,6 +56,13 @@ export function createTuningPane(
   num(situation, settings.situations, 'gaugeSpeed', 0.2, 3, 0.05);
   num(situation, settings.situations, 'keeperSlowMoLow', 0.05, 1, 0.01);
   num(situation, settings.situations, 'keeperSlowMoHigh', 0.05, 1, 0.01);
+  for (const key of [
+    'keeperHoldLow',
+    'keeperHoldHigh',
+    'keeperAssistLow',
+    'keeperAssistHigh',
+  ] as const)
+    num(situation, settings.situations, key, 0, 1, 0.01);
 
   const shooter = folder('shooter', true);
   for (const key of ['shotPower', 'curve', 'finishing', 'composure'] as const)

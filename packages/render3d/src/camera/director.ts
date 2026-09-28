@@ -104,6 +104,8 @@ export interface DirectorInput {
   readonly view?: MomentView;
   /** Pass view: where the pass is going (receiver's meeting point). */
   readonly focus?: Point | null;
+  /** Viewport width / height (portrait phones need a wider framing). Default 16/9. */
+  readonly aspect?: number;
 }
 
 export interface CameraPose {
@@ -288,12 +290,20 @@ export class CameraDirector {
       case 'goalie': {
         // Over the keeper's shoulder, from inside the goal (under the bar): steady, so the swipe
         // maps to the goal.
+        // Portrait: step back and up until the goal and a full dive (±4.6 m) fit the width.
+        const fov = 62;
+        const halfWidth = Math.tan(((fov / 2) * Math.PI) / 180) * (input.aspect ?? 16 / 9);
+        const back = Math.min(11, Math.max(1.4, 4.6 / halfWidth - 1));
         const target = spot.clone().setY(0.9);
         if (input.phase === 'flying') target.lerp(ball, 0.2);
         return {
-          position: new THREE.Vector3(goal.x + 1.4, 1.6, spot.z <= 0 ? 0.8 : -0.8),
+          position: new THREE.Vector3(
+            goal.x + back,
+            back <= 2 ? 1.6 : 1.6 + (back - 2) * 0.35,
+            (spot.z <= 0 ? 0.8 : -0.8) * Math.min(1, 2 / back),
+          ),
           target,
-          fov: 62,
+          fov,
         };
       }
       case 'orbit': {
