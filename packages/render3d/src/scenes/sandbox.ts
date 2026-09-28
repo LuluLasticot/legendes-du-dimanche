@@ -1,6 +1,7 @@
-// Ball sandbox (/lab/ball): trace a shot with the finger or the mouse, see the predicted path
-// while tracing, strike with the shooter's execution error, watch it fly, replay it in slow
-// motion by re-simulation. Every feel parameter comes from SandboxSettings (tuning panel).
+// Ball sandbox (/lab/ball): the playable situations of the key moments. Trace a shot with the
+// finger or the mouse (free shot, free kick), a pass then a first-time shot, a penalty with its
+// power gauge, or keep goal and swipe the dive. Every strike is replayed by re-simulation. Every
+// feel parameter comes from SandboxSettings (tuning panel).
 
 import { moments, physics, Rng, TICK_DT, TICK_RATE } from '@legendes/engine';
 import * as THREE from 'three';
@@ -8,6 +9,7 @@ import {
   CameraDirector,
   REPLAY_ANGLES,
   type DirectorInput,
+  type MomentView,
   type ReplayAngle,
   type ResultKind,
 } from '../camera/director.ts';
@@ -19,12 +21,13 @@ import { Stadium } from '../stadium/stadium.ts';
 import { Character, type Kit } from '../players/character.ts';
 import { loadCharacterAsset, type CharacterAsset } from '../players/character-asset.ts';
 import { DefenderController, KeeperController, ShooterController } from '../players/controllers.ts';
-import { KEEPER_KIT, OPPONENT_KIT, PlayerFigure } from '../players/player-figure.ts';
+import { HOME_KIT, KEEPER_KIT, OPPONENT_KIT, PlayerFigure } from '../players/player-figure.ts';
 import {
+  keeperSlowMo,
+  situationSpot,
   toDefenderSetups,
   toDefenderTuning,
-  toKeeperAttributes,
-  toKeeperTuning,
+  toKeeperSetup,
   toPhysicsParams,
   toShotTuning,
   type SandboxSettings,
@@ -32,10 +35,13 @@ import {
 
 const { BALL, PITCH, kickedBall, restingBall, simulateFlight } = physics;
 
+export type SandboxOutcome = moments.MomentOutcome | 'intercepted' | 'lost';
+
 export interface ShotReport {
   readonly index: number;
+  readonly situation: moments.Situation;
   readonly replay: boolean;
-  /** Gesture power in [0, 1] and bow in [−1, 1]. */
+  /** Gesture power in [0, 1] (gauge for a penalty) and bow in [−1, 1]. */
   readonly power: number;
   readonly bulge: number;
   readonly speedKmh: number;
@@ -43,40 +49,66 @@ export interface ShotReport {
   readonly spinRps: number;
   /** Angle between the ideal strike and the executed one, degrees. */
   readonly errorDeg: number;
+  /** Technical difficulty of the strike (first time, over-hit penalty), [0, 1]. */
+  readonly difficulty: number;
   readonly solverMiss: number;
   readonly solverIterations: number;
-  readonly outcome: moments.MomentOutcome | null;
+  readonly outcome: SandboxOutcome | null;
   /** Last touch: caught or parried by the keeper, or blocked by a defender. */
   readonly save: 'catch' | 'parry' | 'block' | null;
 }
 
+/** What the player is expected to do now (drives the on-screen hint). */
+export type SandboxStep =
+  | 'aim-shot'
+  | 'aim-pass'
+  | 'aim-first-time'
+  | 'aim-penalty'
+  | 'gauge'
+  | 'keeper-ready'
+  | 'keeper-dive'
+  | 'playing';
+
 export interface SandboxHandle {
   readonly stats: Readonly<StageStats>;
   setSettings(settings: SandboxSettings): void;
-  /** Replays the last shot (same initial state, same seed) in slow motion. */
+  /** Replays the last shot (same initial state, same seed, same dive) in slow motion. */
   replay(): void;
   /** Puts the ball back on its spot. */
   reset(): void;
   /** Current trace (viewport-height units) for the 2D overlay, or null when there is none. */
   onGesture(callback: (points: readonly moments.GesturePoint[] | null) => void): () => void;
   onShot(callback: (report: ShotReport) => void): () => void;
+  onStep(callback: (step: SandboxStep) => void): () => void;
+  /** Penalty power gauge in [0, 1] while it sweeps, null otherwise. */
+  onGauge(callback: (value: number | null) => void): () => void;
   dispose(): void;
 }
 
-type Phase = 'aiming' | 'tracing' | 'striking' | 'flying';
+type Phase = 'aiming' | 'tracing' | 'gauge' | 'striking' | 'flying' | 'passing' | 'result';
+
+/** How the strike starts: full run-up, the end of the swing only (first time), or no animation. */
+type RunUp = 'full' | 'first-time';
 
 interface StoredShot {
-  readonly initial: physics.BallState;
-  readonly momentSeed: number;
+  readonly setup: moments.ShotMomentSetup;
+  readonly runUp: RunUp;
+  /** Receiver's feet for a first-time shot (to stand him there again in the replay). */
+  readonly receiverFeet: physics.Vec3 | null;
   readonly report: ShotReport;
 }
 
 const MAX_LINE_POINTS = 1200;
-const HOME_KIT: Kit = { shirt: 0x0f5132, shorts: 0xf4f1e8 };
+const HOME_CHARACTER_KIT: Kit = { shirt: 0x0f5132, shorts: 0xf4f1e8 };
 const KEEPER_CHARACTER_KIT: Kit = { shirt: 0xd4ff3a, shorts: 0x1b1f24 };
 const OPPONENT_CHARACTER_KIT: Kit = { shirt: 0xc4302b, shorts: 0xf2f2ee };
 /** Seconds the result stays on screen before the ball goes back to its spot. */
 const RESULT_HOLD = 1.6;
+/** Time scale while the player aims a first-time shot (bullet time). */
+const BULLET_TIME = 0.04;
+/** Last part of the swing played for a first-time shot, seconds. */
+const FIRST_TIME_LEAD = 0.2;
+const GOAL_CENTRE = { x: PITCH.goalLineX, y: 0, z: 0 };
 
 function makeLine(color: number, opacity: number): THREE.Line {
   const geometry = new THREE.BufferGeometry();
@@ -110,6 +142,14 @@ function setLine(line: THREE.Line, points: readonly physics.BallState[], step = 
 
 function length3(v: physics.Vec3): number {
   return Math.hypot(v.x, v.y, v.z);
+}
+
+/** What the renderer shows of the moment in progress (a pass or a shot). */
+interface ShownState {
+  readonly ball: physics.BallState;
+  readonly keeper: moments.KeeperState | null;
+  readonly defenders: readonly moments.DefenderState[];
+  readonly tick: number;
 }
 
 export function mountBallSandbox(
@@ -182,7 +222,6 @@ export function mountBallSandbox(
       depthTest: false,
     }),
   );
-  targetMarker.rotation.y = Math.PI / 2;
   targetMarker.visible = false;
   scene.add(targetMarker);
 
@@ -205,16 +244,18 @@ export function mountBallSandbox(
   let settings = initialSettings;
   let params = toPhysicsParams(settings);
   let tuning = toShotTuning(settings);
-  let profile = moments.shooterProfile(settings.shooter, settings.shooter, tuning);
   let spot = physics.v3(0, 0, 0);
 
   const keeperFigure = new PlayerFigure(KEEPER_KIT);
   scene.add(keeperFigure.group);
+  const receiverFigure = new PlayerFigure(HOME_KIT, 0x8d5a3b);
+  scene.add(receiverFigure.group);
   const defenderFigures: PlayerFigure[] = [];
-  /** One figure per defender of the current setup (rebuilt when the count changes). */
   // ─── Characters (converted Mixamo asset; greybox figures until / unless it loads) ───
   let characterAsset: CharacterAsset | null = null;
+  /** The shooter: the receiver on a pass, the opponent when the player keeps goal. */
   let shooterCtrl: ShooterController | null = null;
+  let passerCtrl: ShooterController | null = null;
   let keeperCtrl: KeeperController | null = null;
   const defenderCtrls: DefenderController[] = [];
   let disposed = false;
@@ -262,9 +303,7 @@ export function mountBallSandbox(
       ball: at,
       physics: params,
       surface: settings.pitch.surface,
-      keeper: settings.keeper.enabled
-        ? { attributes: toKeeperAttributes(settings), tuning: toKeeperTuning(settings) }
-        : null,
+      keeper: toKeeperSetup(settings),
       defenders: toDefenderSetups(settings, at.pos),
       defenderTuning: toDefenderTuning(settings),
       seed: 0,
@@ -278,15 +317,50 @@ export function mountBallSandbox(
   let currentReport: ShotReport | null = null;
   const samples: physics.BallState[] = [];
 
+  // Pass situation.
+  let pass: {
+    context: moments.PassMomentContext;
+    state: moments.PassMomentState;
+    previous: moments.PassMomentState;
+  } | null = null;
+  /** Pass received: the first-time shot is being aimed from there. */
+  let reception: {
+    ball: physics.BallState;
+    keeper: moments.KeeperSetup | null;
+    defenders: moments.DefenderSetup[];
+    receiverFeet: physics.Vec3;
+  } | null = null;
+  /** Which moment the renderer shows. */
+  let showing: 'moment' | 'pass' = 'moment';
+  /** The pass the player is tracing (ground target), for the camera framing. */
+  let passFocus: physics.Vec3 | null = null;
+
+  // Keeper situation: the player's dive, filled by the swipe while the ball flies.
+  let keeperCommands: moments.KeeperCommand[] = [];
+
+  // Penalty gauge.
+  let gauge: {
+    intent: moments.ShotIntent;
+    features: moments.GestureFeatures;
+    elapsed: number;
+    value: number;
+  } | null = null;
+
   const gestureListeners = new Set<(points: readonly moments.GesturePoint[] | null) => void>();
   const shotListeners = new Set<(report: ShotReport) => void>();
+  const stepListeners = new Set<(step: SandboxStep) => void>();
+  const gaugeListeners = new Set<(value: number | null) => void>();
   let points: moments.GesturePoint[] = [];
   let gestureStart = 0;
   let predictionDirty = false;
   let pointerId: number | null = null;
+  /** What the current trace means. */
+  let tracing: 'shot' | 'pass' | 'dive' = 'shot';
 
   const raycaster = new THREE.Raycaster();
   const goalPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), PITCH.goalLineX);
+  const divePlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), PITCH.goalLineX - 0.3);
+  const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const hit = new THREE.Vector3();
 
   const emitGesture = (): void => {
@@ -294,6 +368,34 @@ export function mountBallSandbox(
   };
   const emitShot = (report: ShotReport): void => {
     for (const listener of shotListeners) listener(report);
+  };
+  let lastStep: SandboxStep | null = null;
+  const currentStep = (): SandboxStep => {
+    if (phase === 'gauge') return 'gauge';
+    if (phase === 'aiming' || phase === 'tracing') {
+      if (settings.situation === 'keeper') return 'keeper-ready';
+      if (reception) return 'aim-first-time';
+      if (settings.situation === 'pass') return 'aim-pass';
+      if (settings.situation === 'penalty') return 'aim-penalty';
+      return 'aim-shot';
+    }
+    if (
+      settings.situation === 'keeper' &&
+      !replaying &&
+      keeperCommands.length === 0 &&
+      (phase === 'striking' || (phase === 'flying' && moment.outcome === null))
+    )
+      return 'keeper-dive';
+    return 'playing';
+  };
+  const emitStep = (): void => {
+    const step = currentStep();
+    if (step === lastStep) return;
+    lastStep = step;
+    for (const listener of stepListeners) listener(step);
+  };
+  const emitGauge = (value: number | null): void => {
+    for (const listener of gaugeListeners) listener(value);
   };
 
   // ─── Camera director ────────────────────────────────────────────────────────
@@ -303,29 +405,65 @@ export function mountBallSandbox(
   const ballPos = new THREE.Vector3();
 
   const resultKind = (): ResultKind => {
+    if (phase === 'result') return 'blocked';
     const outcome = moment.outcome;
     if (outcome === null) return null;
     if (outcome === 'goal' || outcome === 'saved' || outcome === 'blocked') return outcome;
     return 'miss';
   };
 
-  const directorInput = (): DirectorInput => ({
-    phase:
-      phase === 'flying'
-        ? moment.outcome !== null
-          ? 'result'
-          : 'flying'
-        : phase === 'striking' && replaying
-          ? 'flying'
-          : 'aiming',
-    replay: replaying ? replayAngle : null,
-    ball: ballPos,
-    ballVel: moment.flight.ball.vel,
-    spot,
-    goal: { x: PITCH.goalLineX, y: 0, z: 0 },
-    keeper: moment.keeper ? moment.keeper.head : null,
-    result: resultKind(),
-  });
+  const view = (): MomentView => {
+    if (settings.situation === 'keeper') return 'keeper';
+    if (settings.situation === 'pass' && !reception && showing === 'pass') return 'pass';
+    if (settings.situation === 'pass' && !reception && phase !== 'flying') return 'pass';
+    return 'shooter';
+  };
+
+  const shown = (): { now: ShownState; before: ShownState } => {
+    if (showing === 'pass' && pass) {
+      const s = (p: moments.PassMomentState): ShownState => ({
+        ball: p.flight.ball,
+        keeper: p.keeper,
+        defenders: p.defenders,
+        tick: p.tick,
+      });
+      return { now: s(pass.state), before: s(pass.previous) };
+    }
+    const s = (m: moments.ShotMomentState): ShownState => ({
+      ball: m.flight.ball,
+      keeper: m.keeper,
+      defenders: m.defenders,
+      tick: m.tick,
+    });
+    return { now: s(moment), before: s(previousMoment) };
+  };
+
+  const directorPhase = (): DirectorInput['phase'] => {
+    if (phase === 'result') return 'result';
+    if (phase === 'passing') return 'flying';
+    if (phase === 'flying') return moment.outcome !== null ? 'result' : 'flying';
+    if (phase === 'striking' && (replaying || settings.situation === 'keeper')) return 'flying';
+    return 'aiming';
+  };
+
+  const directorInput = (): DirectorInput => {
+    const { now } = shown();
+    return {
+      phase: directorPhase(),
+      replay: replaying ? replayAngle : null,
+      ball: ballPos,
+      ballVel: now.ball.vel,
+      spot,
+      goal: GOAL_CENTRE,
+      keeper: now.keeper ? now.keeper.head : null,
+      result: resultKind(),
+      view: view(),
+      focus:
+        pass?.state.receiver.meet?.feet ??
+        passFocus ??
+        (settings.situation === 'pass' ? passZone() : null),
+    };
+  };
 
   /** Applies the director's pose to the camera (dt = real seconds). */
   const applyCamera = (dt: number): void => {
@@ -347,14 +485,55 @@ export function mountBallSandbox(
       stage.postSettings.flash = Math.max(stage.postSettings.flash, effects.flash);
   };
 
+  const clearAim = (): void => {
+    prediction.geometry.setDrawRange(0, 0);
+    targetMarker.visible = false;
+  };
+
+  const layout = (): moments.PassLayout => moments.passLayout(settings.situations.passLayout);
+  /** Where passes are played to, framed before the pass: between the runner and the box. */
+  const passZone = (): physics.Vec3 => {
+    const r = layout().receiver;
+    return physics.v3((r.x + PITCH.goalLineX - 11) / 2, 0, r.z / 2);
+  };
+
   const placeBall = (): void => {
-    spot = physics.v3(PITCH.goalLineX - settings.spot.distance, BALL.radius, settings.spot.offset);
+    spot = situationSpot(settings);
     ({ context: momentContext, state: moment } = restingMoment(restingBall(spot.x, spot.z)));
     previousMoment = moment;
-    keeperFigure.group.visible = settings.keeper.enabled && characterAsset === null;
+    pass = null;
+    reception = null;
+    passFocus = null;
+    showing = 'moment';
+    gauge = null;
+    emitGauge(null);
+    keeperCommands = [];
+    keeperFigure.group.visible = moment.keeper !== null && characterAsset === null;
     pending = null;
-    shooterCtrl?.standAt(spot, { x: PITCH.goalLineX, y: 0, z: 0 });
+    const situation = settings.situation;
+    shooterCtrl?.character.setKit(
+      situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT,
+    );
+    if (situation === 'pass') {
+      const l = layout();
+      shooterCtrl?.follow(l.receiver, { x: 0, y: 0, z: 0 }, spot);
+      passerCtrl?.standAt(spot, { x: PITCH.goalLineX - 11, y: 0, z: 0 });
+    } else {
+      shooterCtrl?.standAt(spot, GOAL_CENTRE);
+    }
+    if (passerCtrl) passerCtrl.character.root.visible = situation === 'pass';
+    receiverFigure.group.visible = situation === 'pass' && characterAsset === null;
+    if (situation === 'pass') {
+      const r = layout().receiver;
+      receiverFigure.update(
+        { feet: r, head: { x: r.x, y: 1.75, z: r.z } },
+        { feet: r, head: { x: r.x, y: 1.75, z: r.z } },
+        1,
+      );
+    }
     keeperCtrl?.reset();
+    // Keeping goal, the player looks over the keeper's shoulder: see through him.
+    keeperCtrl?.character.setOpacity(situation === 'keeper' ? 0.4 : 1);
     for (const controller of defenderCtrls) controller.reset();
     syncDefenderFigures(moment.defenders.length);
     ball.position.set(spot.x, spot.y, spot.z);
@@ -366,8 +545,20 @@ export function mountBallSandbox(
     spinArrow.visible = false;
     ballPos.set(spot.x, spot.y, spot.z);
     ballTrail.clear();
+    clearAim();
     director.cut();
     applyCamera(0);
+    emitStep();
+  };
+
+  // ─── Gesture → intent ─────────────────────────────────────────────────────────
+  const rayFromLast = (): boolean => {
+    const last = points[points.length - 1];
+    if (!last) return false;
+    const rect = canvas.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((last.u * rect.height) / rect.width) * 2 - 1, -last.v * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    return true;
   };
 
   /** Shot intent from the current trace, or null if the trace is not a gesture yet. */
@@ -376,11 +567,7 @@ export function mountBallSandbox(
     features: moments.GestureFeatures;
   } | null => {
     const features = moments.analyzeGesture(points, settings.gesture);
-    const last = points[points.length - 1];
-    if (!features || !last) return null;
-    const rect = canvas.getBoundingClientRect();
-    const ndc = new THREE.Vector2(((last.u * rect.height) / rect.width) * 2 - 1, -last.v * 2 + 1);
-    raycaster.setFromCamera(ndc, camera);
+    if (!features || !rayFromLast()) return null;
     if (raycaster.ray.direction.x <= 1e-3 || !raycaster.ray.intersectPlane(goalPlane, hit))
       return null;
     const target = physics.v3(
@@ -394,32 +581,101 @@ export function mountBallSandbox(
     };
   };
 
+  /** Pass target on the grass from the current trace. */
+  const currentPassTarget = (): physics.Vec3 | null => {
+    if (!moments.analyzeGesture(points, settings.gesture) || !rayFromLast()) return null;
+    if (!raycaster.ray.intersectPlane(groundPlane, hit)) return null;
+    const target = physics.v3(
+      THREE.MathUtils.clamp(hit.x, -PITCH.goalLineX + 1, PITCH.goalLineX - 1.5),
+      0,
+      THREE.MathUtils.clamp(hit.z, -PITCH.width / 2 + 1, PITCH.width / 2 - 1),
+    );
+    return Math.hypot(target.x - spot.x, target.z - spot.z) > 2 ? target : null;
+  };
+
+  /** Where the keeper's hands go, from the last point of the swipe (seen from the goal). */
+  const currentDiveTarget = (): physics.Vec3 | null => {
+    if (!rayFromLast()) return null;
+    if (raycaster.ray.direction.x >= -1e-3 || !raycaster.ray.intersectPlane(divePlane, hit))
+      return null;
+    return physics.v3(
+      PITCH.goalLineX,
+      THREE.MathUtils.clamp(hit.y, 0.1, 2.8),
+      THREE.MathUtils.clamp(hit.z, -5, 5),
+    );
+  };
+
+  const passerProfile = (): moments.PasserProfile =>
+    moments.passerProfile(
+      { passing: settings.situations.passing, composure: settings.situations.passComposure },
+      settings.shooter.pressure,
+    );
+
+  /** Ideal pass to `target` (before the passer's error). */
+  const solvePassTo = (target: physics.Vec3): moments.PassSolution | null => {
+    const run = moments.receptionTicks(
+      layout().receiver,
+      target,
+      settings.situations.receiverPace,
+      moments.RECEIVER_RUN_SPEED,
+    );
+    try {
+      return moments.solvePass(spot, target, run, passerProfile(), params, settings.pitch.surface);
+    } catch {
+      return null;
+    }
+  };
+
+  /** Shooter profile for a strike of the given technical difficulty. */
+  const profileFor = (difficulty: number): moments.ShooterProfile =>
+    moments.shooterProfile(settings.shooter, { ...settings.shooter, difficulty }, tuning);
+
   const updatePrediction = (): void => {
+    if (!settings.debug.prediction) {
+      clearAim();
+      return;
+    }
+    if (tracing === 'pass') {
+      const target = currentPassTarget();
+      const solution = target ? solvePassTo(target) : null;
+      if (!target || !solution) {
+        clearAim();
+        return;
+      }
+      passFocus = target;
+      const predicted = simulateFlight(
+        moments.passBall(spot, solution.velocity),
+        { params, surface: settings.pitch.surface, rng: null },
+        { maxTicks: 360 },
+      );
+      setLine(prediction, predicted.samples, 2);
+      targetMarker.visible = true;
+      targetMarker.rotation.set(-Math.PI / 2, 0, 0);
+      targetMarker.position.set(target.x, 0.03, target.z);
+      return;
+    }
+    if (tracing === 'dive') return;
     const current = currentIntent();
-    if (!current || !settings.debug.prediction) {
-      prediction.geometry.setDrawRange(0, 0);
-      targetMarker.visible = false;
+    if (!current) {
+      clearAim();
       return;
     }
     const solution = moments.solveShot(
       spot,
       current.intent,
-      profile,
+      profileFor(0),
       params,
       settings.pitch.surface,
       { tuning },
     );
     const predicted = simulateFlight(
       kickedBall(spot, solution.velocity, solution.spin),
-      {
-        params,
-        surface: settings.pitch.surface,
-        rng: null,
-      },
+      { params, surface: settings.pitch.surface, rng: null },
       { maxTicks: 480 },
     );
     setLine(prediction, predicted.samples, 2);
     targetMarker.visible = true;
+    targetMarker.rotation.set(0, Math.PI / 2, 0);
     targetMarker.position.set(
       PITCH.goalLineX - 0.02,
       current.intent.target.y,
@@ -427,22 +683,34 @@ export function mountBallSandbox(
     );
   };
 
+  // ─── Strikes ──────────────────────────────────────────────────────────────────
   /** Strike waiting for the kicking foot to meet the ball (run-up in progress). */
   let pending: {
-    initial: physics.BallState;
-    momentSeed: number;
-    report: ShotReport;
+    kind: 'shot' | 'pass';
+    shot: StoredShot | null;
+    passBall: physics.BallState | null;
+    passSeed: number;
     replay: boolean;
     remaining: number;
   } | null = null;
 
-  /** Starts a shot: run-up and strike when characters are loaded, straight launch otherwise. */
-  const beginShot = (
+  const momentSetup = (
     initial: physics.BallState,
-    momentSeed: number,
-    report: ShotReport,
-    replay: boolean,
-  ): void => {
+    seed: number,
+    keeper: moments.KeeperSetup | null,
+    defenders: readonly moments.DefenderSetup[],
+  ): moments.ShotMomentSetup => ({
+    ball: initial,
+    physics: params,
+    surface: settings.pitch.surface,
+    keeper,
+    defenders,
+    defenderTuning: toDefenderTuning(settings),
+    seed,
+  });
+
+  /** Starts a shot: run-up and strike when characters are loaded, straight launch otherwise. */
+  const beginShot = (stored: StoredShot, replay: boolean): void => {
     replaying = replay;
     if (replay) {
       replayAngle =
@@ -451,74 +719,77 @@ export function mountBallSandbox(
           : settings.cameraReplayAngle;
       director.cut();
     }
-    if (!shooterCtrl) {
-      launch(initial, momentSeed, report, replay);
-      return;
-    }
-    // Ball back on its spot, everyone set, then the run-up.
-    ({ context: momentContext, state: moment } = restingMoment(
-      restingBall(initial.pos.x, initial.pos.z),
-    ));
+    showing = 'moment';
+    const initial = stored.setup.ball;
+    // Ball on its spot (frozen where it was received), everyone set, then the swing.
+    ({ context: momentContext, state: moment } = moments.startShotMoment({
+      ...stored.setup,
+      ball: { ...initial, vel: physics.v3(0, 0, 0), spin: physics.v3(0, 0, 0) },
+    }));
     previousMoment = moment;
     keeperCtrl?.reset();
     for (const controller of defenderCtrls) controller.reset();
     ballTrail.clear();
+    if (!shooterCtrl) {
+      launch(stored, replay);
+      return;
+    }
+    if (stored.receiverFeet) {
+      shooterCtrl.follow(stored.receiverFeet, { x: 0, y: 0, z: 0 }, initial.pos);
+    }
     const horizontal = Math.hypot(initial.vel.x, initial.vel.z) || 1;
     const delay = shooterCtrl.startStrike(
       initial.pos,
       { x: initial.vel.x / horizontal, y: 0, z: initial.vel.z / horizontal },
-      report.power,
+      stored.report.power,
+      stored.runUp === 'first-time' ? { clip: 'player_shot', lead: FIRST_TIME_LEAD } : {},
     );
-    pending = { initial, momentSeed, report, replay, remaining: delay };
+    pending = {
+      kind: 'shot',
+      shot: stored,
+      passBall: null,
+      passSeed: 0,
+      replay,
+      remaining: delay,
+    };
     phase = 'striking';
     stage.clock.reset();
     stage.clock.setTimeScale(replay ? settings.debug.replayScale : settings.debug.timeScale);
+    emitStep();
   };
 
-  const launch = (
-    initial: physics.BallState,
-    momentSeed: number,
-    report: ShotReport,
-    replay: boolean,
-  ): void => {
-    ({ context: momentContext, state: moment } = moments.startShotMoment({
-      ball: initial,
-      physics: params,
-      surface: settings.pitch.surface,
-      keeper: settings.keeper.enabled
-        ? { attributes: toKeeperAttributes(settings), tuning: toKeeperTuning(settings) }
-        : null,
-      defenders: toDefenderSetups(settings, initial.pos),
-      defenderTuning: toDefenderTuning(settings),
-      seed: momentSeed,
-    }));
+  const strikeJuice = (initial: physics.BallState, power: number, seed: number): void => {
+    fxRng = Rng.create(seed).fork('fx');
+    ballTrail.clear();
+    const v = initial.vel;
+    const h = Math.hypot(v.x, v.z) || 1;
+    particles.emit(
+      surfaceParticles(settings.pitch.surface),
+      initial.pos,
+      10 + 16 * power,
+      fxRng,
+      { x: (v.x / h) * 0.6, y: 1, z: (v.z / h) * 0.6 },
+      0.6,
+    );
+    audio.strike(power, settings.pitch.surface);
+  };
+
+  const launch = (stored: StoredShot, replay: boolean): void => {
+    ({ context: momentContext, state: moment } = moments.startShotMoment(stored.setup));
     previousMoment = moment;
+    showing = 'moment';
+    const initial = stored.setup.ball;
     samples.length = 0;
     samples.push(initial);
     heldAfterOutcome = 0;
     replaying = replay;
     phase = 'flying';
-    currentReport = report;
+    currentReport = stored.report;
     stage.clock.reset();
     stage.clock.setTimeScale(replay ? settings.debug.replayScale : settings.debug.timeScale);
-    applyEffects(director.impact('strike', report.power, replay));
+    applyEffects(director.impact('strike', stored.report.power, replay));
     // Juice of the strike: same seed → same bursts in the replay.
-    fxRng = Rng.create(momentSeed).fork('fx');
-    ballTrail.clear();
-    const toGoal = new THREE.Vector3(
-      PITCH.goalLineX - initial.pos.x,
-      0,
-      -initial.pos.z,
-    ).normalize();
-    particles.emit(
-      surfaceParticles(settings.pitch.surface),
-      initial.pos,
-      10 + 16 * report.power,
-      fxRng,
-      { x: toGoal.x * 0.6, y: 1, z: toGoal.z * 0.6 },
-      0.6,
-    );
-    audio.strike(report.power, settings.pitch.surface);
+    strikeJuice(initial, stored.report.power, Number(stored.setup.seed));
 
     const v = initial.vel;
     const speed = length3(v);
@@ -534,54 +805,227 @@ export function mountBallSandbox(
       spinArrow.setDirection(new THREE.Vector3(w.x, w.y, w.z).normalize());
       spinArrow.setLength(Math.max(0.3, spin * 0.02), 0.2, 0.1);
     }
-    emitShot(report);
+    emitShot(stored.report);
+    emitStep();
   };
 
-  const shoot = (): void => {
-    const current = currentIntent();
-    points = [];
-    emitGesture();
-    prediction.geometry.setDrawRange(0, 0);
-    targetMarker.visible = false;
-    if (!current) {
-      phase = 'aiming';
-      return;
-    }
+  const reportOf = (
+    index: number,
+    power: number,
+    bulge: number,
+    ideal: physics.Vec3,
+    actual: physics.Vec3,
+    spin: physics.Vec3,
+    difficulty: number,
+    solver: { miss: number; iterations: number } | null,
+  ): ShotReport => {
+    const a = new THREE.Vector3(ideal.x, ideal.y, ideal.z);
+    const b = new THREE.Vector3(actual.x, actual.y, actual.z);
+    return {
+      index,
+      situation: settings.situation,
+      replay: false,
+      power,
+      bulge,
+      speedKmh: b.length() * 3.6,
+      spinRps: spin.y / (2 * Math.PI),
+      errorDeg: THREE.MathUtils.radToDeg(a.angleTo(b)),
+      difficulty,
+      solverMiss: solver?.miss ?? 0,
+      solverIterations: solver?.iterations ?? 0,
+      outcome: null,
+      save: null,
+    };
+  };
+
+  /** The player's shot (free shot, free kick, penalty after the gauge, first-time shot). */
+  const shoot = (
+    intent: moments.ShotIntent,
+    features: moments.GestureFeatures,
+    gaugeDifficulty: number,
+  ): void => {
     const index = shotIndex++;
     const shotRng = Rng.create(settings.debug.seed).fork('shot', index);
-    const solution = moments.solveShot(
-      spot,
-      current.intent,
-      profile,
-      params,
-      settings.pitch.surface,
-      { tuning },
-    );
+    const from = reception ? reception.ball.pos : spot;
+    const toTarget = physics.v3(intent.target.x - from.x, 0, intent.target.z - from.z);
+    const difficulty = reception
+      ? moments.firstTimeDifficulty(reception.ball, toTarget)
+      : gaugeDifficulty;
+    const profile = profileFor(difficulty);
+    let solution: moments.ShotSolution;
+    try {
+      solution = moments.solveShot(from, intent, profile, params, settings.pitch.surface, {
+        tuning,
+      });
+    } catch {
+      phase = 'aiming';
+      emitStep();
+      return;
+    }
     const struck = moments.applyExecutionError(
       solution,
       profile,
       shotRng.fork('execution'),
       tuning,
     );
-    const ideal = new THREE.Vector3(solution.velocity.x, solution.velocity.y, solution.velocity.z);
-    const actual = new THREE.Vector3(struck.velocity.x, struck.velocity.y, struck.velocity.z);
-    const report: ShotReport = {
+    const report = reportOf(
       index,
-      replay: false,
-      power: current.features.power,
-      bulge: current.features.bulge,
-      speedKmh: actual.length() * 3.6,
-      spinRps: struck.spin.y / (2 * Math.PI),
-      errorDeg: THREE.MathUtils.radToDeg(ideal.angleTo(actual)),
-      solverMiss: solution.miss,
-      solverIterations: solution.iterations,
-      outcome: null,
-      save: null,
+      intent.power,
+      features.bulge,
+      solution.velocity,
+      struck.velocity,
+      struck.spin,
+      difficulty,
+      solution,
+    );
+    const initial = kickedBall(from, struck.velocity, struck.spin);
+    const seed = shotRng.fork('moment').nextU32();
+    const setup = reception
+      ? momentSetup(initial, seed, reception.keeper, reception.defenders)
+      : momentSetup(initial, seed, toKeeperSetup(settings), toDefenderSetups(settings, from));
+    const stored: StoredShot = {
+      setup,
+      runUp: reception ? 'first-time' : 'full',
+      receiverFeet: reception?.receiverFeet ?? null,
+      report,
     };
-    const initial = kickedBall(spot, struck.velocity, struck.spin);
-    const momentSeed = shotRng.fork('moment').nextU32();
-    lastShot = { initial, momentSeed, report };
-    beginShot(initial, momentSeed, report, false);
+    lastShot = stored;
+    beginShot(stored, false);
+  };
+
+  /** Keeper situation: the opponent strikes; the player will swipe the dive. */
+  const opponentStrike = (): void => {
+    const index = shotIndex++;
+    const rng = Rng.create(settings.debug.seed).fork('opponent', index);
+    const profile = profileFor(0);
+    const shot = moments.opponentShot(spot, profile, params, settings.pitch.surface, rng, tuning);
+    const initial = kickedBall(spot, shot.velocity, shot.spin);
+    keeperCommands = [];
+    const stored: StoredShot = {
+      setup: momentSetup(
+        initial,
+        rng.fork('moment').nextU32(),
+        toKeeperSetup(settings, keeperCommands),
+        [],
+      ),
+      runUp: 'full',
+      receiverFeet: null,
+      report: reportOf(index, 0.8, 0, shot.velocity, shot.velocity, shot.spin, 0, null),
+    };
+    lastShot = stored;
+    beginShot(stored, false);
+  };
+
+  /** The player's pass: weighted to the receiver's run, then the passer's error. */
+  const passTo = (target: physics.Vec3, features: moments.GestureFeatures): void => {
+    const solution = solvePassTo(target);
+    if (!solution) {
+      phase = 'aiming';
+      emitStep();
+      return;
+    }
+    const index = shotIndex++;
+    const rng = Rng.create(settings.debug.seed).fork('pass', index);
+    const velocity = moments.applyPassError(solution.velocity, passerProfile(), rng.fork('error'));
+    const initial = moments.passBall(spot, velocity);
+    const passSeed = rng.fork('moment').nextU32();
+    currentReport = reportOf(
+      index,
+      features.power,
+      features.bulge,
+      solution.velocity,
+      velocity,
+      physics.v3(0, 0, 0),
+      0,
+      null,
+    );
+    passFocus = target;
+    if (!passerCtrl) {
+      startPass(initial, passSeed);
+      return;
+    }
+    const h = Math.hypot(velocity.x, velocity.z) || 1;
+    const delay = passerCtrl.startStrike(
+      spot,
+      { x: velocity.x / h, y: 0, z: velocity.z / h },
+      0.3,
+      { clip: 'player_pass' },
+    );
+    pending = {
+      kind: 'pass',
+      shot: null,
+      passBall: initial,
+      passSeed,
+      replay: false,
+      remaining: delay,
+    };
+    phase = 'striking';
+    emitStep();
+  };
+
+  const startPass = (initial: physics.BallState, seed: number): void => {
+    const started = moments.startPassMoment({
+      ball: initial,
+      physics: params,
+      surface: settings.pitch.surface,
+      receiver: {
+        from: layout().receiver,
+        pace: settings.situations.receiverPace,
+        speed: moments.RECEIVER_RUN_SPEED,
+      },
+      keeper: toKeeperSetup(settings),
+      defenders: toDefenderSetups(settings, initial.pos),
+      defenderTuning: toDefenderTuning(settings),
+      seed,
+    });
+    pass = { ...started, previous: started.state };
+    showing = 'pass';
+    phase = 'passing';
+    samples.length = 0;
+    samples.push(initial);
+    heldAfterOutcome = 0;
+    stage.clock.reset();
+    stage.clock.setTimeScale(settings.debug.timeScale);
+    strikeJuice(initial, 0.35, seed);
+    emitStep();
+  };
+
+  /** Pass received: time almost stops, the player aims the first-time shot. */
+  const receive = (): void => {
+    if (!pass) return;
+    const s = pass.state;
+    const keeperSetup = toKeeperSetup(settings);
+    reception = {
+      ball: s.flight.ball,
+      keeper: keeperSetup && s.keeper ? { ...keeperSetup, feet: s.keeper.feet } : keeperSetup,
+      defenders: moments.defendersAfterPass(pass.context.defenderSetups, s.defenders),
+      receiverFeet: s.receiver.feet,
+    };
+    spot = s.flight.ball.pos;
+    phase = 'aiming';
+    stage.clock.setTimeScale(BULLET_TIME, 0.12);
+    emitStep();
+  };
+
+  const passOver = (outcome: 'intercepted' | 'lost'): void => {
+    phase = 'result';
+    heldAfterOutcome = 0;
+    if (currentReport) {
+      currentReport = { ...currentReport, outcome };
+      emitShot(currentReport);
+    }
+    shooterCtrl?.react('miss', 0);
+    audio.crowdReaction('ooh');
+    emitStep();
+  };
+
+  /** Keeper situation: the swipe sets the dive (target on the goal plane, tick of the moment). */
+  const dive = (): void => {
+    const target = currentDiveTarget();
+    if (!target || keeperCommands.length > 0 || replaying) return;
+    const tick = phase === 'striking' ? 1 : moment.tick + 1;
+    keeperCommands.push({ tick, target });
+    emitStep();
   };
 
   // ─── Input ──────────────────────────────────────────────────────────────────
@@ -593,41 +1037,101 @@ export function mountBallSandbox(
       tick: Math.round(((event.timeStamp - gestureStart) / 1000) * TICK_RATE),
     };
   };
+  const startTrace = (event: PointerEvent, kind: 'shot' | 'pass' | 'dive'): void => {
+    pointerId = event.pointerId;
+    try {
+      canvas.setPointerCapture(event.pointerId);
+    } catch {
+      // Not an active pointer (synthetic events): tracing still works without capture.
+    }
+    gestureStart = event.timeStamp;
+    points = [toPoint(event)];
+    tracing = kind;
+    emitGesture();
+  };
   const onPointerDown = (event: PointerEvent): void => {
     // Browsers only allow audio after a user gesture.
     if (audio.unlock()) audio.startMurmur();
-    if (phase !== 'aiming' || pointerId !== null) return;
-    pointerId = event.pointerId;
-    canvas.setPointerCapture(event.pointerId);
-    gestureStart = event.timeStamp;
-    points = [toPoint(event)];
+    if (pointerId !== null) return;
+    const situation = settings.situation;
+    if (phase === 'gauge' && gauge) {
+      const g = moments.penaltyGauge(gauge.value);
+      const intent = { ...gauge.intent, power: g.power };
+      const features = gauge.features;
+      gauge = null;
+      emitGauge(null);
+      shoot(intent, features, g.difficulty);
+      return;
+    }
+    if (situation === 'keeper') {
+      if (phase === 'aiming') {
+        opponentStrike();
+        return;
+      }
+      const live = phase === 'striking' || (phase === 'flying' && moment.outcome === null);
+      if (live && !replaying && keeperCommands.length === 0) startTrace(event, 'dive');
+      return;
+    }
+    if (phase !== 'aiming') return;
+    startTrace(event, situation === 'pass' && !reception ? 'pass' : 'shot');
     phase = 'tracing';
-    emitGesture();
   };
   const onPointerMove = (event: PointerEvent): void => {
-    if (phase !== 'tracing' || event.pointerId !== pointerId) return;
+    if (pointerId === null || event.pointerId !== pointerId) return;
     const events =
       typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [event];
     for (const e of events.length > 0 ? events : [event]) points.push(toPoint(e));
     predictionDirty = true;
     emitGesture();
   };
+  const endTrace = (): void => {
+    points = [];
+    emitGesture();
+    clearAim();
+  };
   const onPointerUp = (event: PointerEvent): void => {
     if (event.pointerId !== pointerId) return;
     pointerId = null;
-    if (phase === 'tracing') {
-      points.push(toPoint(event));
-      shoot();
+    points.push(toPoint(event));
+    if (tracing === 'dive') {
+      dive();
+      endTrace();
+      return;
     }
+    if (phase !== 'tracing') {
+      endTrace();
+      return;
+    }
+    if (tracing === 'pass') {
+      const target = currentPassTarget();
+      const features = moments.analyzeGesture(points, settings.gesture);
+      endTrace();
+      if (target && features) passTo(target, features);
+      else phase = 'aiming';
+      emitStep();
+      return;
+    }
+    const current = currentIntent();
+    endTrace();
+    if (!current) {
+      phase = 'aiming';
+      emitStep();
+      return;
+    }
+    if (settings.situation === 'penalty') {
+      gauge = { intent: current.intent, features: current.features, elapsed: 0, value: 0 };
+      phase = 'gauge';
+      emitStep();
+      return;
+    }
+    shoot(current.intent, current.features, 0);
   };
   const onPointerCancel = (event: PointerEvent): void => {
     if (event.pointerId !== pointerId) return;
     pointerId = null;
-    points = [];
-    phase = 'aiming';
-    prediction.geometry.setDrawRange(0, 0);
-    targetMarker.visible = false;
-    emitGesture();
+    if (phase === 'tracing') phase = 'aiming';
+    endTrace();
+    emitStep();
   };
   canvas.addEventListener('pointerdown', onPointerDown);
   canvas.addEventListener('pointermove', onPointerMove);
@@ -635,100 +1139,154 @@ export function mountBallSandbox(
   canvas.addEventListener('pointercancel', onPointerCancel);
 
   // ─── Loop ───────────────────────────────────────────────────────────────────
+  const flightEvent = (event: physics.FlightEvent, i: number): void => {
+    if (event.type === 'frame') {
+      applyEffects(director.impact('post', event.speed, replaying));
+      particles.emit('glint', event.pos, 14, fxRng, { x: -1, y: 0.3, z: 0 }, 1);
+      audio.post(event.speed, panOf(event.pos.z));
+      audio.crowdReaction('ooh');
+    }
+    if (event.type === 'bounce') {
+      particles.emit(
+        surfaceParticles(settings.pitch.surface),
+        event.pos,
+        Math.min(14, event.speed),
+        fxRng,
+        { x: 0, y: 1, z: 0 },
+        0.9,
+      );
+      audio.bounce(event.speed, settings.pitch.surface, panOf(event.pos.z));
+    }
+    if (event.type === 'net') {
+      particles.emit('net', event.pos, 10, fxRng, { x: -1, y: 0.2, z: 0 }, 1);
+      audio.net(event.speed, panOf(event.pos.z));
+      stage.shake.add(Math.min(0.2, event.speed * 0.01));
+      stadium.netImpact(event.pos, event.speed, simTime + (i + 1) * TICK_DT);
+    }
+  };
+
+  const stepShot = (ticks: number): void => {
+    for (let i = 0; i < ticks; i++) {
+      previousMoment = moment;
+      const next = moments.stepShotMoment(moment, momentContext);
+      moment = next.state;
+      samples.push(moment.flight.ball);
+      for (const event of next.events) {
+        if (event.type === 'save' && currentReport) {
+          currentReport = { ...currentReport, save: event.kind, replay: replaying };
+          emitShot(currentReport);
+          applyEffects(director.impact('save', event.speed, replaying));
+          audio.gloves(event.kind, event.speed, panOf(event.pos.z));
+          audio.crowdReaction(settings.situation === 'keeper' ? 'goal' : 'ooh');
+        } else if (event.type === 'block' && currentReport) {
+          currentReport = { ...currentReport, save: 'block', replay: replaying };
+          emitShot(currentReport);
+          applyEffects(director.impact('block', event.speed, replaying));
+          audio.block(event.speed, panOf(event.pos.z));
+        } else if (
+          event.type === 'bounce' ||
+          event.type === 'frame' ||
+          event.type === 'net' ||
+          event.type === 'outcome'
+        ) {
+          flightEvent(event, i);
+        }
+      }
+      if (currentReport && moment.outcome !== null && currentReport.outcome !== moment.outcome) {
+        currentReport = { ...currentReport, outcome: moment.outcome, replay: replaying };
+        if (!replaying && lastShot) lastShot = { ...lastShot, report: currentReport };
+        emitShot(currentReport);
+        const goal = moment.outcome === 'goal';
+        const keeperGame = settings.situation === 'keeper';
+        if (!replaying) {
+          shooterCtrl?.react(goal ? 'goal' : 'miss', fxRng.float());
+          if (goal) keeperCtrl?.concede();
+        }
+        if (goal) {
+          applyEffects(director.impact('goal', 1, replaying));
+          if (!replaying) {
+            // Conceding in the keeper situation: the away end is quieter than the home one.
+            audio.crowdReaction(keeperGame ? 'ooh' : 'goal');
+            audio.whistle(0.45, 0.9);
+            if (!keeperGame) confetti();
+          }
+        }
+        // Near miss: the stand goes "ouuuh".
+        if ((moment.outcome === 'wide' || moment.outcome === 'over') && !replaying) {
+          const p = moment.flight.ball.pos;
+          const besidePost = Math.abs(p.z) - physics.GOAL.width / 2 < 1.5 && p.y < 3.2;
+          const overBar =
+            p.y - physics.GOAL.height < 1.2 && Math.abs(p.z) < physics.GOAL.width / 2 + 1;
+          if (besidePost || overBar) audio.crowdReaction('ooh');
+        }
+        emitStep();
+      }
+    }
+  };
+
+  const stepPass = (ticks: number): void => {
+    if (!pass) return;
+    for (let i = 0; i < ticks && phase === 'passing'; i++) {
+      pass.previous = pass.state;
+      const next = moments.stepPassMoment(pass.state, pass.context);
+      pass.state = next.state;
+      samples.push(pass.state.flight.ball);
+      for (const event of next.events) {
+        if (event.type === 'intercepted') {
+          applyEffects(director.impact('block', event.speed, false));
+          audio.block(event.speed, panOf(event.pos.z));
+        } else if (event.type === 'bounce' || event.type === 'frame' || event.type === 'net') {
+          flightEvent(event, i);
+        }
+      }
+      const outcome = pass.state.outcome;
+      if (outcome === 'received') receive();
+      else if (outcome === 'intercepted' || outcome === 'lost') passOver(outcome);
+    }
+  };
+
   const unsubscribe = stage.onFrame((frame) => {
     if (phase === 'striking' && pending) {
       pending.remaining -= frame.simDt;
       if (pending.remaining <= 0) {
         const p = pending;
         pending = null;
-        launch(p.initial, p.momentSeed, p.report, p.replay);
+        if (p.kind === 'shot' && p.shot) launch(p.shot, p.replay);
+        else if (p.kind === 'pass' && p.passBall) startPass(p.passBall, p.passSeed);
       }
     }
     if (phase === 'tracing' && predictionDirty) {
       predictionDirty = false;
       updatePrediction();
     }
+    if (phase === 'gauge' && gauge) {
+      // Triangle wave: the crowd's pressure makes it sweep faster.
+      gauge.elapsed += frame.wallDt;
+      const speed = settings.situations.gaugeSpeed * (1 + settings.shooter.pressure * 0.8);
+      const x = (gauge.elapsed * speed * 2) % 2;
+      gauge.value = x < 1 ? x : 2 - x;
+      emitGauge(gauge.value);
+    }
 
+    if (phase === 'passing') stepPass(frame.ticks);
     if (phase === 'flying') {
-      for (let i = 0; i < frame.ticks; i++) {
-        previousMoment = moment;
-        const next = moments.stepShotMoment(moment, momentContext);
-        moment = next.state;
-        samples.push(moment.flight.ball);
-        for (const event of next.events) {
-          if (event.type === 'save' && currentReport) {
-            currentReport = { ...currentReport, save: event.kind, replay: replaying };
-            emitShot(currentReport);
-            applyEffects(director.impact('save', event.speed, replaying));
-            audio.gloves(event.kind, event.speed, panOf(event.pos.z));
-            audio.crowdReaction('ooh');
-          }
-          if (event.type === 'block' && currentReport) {
-            currentReport = { ...currentReport, save: 'block', replay: replaying };
-            emitShot(currentReport);
-            applyEffects(director.impact('block', event.speed, replaying));
-            audio.block(event.speed, panOf(event.pos.z));
-          }
-          if (event.type === 'frame') {
-            applyEffects(director.impact('post', event.speed, replaying));
-            particles.emit('glint', event.pos, 14, fxRng, { x: -1, y: 0.3, z: 0 }, 1);
-            audio.post(event.speed, panOf(event.pos.z));
-            audio.crowdReaction('ooh');
-          }
-          if (event.type === 'bounce') {
-            particles.emit(
-              surfaceParticles(settings.pitch.surface),
-              event.pos,
-              Math.min(14, event.speed),
-              fxRng,
-              { x: 0, y: 1, z: 0 },
-              0.9,
-            );
-            audio.bounce(event.speed, settings.pitch.surface, panOf(event.pos.z));
-          }
-          if (event.type === 'net') {
-            particles.emit('net', event.pos, 10, fxRng, { x: -1, y: 0.2, z: 0 }, 1);
-            audio.net(event.speed, panOf(event.pos.z));
-            stage.shake.add(Math.min(0.2, event.speed * 0.01));
-            stadium.netImpact(event.pos, event.speed, simTime + (i + 1) * TICK_DT);
-          }
-        }
-        if (currentReport && moment.outcome !== null && currentReport.outcome !== moment.outcome) {
-          currentReport = { ...currentReport, outcome: moment.outcome, replay: replaying };
-          if (!replaying && lastShot) lastShot = { ...lastShot, report: currentReport };
-          emitShot(currentReport);
-          if (!replaying) {
-            shooterCtrl?.react(moment.outcome === 'goal' ? 'goal' : 'miss', fxRng.float());
-            if (moment.outcome === 'goal') keeperCtrl?.concede();
-          }
-          if (moment.outcome === 'goal') {
-            applyEffects(director.impact('goal', 1, replaying));
-            if (!replaying) {
-              audio.crowdReaction('goal');
-              audio.whistle(0.45, 0.9);
-              confetti();
-            }
-          }
-          // Near miss: the stand goes "ouuuh".
-          if ((moment.outcome === 'wide' || moment.outcome === 'over') && !replaying) {
-            const p = moment.flight.ball.pos;
-            const besidePost = Math.abs(p.z) - physics.GOAL.width / 2 < 1.5 && p.y < 3.2;
-            const overBar =
-              p.y - physics.GOAL.height < 1.2 && Math.abs(p.z) < physics.GOAL.width / 2 + 1;
-            if (besidePost || overBar) audio.crowdReaction('ooh');
-          }
-        }
-      }
+      stepShot(frame.ticks);
       if (settings.debug.trail) setLine(trail, samples, 2);
       if (moment.outcome !== null) {
         heldAfterOutcome += frame.wallDt;
         if (heldAfterOutcome > RESULT_HOLD) {
-          // A live goal is replayed once from another angle, then the ball goes back.
-          if (!replaying && moment.outcome === 'goal' && settings.camera.autoReplay && lastShot) {
+          // The highlight (a goal, or a save when keeping goal) is replayed once from another
+          // angle, then the ball goes back.
+          const highlight =
+            settings.situation === 'keeper'
+              ? moment.outcome === 'saved'
+              : moment.outcome === 'goal';
+          if (!replaying && highlight && settings.camera.autoReplay && lastShot) {
             beginShot(
-              lastShot.initial,
-              lastShot.momentSeed,
-              { ...lastShot.report, replay: true, outcome: null, save: null },
+              {
+                ...lastShot,
+                report: { ...lastShot.report, replay: true, outcome: null, save: null },
+              },
               true,
             );
           } else {
@@ -737,48 +1295,92 @@ export function mountBallSandbox(
         }
       }
     }
+    if (phase === 'passing' && settings.debug.trail) setLine(trail, samples, 2);
+    if (phase === 'result') {
+      heldAfterOutcome += frame.wallDt;
+      if (heldAfterOutcome > RESULT_HOLD) placeBall();
+    }
 
+    const { now, before } = shown();
     const a = frame.alpha;
-    const p0 = previousMoment.flight.ball.pos;
-    const p1 = moment.flight.ball.pos;
+    const p0 = before.ball.pos;
+    const p1 = now.ball.pos;
     ball.position.set(p0.x + (p1.x - p0.x) * a, p0.y + (p1.y - p0.y) * a, p0.z + (p1.z - p0.z) * a);
     ballPos.copy(ball.position);
 
     // Director: camera every frame (real time, fluid in slow motion) and slow motion.
     if (phase === 'flying') {
       const base = replaying ? settings.debug.replayScale : settings.debug.timeScale;
-      stage.clock.setTimeScale(base * director.timeScale(directorInput()), 0.06);
+      // Keeping goal: the flight is slowed down so the player can read it and swipe.
+      const keeperTime =
+        settings.situation === 'keeper' && !replaying && moment.outcome === null
+          ? keeperSlowMo(settings)
+          : 1;
+      stage.clock.setTimeScale(base * keeperTime * director.timeScale(directorInput()), 0.06);
     }
     applyCamera(frame.wallDt);
 
     // Trail and particles follow simulated time (slow motion slows them too).
-    if (phase === 'flying' && moment.keeper?.phase !== 'holding') {
-      const v = moment.flight.ball.vel;
+    const moving = phase === 'flying' || phase === 'passing' || phase === 'result';
+    if (moving && now.keeper?.phase !== 'holding') {
+      const v = now.ball.vel;
       ballTrail.push(ballPos, Math.hypot(v.x, v.y, v.z), camera.position);
     }
     particles.update(frame.simDt);
     particles.setViewportHeight(
       (stage.stats.height * stage.stats.pixelRatio) / (2 * Math.tan((camera.fov * Math.PI) / 360)),
     );
-    if (phase === 'flying') {
-      // Ball spin, for the eye only.
-      const w = moment.flight.ball.spin;
-      ball.rotation.x += w.x * frame.simDt;
-      ball.rotation.y += w.y * frame.simDt;
-      ball.rotation.z += w.z * frame.simDt;
+    if (moving) {
+      // Ball spin, for the eye only; a rolling ball turns with its speed.
+      const b = now.ball;
+      if (b.grounded) {
+        ball.rotation.x += (b.vel.z / BALL.radius) * frame.simDt;
+        ball.rotation.z -= (b.vel.x / BALL.radius) * frame.simDt;
+      } else {
+        ball.rotation.x += b.spin.x * frame.simDt;
+        ball.rotation.y += b.spin.y * frame.simDt;
+        ball.rotation.z += b.spin.z * frame.simDt;
+      }
+    }
+
+    // Receiver's run (pass situation, until he strikes).
+    if (showing === 'pass' && pass && phase !== 'striking') {
+      const r0 = pass.previous.receiver;
+      const r1 = pass.state.receiver;
+      const feet = {
+        x: r0.feet.x + (r1.feet.x - r0.feet.x) * a,
+        y: 0,
+        z: r0.feet.z + (r1.feet.z - r0.feet.z) * a,
+      };
+      shooterCtrl?.follow(feet, r1.vel, ballPos);
+      receiverFigure.update(
+        { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
+        { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
+        1,
+      );
+    } else if (reception && characterAsset === null) {
+      const feet = reception.receiverFeet;
+      receiverFigure.update(
+        { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
+        { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
+        1,
+      );
     }
     shooterCtrl?.update(frame.simDt);
-    if (keeperCtrl && moment.keeper && previousMoment.keeper) {
-      keeperCtrl.character.root.visible = settings.keeper.enabled;
-      keeperCtrl.update(previousMoment.keeper, moment.keeper, moment.tick, a, frame.simDt);
+    passerCtrl?.update(frame.simDt);
+    if (keeperCtrl && now.keeper && before.keeper) {
+      keeperCtrl.character.root.visible = true;
+      keeperCtrl.update(before.keeper, now.keeper, now.tick, a, frame.simDt);
+    } else if (keeperCtrl) {
+      keeperCtrl.character.root.visible = false;
     }
     for (let i = 0; i < defenderCtrls.length; i++) {
-      const now = moment.defenders[i];
-      const before = previousMoment.defenders[i] ?? now;
-      if (now && before)
+      const cur = now.defenders[i];
+      const prev = before.defenders[i] ?? cur;
+      if (cur && prev)
         (defenderCtrls[i] as DefenderController).update(
-          before,
-          now,
+          prev,
+          cur,
           ballPos,
           a,
           frame.simDt,
@@ -786,15 +1388,16 @@ export function mountBallSandbox(
         );
     }
     for (let i = 0; i < defenderFigures.length; i++) {
-      const now = moment.defenders[i];
-      const before = previousMoment.defenders[i] ?? now;
-      if (now && before) (defenderFigures[i] as PlayerFigure).update(before, now, a);
+      const cur = now.defenders[i];
+      const prev = before.defenders[i] ?? cur;
+      if (cur && prev) (defenderFigures[i] as PlayerFigure).update(prev, cur, a);
     }
-    if (moment.keeper && previousMoment.keeper && characterAsset === null)
-      keeperFigure.update(previousMoment.keeper, moment.keeper, a);
+    if (now.keeper && before.keeper && characterAsset === null)
+      keeperFigure.update(before.keeper, now.keeper, a);
     simTime += frame.simDt;
     stadium.update(simTime);
     stage.postSettings.flash = Math.max(0, stage.postSettings.flash - frame.wallDt * 2.5);
+    emitStep();
   });
 
   applyJuiceSettings();
@@ -803,18 +1406,28 @@ export function mountBallSandbox(
   void loadCharacterAsset(options.characterAssetsUrl ?? '/assets/characters/').then((asset) => {
     if (!asset || disposed) return;
     characterAsset = asset;
-    const shooter = new Character(asset, HOME_KIT);
+    const shooter = new Character(asset, HOME_CHARACTER_KIT);
+    const passer = new Character(asset, HOME_CHARACTER_KIT);
     const keeper = new Character(asset, KEEPER_CHARACTER_KIT);
-    scene.add(shooter.root, keeper.root);
+    scene.add(shooter.root, passer.root, keeper.root);
     shooterCtrl = new ShooterController(shooter);
+    passerCtrl = new ShooterController(passer);
     keeperCtrl = new KeeperController(keeper);
-    if (phase === 'aiming') placeBall();
-    else syncDefenderFigures(moment.defenders.length);
+    if (phase === 'aiming' && !reception) placeBall();
+    else {
+      passer.root.visible = settings.situation === 'pass';
+      receiverFigure.group.visible = false;
+      keeperFigure.group.visible = false;
+      syncDefenderFigures(moment.defenders.length);
+    }
   });
 
   return {
     stats: stage.stats,
     setSettings(next) {
+      const situationChanged =
+        next.situation !== settings.situation ||
+        next.situations.passLayout !== settings.situations.passLayout;
       const spotChanged =
         next.spot.distance !== settings.spot.distance || next.spot.offset !== settings.spot.offset;
       settings = next;
@@ -823,27 +1436,28 @@ export function mountBallSandbox(
       stadium.setSurface(settings.pitch.surface);
       params = toPhysicsParams(settings);
       tuning = toShotTuning(settings);
-      profile = moments.shooterProfile(settings.shooter, settings.shooter, tuning);
       trail.visible = settings.debug.trail;
-      if (!settings.debug.prediction) prediction.geometry.setDrawRange(0, 0);
+      if (!settings.debug.prediction) clearAim();
       if (phase === 'flying' && !replaying) stage.clock.setTimeScale(settings.debug.timeScale);
-      if (phase === 'aiming') placeBall();
+      if (situationChanged) {
+        trail.geometry.setDrawRange(0, 0);
+        placeBall();
+      } else if (phase === 'aiming' && !reception) placeBall();
       else if (spotChanged) trail.geometry.setDrawRange(0, 0);
     },
     replay() {
-      if (!lastShot || phase === 'tracing') return;
+      if (!lastShot || phase === 'tracing' || phase === 'gauge' || phase === 'passing') return;
+      reception = null;
+      pass = null;
       beginShot(
-        lastShot.initial,
-        lastShot.momentSeed,
-        { ...lastShot.report, replay: true, outcome: null, save: null },
+        { ...lastShot, report: { ...lastShot.report, replay: true, outcome: null, save: null } },
         true,
       );
     },
     reset() {
       points = [];
       emitGesture();
-      prediction.geometry.setDrawRange(0, 0);
-      targetMarker.visible = false;
+      clearAim();
       trail.geometry.setDrawRange(0, 0);
       placeBall();
     },
@@ -855,6 +1469,15 @@ export function mountBallSandbox(
       shotListeners.add(callback);
       return () => shotListeners.delete(callback);
     },
+    onStep(callback) {
+      stepListeners.add(callback);
+      callback(currentStep());
+      return () => stepListeners.delete(callback);
+    },
+    onGauge(callback) {
+      gaugeListeners.add(callback);
+      return () => gaugeListeners.delete(callback);
+    },
     dispose() {
       unsubscribe();
       canvas.removeEventListener('pointerdown', onPointerDown);
@@ -863,8 +1486,11 @@ export function mountBallSandbox(
       canvas.removeEventListener('pointercancel', onPointerCancel);
       gestureListeners.clear();
       shotListeners.clear();
+      stepListeners.clear();
+      gaugeListeners.clear();
       disposed = true;
       shooterCtrl?.character.dispose();
+      passerCtrl?.character.dispose();
       keeperCtrl?.character.dispose();
       for (const controller of defenderCtrls) controller.character.dispose();
       audio.dispose();
