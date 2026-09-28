@@ -74,7 +74,8 @@
         "shot": "tir n° {index}",
         "save": "gardien",
         "difficulty": "difficulté",
-        "situation": "situation"
+        "situation": "situation",
+        "perf": "{fps} i/s · {ms} ms · {calls} appels · {tris}k tri · {quality} · {res} %"
       },
       "panel": {
         "title": "Réglages",
