@@ -1,3 +1,7 @@
 // @legendes/render2d — top-down match view (PixiJS v8), imperative like render3d.
-export { MatchPlayback, type PlaybackFrame } from './playback.ts';
-export { mountPitch2D, type Pitch2DHandle, type TeamLook } from './pitch.ts';
+export { Timeline, displayDuration, clockKey } from './timeline.ts';
+export type { Cursor, Phase, Segment, Stoppage } from './timeline.ts';
+export { Choreographer } from './choreo.ts';
+export type { ChoreoFrame, TokenFrame } from './choreo.ts';
+export { mountPitch2D } from './pitch.ts';
+export type { Pitch2DHandle, TeamLook } from './pitch.ts';

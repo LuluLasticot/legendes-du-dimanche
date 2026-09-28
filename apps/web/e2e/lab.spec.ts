@@ -19,3 +19,20 @@ test('the ball lab mounts and switches situations', async ({ page }) => {
 
   expect(errors).toEqual([]);
 });
+
+test('the match lab plays a match on the 2D pitch', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/lab/match?speed=6');
+
+  await expect(page.locator('canvas')).toBeVisible();
+  // The clock runs: after a few seconds of fast-forward the minute has moved on.
+  const clock = page.getByText(/^\d+'$/);
+  await expect
+    .poll(async () => Number.parseInt((await clock.first().textContent()) ?? '0', 10), {
+      timeout: 20_000,
+    })
+    .toBeGreaterThan(4);
+  await expect(page.getByRole('button', { name: '×1' })).toBeVisible();
+  expect(errors).toEqual([]);
+});

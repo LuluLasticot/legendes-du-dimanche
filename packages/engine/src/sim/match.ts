@@ -36,7 +36,9 @@ export type ActionKind =
   | 'corner'
   | 'goal-kick'
   | 'free-kick'
-  | 'penalty';
+  | 'penalty'
+  | 'foul'
+  | 'offside';
 
 /** One ball movement, for the 2D renderer: who played it, where the ball ends, when. */
 export interface MatchAction {
@@ -70,6 +72,7 @@ export type MatchEventKind =
   | 'yellow'
   | 'red'
   | 'injury'
+  | 'offside'
   | 'sub';
 
 export interface MatchEvent {
@@ -452,6 +455,7 @@ export class MatchSim {
     to: number | null,
     success: boolean,
     side = this.possession,
+    toSide: Side = side,
   ): void {
     this.actions.push({
       t: this.t,
@@ -459,7 +463,7 @@ export class MatchSim {
       team: side,
       kind,
       from: this.id(side, this.carrier),
-      to: to === null ? null : this.id(side, to),
+      to: to === null ? null : this.id(toSide, to),
       ball: this.abs(this.ball, side),
       success,
     });
@@ -698,17 +702,13 @@ export class MatchSim {
     const success = rng.chance(logistic(base + (skill - defender.value) * SKILL));
     this.tick(isPass ? rng.range(3, 7) : rng.range(3, 6));
     if (isPass) a.stats.passes++;
+    const target: Point = {
+      x: clamp(this.ball.x + rng.normal(0, 0.18), 0.04, 0.96),
+      y: clamp(this.ball.y + (isPass ? rng.range(-0.04, 0.14) : rng.range(0.05, 0.12)), 0.04, 0.95),
+    };
 
     if (success) {
       if (isPass) a.stats.passesCompleted++;
-      const target: Point = {
-        x: clamp(this.ball.x + rng.normal(0, 0.18), 0.04, 0.96),
-        y: clamp(
-          this.ball.y + (isPass ? rng.range(-0.04, 0.14) : rng.range(0.05, 0.12)),
-          0.04,
-          0.95,
-        ),
-      };
       const receiver = isPass
         ? this.nearest(this.possession, target, true, this.carrier)
         : this.carrier;
@@ -716,6 +716,20 @@ export class MatchSim {
       this.record(isPass ? 'pass' : 'dribble', isPass ? receiver : null, true);
       this.carrier = receiver;
       return true;
+    }
+    if (isPass) {
+      // A pass towards the touchline sometimes runs out; otherwise it is cut on its way.
+      if ((target.x < 0.1 || target.x > 0.9) && rng.chance(0.35)) {
+        this.ball = { x: target.x < 0.5 ? 0 : 1, y: target.y };
+        this.record('pass', null, false);
+        this.outOfPlay(rng);
+        return false;
+      }
+      const cut = rng.range(0.35, 0.8);
+      this.ball = {
+        x: this.ball.x + (target.x - this.ball.x) * cut,
+        y: this.ball.y + (target.y - this.ball.y) * cut,
+      };
     }
     return this.lose(rng, isPass ? 'interception' : 'tackle', defender.slot);
   }
@@ -734,6 +748,7 @@ export class MatchSim {
         this.attack().knocked[this.carrier] = true;
         this.event('injury', this.possession, fouled);
       }
+      this.record('foul', winner, false, this.possession, offender);
       const inBox = this.ball.y > 0.84 && Math.abs(this.ball.x - 0.5) < 0.2;
       this.restart = inBox && rng.chance(0.3) ? 'penalty' : 'free-kick';
       return false;
@@ -789,6 +804,20 @@ export class MatchSim {
     );
     this.ball = target;
     if (rng.chance(p)) {
+      // Balls in behind sometimes find a runner offside: free kick to the defence.
+      if (target.y > 0.72 && rng.chance(0.07)) {
+        this.record('long-pass', receiver, false);
+        this.event('offside', this.possession, this.id(this.possession, receiver));
+        this.record('offside', receiver, false);
+        const winner = this.nearest(
+          this.other(this.possession),
+          toTeamFrame(this.ball, false, false),
+          true,
+        );
+        this.turnover(winner);
+        this.restart = 'free-kick';
+        return false;
+      }
       a.stats.passesCompleted++;
       this.record('long-pass', receiver, true);
       this.carrier = receiver;
@@ -918,6 +947,8 @@ export class MatchSim {
       this.ball = { x: 0.5, y: 1 };
       this.record('shot', null, true);
       this.event('goal', side, shooterId, null, xg);
+      // Celebrations, the walk back to the centre circle.
+      this.tick(rng.range(25, 40));
       this.possession = this.other(side);
       this.restart = 'kickoff';
       return;

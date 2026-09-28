@@ -1,37 +1,77 @@
 'use client';
 
 import { sim } from '@legendes/engine';
-import type { Pitch2DHandle, TeamLook } from '@legendes/render2d';
+import type { Phase, Pitch2DHandle, Stoppage, TeamLook } from '@legendes/render2d';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-const SPEEDS = [1, 10, 20, 60] as const;
-const HALF = 45 * 60;
+const SPEEDS = [1, 2, 3, 6] as const;
+const FEED_KINDS: readonly string[] = [
+  'goal',
+  'yellow',
+  'red',
+  'sub',
+  'injury',
+  'penalty',
+  'save',
+  'offside',
+  'half-time',
+  'full-time',
+];
 
-type Clock = { half: 1 | 2; t: number };
-const key = (c: Clock): number => (c.half === 1 ? c.t : 1e5 + c.t);
+interface Hud {
+  half: 1 | 2;
+  t: number;
+  phase: Phase;
+  possession: sim.Side;
+  stoppage: Stoppage;
+  stoppageProgress: number;
+}
 
-/** Demo match (Phase 2 lab): the engine's timeline played back on the 2D pitch. */
+const key = (half: 1 | 2, t: number): number => (half === 1 ? t : 1e5 + t);
+
+/** Demo match (Phase 2 lab): the engine's timeline choreographed on the 2D pitch. */
 export function MatchView() {
   const t = useTranslations('lab.match');
   const hostRef = useRef<HTMLDivElement>(null);
-  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(20);
+  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(2);
   const speedRef = useRef(speed);
   useEffect(() => {
     speedRef.current = speed;
   }, [speed]);
-  const [clock, setClock] = useState<Clock>({ half: 1, t: 0 });
+  const [hud, setHud] = useState<Hud>({
+    half: 1,
+    t: 0,
+    phase: 'kickoff',
+    possession: 0,
+    stoppage: null,
+    stoppageProgress: 0,
+  });
+
+  // Lab controls in the URL: ?seed=N (another match), ?at=S (start S display seconds in),
+  // ?speed=K (playback speed).
+  const [params, setParams] = useState({ seed: 1, at: 0 });
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const speedParam = Number(q.get('speed'));
+    const id = requestAnimationFrame(() => {
+      if ((SPEEDS as readonly number[]).includes(speedParam))
+        setSpeed(speedParam as (typeof SPEEDS)[number]);
+      setParams({ seed: Number(q.get('seed')) || 1, at: Number(q.get('at')) || 0 });
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const match = useMemo(() => {
     const setup: sim.MatchSetup = {
-      seed: 1,
-      home: sim.demoTeam(1, {
+      seed: params.seed,
+      home: sim.demoTeam(params.seed, {
         id: 'fca',
         name: 'FC Avesnes-le-Sec',
         rating: 58,
         colours: { shirt: '#f4f1e8', shorts: '#0f5132', number: '#0f5132' },
       }),
-      away: sim.demoTeam(2, {
+      away: sim.demoTeam(params.seed + 1, {
         id: 'uss',
         name: 'US Saint-Amand',
         rating: 56,
@@ -41,12 +81,7 @@ export function MatchView() {
       conditions: { surface: 'grass', rain: false, windSpeed: 0, windDirection: 0 },
     };
     return { setup, result: sim.simulateMatch(setup) };
-  }, []);
-
-  const halfTimeAt = useMemo(
-    () => match.result.events.find((e) => e.kind === 'half-time')?.t ?? HALF,
-    [match],
-  );
+  }, [params.seed]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -63,54 +98,66 @@ export function MatchView() {
       numbers: team.lineup.map((id) => sim.playerById(team, id).number),
     });
     let teams: [TeamLook, TeamLook] = [look(setup.home), look(setup.away)];
-    const subs = result.events.filter((e) => e.kind === 'sub' || e.kind === 'red');
+    const changes = result.events.filter((e) => e.kind === 'sub' || e.kind === 'red');
     let applied = 0;
-    let current: Clock = { half: 1, t: 0 };
 
-    void import('@legendes/render2d').then(async ({ mountPitch2D, MatchPlayback }) => {
+    void import('@legendes/render2d').then(async ({ mountPitch2D, Timeline }) => {
       if (cancelled) return;
       handle = await mountPitch2D(host, teams);
       if (cancelled) {
         handle.dispose();
         return;
       }
-      const playback = new MatchPlayback(result.actions);
+      const timeline = new Timeline(result.actions, { final: true });
+      let display = params.at;
       let last = performance.now();
       let uiTimer = 0;
       const loop = (now: number): void => {
-        const dt = Math.min(0.1, (now - last) / 1000);
+        const dtReal = Math.min(0.1, Math.max(0, (now - last) / 1000));
         last = now;
-        let next: Clock = { half: current.half, t: current.t + dt * speedRef.current };
-        if (next.half === 1 && next.t > halfTimeAt) next = { half: 2, t: HALF };
-        const end = playback.end;
-        if (end && key(next) > key(end)) next = end;
-        current = next;
-        // Substitutions and red cards change who is on the pitch.
-        while (applied < subs.length && key(subs[applied] as Clock) <= key(current)) {
-          const e = subs[applied++] as sim.MatchEvent;
-          const team = e.team === 0 ? setup.home : setup.away;
-          teams = teams.map((look, side) => {
-            if (side !== e.team) return look;
-            const slot = look.ids.indexOf(e.kind === 'sub' ? (e.other ?? '') : (e.player ?? ''));
-            if (slot < 0) return look;
-            if (e.kind === 'red') {
-              const sentOff = [...(look.sentOff ?? look.ids.map(() => false))];
-              sentOff[slot] = true;
-              return { ...look, sentOff };
-            }
-            const ids = [...look.ids];
-            const numbers = [...look.numbers];
-            ids[slot] = e.player ?? '';
-            numbers[slot] = sim.playerById(team, e.player ?? '').number;
-            return { ...look, ids, numbers };
-          }) as [TeamLook, TeamLook];
-          handle?.setTeams(teams);
-        }
-        handle?.render(playback.frame(current.half, current.t));
-        uiTimer += dt;
-        if (uiTimer > 0.25) {
-          uiTimer = 0;
-          setClock(current);
+        const dt = dtReal * speedRef.current;
+        display = Math.min(timeline.duration, display + dt);
+        const cursor = timeline.locate(display);
+        if (cursor && handle) {
+          const clock = timeline.clock(cursor);
+          const now2 = key(clock.half, clock.t);
+          // Substitutions and red cards change who is on the pitch.
+          while (
+            applied < changes.length &&
+            key(changes[applied]?.half ?? 1, changes[applied]?.t ?? 0) <= now2
+          ) {
+            const e = changes[applied++] as sim.MatchEvent;
+            const team = e.team === 0 ? setup.home : setup.away;
+            teams = teams.map((tl, side) => {
+              if (side !== e.team) return tl;
+              const slot = tl.ids.indexOf(e.kind === 'sub' ? (e.other ?? '') : (e.player ?? ''));
+              if (slot < 0) return tl;
+              if (e.kind === 'red') {
+                const sentOff = [...(tl.sentOff ?? tl.ids.map(() => false))];
+                sentOff[slot] = true;
+                return { ...tl, sentOff };
+              }
+              const ids = [...tl.ids];
+              const numbers = [...tl.numbers];
+              ids[slot] = e.player ?? '';
+              numbers[slot] = sim.playerById(team, e.player ?? '').number;
+              return { ...tl, ids, numbers };
+            }) as [TeamLook, TeamLook];
+            handle.setTeams(teams);
+          }
+          const frame = handle.render(dt, cursor, clock);
+          uiTimer += dtReal;
+          if (uiTimer > 0.1) {
+            uiTimer = 0;
+            setHud({
+              half: clock.half,
+              t: clock.t,
+              phase: frame.phase,
+              possession: frame.possession,
+              stoppage: frame.stoppage,
+              stoppageProgress: frame.stoppageProgress,
+            });
+          }
         }
         raf = requestAnimationFrame(loop);
       };
@@ -121,47 +168,57 @@ export function MatchView() {
       cancelAnimationFrame(raf);
       handle?.dispose();
     };
-  }, [match, halfTimeAt]);
+  }, [match, params.at]);
 
   const { setup, result } = match;
-  const seen = result.events.filter((e) => key(e) <= key(clock));
+  const seen = result.events.filter((e) => key(e.half, e.t) <= key(hud.half, hud.t));
   const score = seen.reduce<[number, number]>(
     (s, e) => (e.kind === 'goal' ? (e.team === 0 ? [s[0] + 1, s[1]] : [s[0], s[1] + 1]) : s),
     [0, 0],
   );
-  const minute = Math.floor(clock.t / 60) + 1;
+  const minute = Math.floor(hud.t / 60) + 1;
   const name = (id: string | null): string => {
     if (!id) return '';
     const team = id.startsWith(setup.home.id) ? setup.home : setup.away;
     return sim.playerById(team, id).name;
   };
   const feed = seen
-    .filter((e) =>
-      [
-        'goal',
-        'yellow',
-        'red',
-        'sub',
-        'injury',
-        'penalty',
-        'save',
-        'half-time',
-        'full-time',
-      ].includes(e.kind),
-    )
+    .filter((e) => FEED_KINDS.includes(e.kind))
     .slice(-5)
     .reverse();
+  const teamName = (side: sim.Side): string => (side === 0 ? setup.home.name : setup.away.name);
+  const showBanner =
+    hud.stoppage !== null &&
+    hud.stoppage !== 'kickoff' &&
+    hud.stoppageProgress > 0.04 &&
+    hud.stoppageProgress < 0.9;
 
   return (
     <div className="relative min-h-0 flex-1">
       <div ref={hostRef} className="absolute inset-0" />
-      <div className="pointer-events-none absolute top-3 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-md bg-pitch-950/80 px-4 py-2 font-semibold text-chalk backdrop-blur-sm">
-        <span className="text-sm">{setup.home.name}</span>
-        <span className="font-mono text-lg text-floodlight-300">
-          {score[0]} – {score[1]}
-        </span>
-        <span className="text-sm">{setup.away.name}</span>
-        <span className="font-mono text-xs text-chalk-muted">{minute}&apos;</span>
+      <div className="pointer-events-none absolute top-3 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
+        <div className="flex items-center gap-3 rounded-md bg-pitch-950/80 px-4 py-2 font-semibold text-chalk backdrop-blur-sm">
+          <span className="text-sm">{setup.home.name}</span>
+          <span className="font-mono text-lg text-floodlight-300">
+            {score[0]} – {score[1]}
+          </span>
+          <span className="text-sm">{setup.away.name}</span>
+          <span className="font-mono text-xs text-chalk-muted">{minute}&apos;</span>
+        </div>
+        <p className="rounded-pill bg-pitch-950/70 px-3 py-0.5 text-[11px] text-chalk-muted backdrop-blur-sm">
+          {teamName(hud.possession)} · {t(`phase.${hud.phase}`)}
+        </p>
+        {showBanner && hud.stoppage && (
+          <p
+            className={`rounded-md px-4 py-1.5 text-center font-semibold backdrop-blur-sm ${
+              hud.stoppage === 'goal'
+                ? 'bg-floodlight-400 text-lg text-pitch-950'
+                : 'bg-pitch-950/85 text-sm text-floodlight-300'
+            }`}
+          >
+            {t(`stoppage.${hud.stoppage}`)}
+          </p>
+        )}
       </div>
       <ol className="pointer-events-none absolute bottom-16 left-3 w-[min(22rem,calc(100%-1.5rem))] space-y-1 text-xs text-chalk">
         {feed.map((e, i) => (

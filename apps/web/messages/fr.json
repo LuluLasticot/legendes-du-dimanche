@@ -301,7 +301,29 @@
         "penalty": "Penalty ! {player} s'avance",
         "save": "Arrêt de {player} devant {other}",
         "half-time": "Mi-temps",
+        "full-time": "Fin du match",
+        "offside": "Hors-jeu de {player}"
+      },
+      "stoppage": {
+        "kickoff": "Engagement",
+        "throw-in": "Touche",
+        "corner": "Corner",
+        "goal-kick": "Sortie de but",
+        "free-kick": "Coup franc",
+        "penalty": "Penalty !",
+        "foul": "Faute",
+        "offside": "Hors-jeu",
+        "goal": "BUT !",
+        "half-time": "Mi-temps",
         "full-time": "Fin du match"
+      },
+      "phase": {
+        "kickoff": "Engagement",
+        "buildup": "Relance",
+        "progress": "Construction",
+        "attack": "Attaque placée",
+        "transition": "Transition",
+        "set-piece": "Arrêt de jeu"
       }
     }
   }

@@ -1,29 +1,19 @@
 // Top-down match view (GDD §7.1): pitch with the IFAB markings, 22 tokens in the kit colours
-// with their numbers, the ball and the pass in flight. The engine gives targets (team shapes,
-// ball); the view eases the tokens towards them. Portrait on phones (home attacks up in the
-// first half), landscape on wide screens. Imperative API: mount → render(frame) → dispose.
+// with their numbers and the direction they face, the ball (with its height on long balls and
+// shots) and the pass in flight. Everything that moves comes from the Choreographer; this file
+// only draws it. Portrait on phones (home attacks up in the first half), landscape on wide
+// screens. Imperative API: mount → render(dt, cursor, clock) → dispose.
 
-import { sim } from '@legendes/engine';
 import { Application, Container, Graphics, Text } from 'pixi.js';
-import type { PlaybackFrame } from './playback.ts';
+import { Choreographer, type ChoreoFrame, type TeamLook } from './choreo.ts';
+import type { Cursor } from './timeline.ts';
 
-type Point = sim.Point;
-
-export interface TeamLook {
-  readonly formation: sim.Formation;
-  readonly tactic: sim.Tactic;
-  readonly colours: { readonly shirt: string; readonly shorts: string; readonly number: string };
-  /** Player ids on the pitch, by formation slot (update after substitutions). */
-  readonly ids: readonly string[];
-  readonly numbers: readonly number[];
-  /** Slots of sent-off players (their token leaves the pitch). */
-  readonly sentOff?: readonly boolean[];
-}
+export type { TeamLook } from './choreo.ts';
 
 export interface Pitch2DHandle {
   setTeams(teams: readonly [TeamLook, TeamLook]): void;
-  /** Target state to show (called every frame by the match screen). */
-  render(frame: PlaybackFrame): void;
+  /** Advances by `dt` display seconds and draws; returns what is on screen (for the HUD). */
+  render(dt: number, cursor: Cursor, clock: { half: 1 | 2; t: number }): ChoreoFrame;
   readonly stats: { fps: number };
   dispose(): void;
 }
@@ -34,12 +24,11 @@ const GRASS = 0x1f5a2c;
 const STRIPE = 0x236433;
 const LINE = 0xf4f1e8;
 
-interface Token {
+interface TokenView {
   readonly view: Container;
   readonly disc: Graphics;
+  readonly wedge: Graphics;
   readonly label: Text;
-  x: number;
-  y: number;
 }
 
 export async function mountPitch2D(
@@ -59,19 +48,19 @@ export async function mountPitch2D(
   const pitch = new Graphics();
   const arrow = new Graphics();
   const tokensLayer = new Container();
-  const ballView = new Graphics();
+  const ballLayer = new Graphics();
   const highlight = new Graphics();
-  app.stage.addChild(pitch, arrow, highlight, tokensLayer, ballView);
+  app.stage.addChild(pitch, arrow, highlight, tokensLayer, ballLayer);
 
   let teams = initial;
-  let frame: PlaybackFrame | null = null;
-  // Screen mapping, recomputed on resize.
+  const choreo = new Choreographer(initial);
   let layout = { left: 0, top: 0, w: 1, h: 1, portrait: true, unit: 1 };
 
-  const toScreen = (p: Point): { x: number; y: number } =>
+  /** Normalised absolute point (x across, y along) → pixels. */
+  const toScreen = (x: number, y: number): { x: number; y: number } =>
     layout.portrait
-      ? { x: layout.left + p.x * layout.w, y: layout.top + (1 - p.y) * layout.h }
-      : { x: layout.left + p.y * layout.w, y: layout.top + p.x * layout.h };
+      ? { x: layout.left + x * layout.w, y: layout.top + (1 - y) * layout.h }
+      : { x: layout.left + y * layout.w, y: layout.top + x * layout.h };
 
   const drawPitch = (): void => {
     const W = app.screen.width;
@@ -79,7 +68,6 @@ export async function mountPitch2D(
     const portrait = H >= W;
     const along = portrait ? H : W;
     const across = portrait ? W : H;
-    // Fit 105 × 68 with a margin.
     const unit = Math.min((along * 0.94) / LENGTH, (across * 0.9) / WIDTH);
     const w = (portrait ? WIDTH : LENGTH) * unit;
     const h = (portrait ? LENGTH : WIDTH) * unit;
@@ -88,16 +76,14 @@ export async function mountPitch2D(
     pitch.clear();
     pitch.rect(layout.left, layout.top, w, h).fill(GRASS);
     for (let i = 0; i < 12; i += 2) {
-      // Mowing stripes across the pitch.
-      const a = toScreen({ x: 0, y: i / 12 });
-      const b = toScreen({ x: 1, y: (i + 1) / 12 });
+      const a = toScreen(0, i / 12);
+      const b = toScreen(1, (i + 1) / 12);
       pitch
         .rect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y))
         .fill(STRIPE);
     }
     const line = { width: Math.max(1, unit * 0.12), color: LINE, alpha: 0.9 };
-    const m = (x: number, y: number): { x: number; y: number } =>
-      toScreen({ x: x / WIDTH, y: y / LENGTH });
+    const m = (x: number, y: number): { x: number; y: number } => toScreen(x / WIDTH, y / LENGTH);
     const rect = (x0: number, y0: number, x1: number, y1: number): void => {
       const a = m(x0, y0);
       const b = m(x1, y1);
@@ -122,13 +108,14 @@ export async function mountPitch2D(
     pitch.circle(centre.x, centre.y, unit * 0.3).fill(LINE);
   };
 
-  const tokens: Token[][] = [[], []];
+  const views: TokenView[][] = [[], []];
   const buildTokens = (): void => {
     tokensLayer.removeChildren().forEach((c) => c.destroy({ children: true }));
     teams.forEach((team, side) => {
-      tokens[side] = team.numbers.map((n) => {
+      views[side] = team.numbers.map((n) => {
         const view = new Container();
         const disc = new Graphics();
+        const wedge = new Graphics();
         const label = new Text({
           text: String(n),
           style: {
@@ -139,9 +126,9 @@ export async function mountPitch2D(
           },
         });
         label.anchor.set(0.5);
-        view.addChild(disc, label);
+        view.addChild(wedge, disc, label);
         tokensLayer.addChild(view);
-        return { view, disc, label, x: 0.5, y: side === 0 ? 0.3 : 0.7 };
+        return { view, disc, wedge, label };
       });
     });
     styleTokens();
@@ -150,15 +137,19 @@ export async function mountPitch2D(
   const styleTokens = (): void => {
     const r = Math.max(6, layout.unit * 1.25);
     teams.forEach((team, side) => {
-      (tokens[side] ?? []).forEach((t, i) => {
+      (views[side] ?? []).forEach((t, i) => {
         t.disc.clear();
         t.disc
           .circle(0, 0, r)
           .fill(team.colours.shirt)
           .stroke({ width: Math.max(1, r * 0.12), color: team.colours.shorts });
+        // Facing marker: a small wedge on the rim, pointing where he looks.
+        t.wedge.clear();
+        t.wedge
+          .poly([-r * 0.55, -r * 0.9, r * 0.55, -r * 0.9, 0, -r * 1.7])
+          .fill({ color: team.colours.shirt, alpha: 0.85 });
         t.label.text = String(team.numbers[i] ?? '');
         t.label.style.fontSize = Math.round(r * 1.05);
-        t.view.visible = !team.sentOff?.[i];
       });
     });
   };
@@ -174,51 +165,6 @@ export async function mountPitch2D(
   const stats = { fps: 0 };
   app.ticker.add((ticker) => {
     stats.fps = ticker.FPS;
-    if (!frame) return;
-    const f = frame;
-    const dt = Math.min(0.1, ticker.deltaMS / 1000);
-    const k = 1 - Math.exp(-dt * 5);
-    const second = f.half === 2;
-    highlight.clear();
-    teams.forEach((team, index) => {
-      const side = index as sim.Side;
-      const home = side === 0;
-      const inPossession = f.possession === side;
-      const ball = sim.toTeamFrame(f.ball, home, second);
-      const shape = sim.teamShape(team.formation, team.tactic, ball, inPossession);
-      (tokens[side] ?? []).forEach((t, i) => {
-        const target =
-          team.ids[i] === f.carrier ? f.ball : sim.toAbsolute(shape[i] as Point, home, second);
-        t.x += (target.x - t.x) * k;
-        t.y += (target.y - t.y) * k;
-        const s = toScreen(t);
-        t.view.position.set(s.x, s.y);
-        if (team.ids[i] === f.carrier) {
-          highlight
-            .circle(s.x, s.y, Math.max(8, layout.unit * 1.9))
-            .stroke({ width: 2, color: 0xffd166, alpha: 0.9 });
-        }
-      });
-    });
-    const b = toScreen(f.ball);
-    ballView.clear();
-    ballView
-      .circle(b.x + 1.5, b.y + 1.5, Math.max(3, layout.unit * 0.55))
-      .fill({ color: 0, alpha: 0.35 });
-    ballView.circle(b.x, b.y, Math.max(3, layout.unit * 0.55)).fill(0xffffff);
-    arrow.clear();
-    if (f.pass) {
-      const a = toScreen(f.pass.from);
-      const c = toScreen(f.pass.to);
-      arrow
-        .moveTo(a.x, a.y)
-        .lineTo(c.x, c.y)
-        .stroke({
-          width: Math.max(1.5, layout.unit * 0.25),
-          color: 0xffd166,
-          alpha: 0.55 * (1 - f.pass.progress * 0.6),
-        });
-    }
   });
 
   return {
@@ -226,11 +172,50 @@ export async function mountPitch2D(
     setTeams(next) {
       const rebuild = next.some((t, i) => t.numbers.length !== teams[i]?.numbers.length);
       teams = next;
+      choreo.setLooks(next);
       if (rebuild) buildTokens();
       else styleTokens();
     },
-    render(next) {
-      frame = next;
+    render(dt, cursor, clock) {
+      const frame = choreo.update(dt, cursor, clock);
+      const r = Math.max(6, layout.unit * 1.25);
+      highlight.clear();
+      for (const t of frame.tokens) {
+        const tv = views[t.side]?.[t.slot];
+        if (!tv) continue;
+        tv.view.visible = !t.off;
+        const s = toScreen(t.x, t.y);
+        tv.view.position.set(s.x, s.y);
+        tv.wedge.rotation = layout.portrait ? t.face : t.face + Math.PI / 2;
+        if (t.hasBall && !t.off) {
+          highlight.circle(s.x, s.y, r * 1.5).stroke({ width: 2, color: 0xffd166, alpha: 0.9 });
+        }
+      }
+      const b = toScreen(frame.ball.x, frame.ball.y);
+      const br = Math.max(3, layout.unit * 0.5) * (1 + frame.ball.height * 0.7);
+      const lift = frame.ball.height * layout.unit * 2.6;
+      ballLayer.clear();
+      ballLayer
+        .circle(b.x + 1.5, b.y + 1.5 + lift * 0.4, Math.max(3, layout.unit * 0.5))
+        .fill({ color: 0, alpha: 0.35 });
+      ballLayer
+        .circle(b.x, b.y - lift, br)
+        .fill(0xffffff)
+        .stroke({ width: 1, color: 0x222222, alpha: 0.6 });
+      arrow.clear();
+      if (frame.pass) {
+        const a = toScreen(frame.pass.from.x, frame.pass.from.y);
+        const c = toScreen(frame.pass.to.x, frame.pass.to.y);
+        arrow
+          .moveTo(a.x, a.y)
+          .lineTo(c.x, c.y)
+          .stroke({
+            width: Math.max(1.5, layout.unit * 0.22),
+            color: 0xffd166,
+            alpha: 0.4 * (1 - frame.pass.progress * 0.7),
+          });
+      }
+      return frame;
     },
     dispose() {
       app.renderer.off('resize', onResize);
