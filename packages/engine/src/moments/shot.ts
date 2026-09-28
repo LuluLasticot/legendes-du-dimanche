@@ -44,6 +44,11 @@ export interface ShotSituation {
   readonly weakFootStars: number;
   /** Pressure in [0, 1] (defenders close, last minute, penalty…). */
   readonly pressure: number;
+  /**
+   * Technical difficulty of the strike in [0, 1]: first-time shot on a fast ball, volley,
+   * over-hit penalty… (0 = ball at rest).
+   */
+  readonly difficulty?: number;
 }
 
 export interface ShotTuning {
@@ -63,6 +68,8 @@ export interface ShotTuning {
   readonly lobBackspin: number;
   /** Relative one-sigma error on pace and spin, scaled by the angular error. */
   readonly paceErrorRatio: number;
+  /** Error multiplier at full technical difficulty (added to 1). */
+  readonly difficultyPenalty: number;
 }
 
 export const DEFAULT_SHOT_TUNING: ShotTuning = {
@@ -74,6 +81,7 @@ export const DEFAULT_SHOT_TUNING: ShotTuning = {
   pressurePenalty: 1,
   lobBackspin: 25,
   paceErrorRatio: 0.6,
+  difficultyPenalty: 1.5,
 };
 
 export interface ShooterProfile {
@@ -102,8 +110,27 @@ export function shooterProfile(
     errorRad:
       degToRad(lerp(tuning.errorDegRange[0], tuning.errorDegRange[1], t(attributes.finishing))) *
       weakFootFactor *
-      pressureFactor,
+      pressureFactor *
+      (1 + clamp(situation.difficulty ?? 0, 0, 1) * tuning.difficultyPenalty),
   };
+}
+
+/**
+ * Difficulty of a first-time strike on an incoming ball: the faster it comes, the more it has to
+ * be redirected and the higher it is (volley), the harder the finish.
+ */
+export function firstTimeDifficulty(ball: BallState, shotDirection: Vec3): number {
+  const hx = ball.vel.x;
+  const hz = ball.vel.z;
+  const speed = sqrt(hx * hx + hz * hz);
+  const sd = sqrt(shotDirection.x * shotDirection.x + shotDirection.z * shotDirection.z);
+  if (speed < 0.5 || sd < 1e-9) return clamp((ball.pos.y - 0.3) / 0.9, 0, 1) * 0.35;
+  const cos = (hx * shotDirection.x + hz * shotDirection.z) / (speed * sd);
+  // 0 when the ball already travels along the shot, 1 when it comes straight at the shooter.
+  const turn = (1 - cos) / 2;
+  const pace = clamp(speed / 18, 0, 1);
+  const height = clamp((ball.pos.y - 0.3) / 0.9, 0, 1);
+  return clamp(pace * (0.25 + 0.75 * turn) + 0.35 * height, 0, 1);
 }
 
 export interface ShotSolution {

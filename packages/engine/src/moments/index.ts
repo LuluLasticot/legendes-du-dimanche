@@ -3,3 +3,6 @@ export * from './shot.ts';
 export * from './keeper.ts';
 export * from './defenders.ts';
 export * from './shot-moment.ts';
+export * from './pass.ts';
+export * from './pass-moment.ts';
+export * from './situations.ts';
