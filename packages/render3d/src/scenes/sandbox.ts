@@ -16,6 +16,9 @@ import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
 import { ImpactParticles, surfaceParticles } from '../fx/particles.ts';
 import { BallTrail } from '../fx/trail.ts';
 import { Stadium } from '../stadium/stadium.ts';
+import { Character, type Kit } from '../players/character.ts';
+import { loadCharacterAsset, type CharacterAsset } from '../players/character-asset.ts';
+import { DefenderController, KeeperController, ShooterController } from '../players/controllers.ts';
 import { KEEPER_KIT, OPPONENT_KIT, PlayerFigure } from '../players/player-figure.ts';
 import {
   toDefenderSetups,
@@ -60,7 +63,7 @@ export interface SandboxHandle {
   dispose(): void;
 }
 
-type Phase = 'aiming' | 'tracing' | 'flying';
+type Phase = 'aiming' | 'tracing' | 'striking' | 'flying';
 
 interface StoredShot {
   readonly initial: physics.BallState;
@@ -69,6 +72,9 @@ interface StoredShot {
 }
 
 const MAX_LINE_POINTS = 1200;
+const HOME_KIT: Kit = { shirt: 0x0f5132, shorts: 0xf4f1e8 };
+const KEEPER_CHARACTER_KIT: Kit = { shirt: 0xd4ff3a, shorts: 0x1b1f24 };
+const OPPONENT_CHARACTER_KIT: Kit = { shirt: 0xc4302b, shorts: 0xf2f2ee };
 /** Seconds the result stays on screen before the ball goes back to its spot. */
 const RESULT_HOLD = 1.6;
 
@@ -109,7 +115,10 @@ function length3(v: physics.Vec3): number {
 export function mountBallSandbox(
   canvas: HTMLCanvasElement,
   initialSettings: SandboxSettings,
-  options: StageOptions = {},
+  options: StageOptions & {
+    /** Base URL of the converted character asset (player.glb + player.meta.json). */
+    characterAssetsUrl?: string;
+  } = {},
 ): SandboxHandle {
   const stage = Stage.mount(canvas, { fov: 50, ...options });
   const { scene, camera } = stage;
@@ -203,7 +212,32 @@ export function mountBallSandbox(
   scene.add(keeperFigure.group);
   const defenderFigures: PlayerFigure[] = [];
   /** One figure per defender of the current setup (rebuilt when the count changes). */
+  // ─── Characters (converted Mixamo asset; greybox figures until / unless it loads) ───
+  let characterAsset: CharacterAsset | null = null;
+  let shooterCtrl: ShooterController | null = null;
+  let keeperCtrl: KeeperController | null = null;
+  const defenderCtrls: DefenderController[] = [];
+  let disposed = false;
+  const syncDefenderCharacters = (count: number): void => {
+    if (!characterAsset) return;
+    while (defenderCtrls.length > count) defenderCtrls.pop()?.character.dispose();
+    while (defenderCtrls.length < count) {
+      const character = new Character(characterAsset, OPPONENT_CHARACTER_KIT);
+      scene.add(character.root);
+      const controller = new DefenderController(character);
+      controller.reset();
+      defenderCtrls.push(controller);
+    }
+  };
+  /** Seconds from take-off to the apex of a wall jump (engine jump height, same tuning). */
+  const wallApexSeconds = (): number => {
+    const d = settings.defenders;
+    const h = d.jumpLow + (d.jumpHigh - d.jumpLow) * ((d.physical - 1) / 98);
+    return Math.sqrt((2 * h) / 9.81);
+  };
+
   const syncDefenderFigures = (count: number): void => {
+    syncDefenderCharacters(count);
     while (defenderFigures.length > count) {
       const figure = defenderFigures.pop();
       if (figure) scene.remove(figure.group);
@@ -216,6 +250,7 @@ export function mountBallSandbox(
       scene.add(figure.group);
       defenderFigures.push(figure);
     }
+    for (const figure of defenderFigures) figure.group.visible = characterAsset === null;
   };
 
   let phase: Phase = 'aiming';
@@ -275,7 +310,14 @@ export function mountBallSandbox(
   };
 
   const directorInput = (): DirectorInput => ({
-    phase: phase === 'flying' ? (moment.outcome !== null ? 'result' : 'flying') : 'aiming',
+    phase:
+      phase === 'flying'
+        ? moment.outcome !== null
+          ? 'result'
+          : 'flying'
+        : phase === 'striking' && replaying
+          ? 'flying'
+          : 'aiming',
     replay: replaying ? replayAngle : null,
     ball: ballPos,
     ballVel: moment.flight.ball.vel,
@@ -309,7 +351,11 @@ export function mountBallSandbox(
     spot = physics.v3(PITCH.goalLineX - settings.spot.distance, BALL.radius, settings.spot.offset);
     ({ context: momentContext, state: moment } = restingMoment(restingBall(spot.x, spot.z)));
     previousMoment = moment;
-    keeperFigure.group.visible = settings.keeper.enabled;
+    keeperFigure.group.visible = settings.keeper.enabled && characterAsset === null;
+    pending = null;
+    shooterCtrl?.standAt(spot, { x: PITCH.goalLineX, y: 0, z: 0 });
+    keeperCtrl?.reset();
+    for (const controller of defenderCtrls) controller.reset();
     syncDefenderFigures(moment.defenders.length);
     ball.position.set(spot.x, spot.y, spot.z);
     phase = 'aiming';
@@ -381,6 +427,54 @@ export function mountBallSandbox(
     );
   };
 
+  /** Strike waiting for the kicking foot to meet the ball (run-up in progress). */
+  let pending: {
+    initial: physics.BallState;
+    momentSeed: number;
+    report: ShotReport;
+    replay: boolean;
+    remaining: number;
+  } | null = null;
+
+  /** Starts a shot: run-up and strike when characters are loaded, straight launch otherwise. */
+  const beginShot = (
+    initial: physics.BallState,
+    momentSeed: number,
+    report: ShotReport,
+    replay: boolean,
+  ): void => {
+    replaying = replay;
+    if (replay) {
+      replayAngle =
+        settings.cameraReplayAngle === 'auto'
+          ? (REPLAY_ANGLES[replayCount++ % REPLAY_ANGLES.length] ?? 'side')
+          : settings.cameraReplayAngle;
+      director.cut();
+    }
+    if (!shooterCtrl) {
+      launch(initial, momentSeed, report, replay);
+      return;
+    }
+    // Ball back on its spot, everyone set, then the run-up.
+    ({ context: momentContext, state: moment } = restingMoment(
+      restingBall(initial.pos.x, initial.pos.z),
+    ));
+    previousMoment = moment;
+    keeperCtrl?.reset();
+    for (const controller of defenderCtrls) controller.reset();
+    ballTrail.clear();
+    const horizontal = Math.hypot(initial.vel.x, initial.vel.z) || 1;
+    const delay = shooterCtrl.startStrike(
+      initial.pos,
+      { x: initial.vel.x / horizontal, y: 0, z: initial.vel.z / horizontal },
+      report.power,
+    );
+    pending = { initial, momentSeed, report, replay, remaining: delay };
+    phase = 'striking';
+    stage.clock.reset();
+    stage.clock.setTimeScale(replay ? settings.debug.replayScale : settings.debug.timeScale);
+  };
+
   const launch = (
     initial: physics.BallState,
     momentSeed: number,
@@ -407,13 +501,6 @@ export function mountBallSandbox(
     currentReport = report;
     stage.clock.reset();
     stage.clock.setTimeScale(replay ? settings.debug.replayScale : settings.debug.timeScale);
-    if (replay) {
-      replayAngle =
-        settings.cameraReplayAngle === 'auto'
-          ? (REPLAY_ANGLES[replayCount++ % REPLAY_ANGLES.length] ?? 'side')
-          : settings.cameraReplayAngle;
-      director.cut();
-    }
     applyEffects(director.impact('strike', report.power, replay));
     // Juice of the strike: same seed → same bursts in the replay.
     fxRng = Rng.create(momentSeed).fork('fx');
@@ -494,7 +581,7 @@ export function mountBallSandbox(
     const initial = kickedBall(spot, struck.velocity, struck.spin);
     const momentSeed = shotRng.fork('moment').nextU32();
     lastShot = { initial, momentSeed, report };
-    launch(initial, momentSeed, report, false);
+    beginShot(initial, momentSeed, report, false);
   };
 
   // ─── Input ──────────────────────────────────────────────────────────────────
@@ -549,6 +636,14 @@ export function mountBallSandbox(
 
   // ─── Loop ───────────────────────────────────────────────────────────────────
   const unsubscribe = stage.onFrame((frame) => {
+    if (phase === 'striking' && pending) {
+      pending.remaining -= frame.simDt;
+      if (pending.remaining <= 0) {
+        const p = pending;
+        pending = null;
+        launch(p.initial, p.momentSeed, p.report, p.replay);
+      }
+    }
     if (phase === 'tracing' && predictionDirty) {
       predictionDirty = false;
       updatePrediction();
@@ -602,6 +697,10 @@ export function mountBallSandbox(
           currentReport = { ...currentReport, outcome: moment.outcome, replay: replaying };
           if (!replaying && lastShot) lastShot = { ...lastShot, report: currentReport };
           emitShot(currentReport);
+          if (!replaying) {
+            shooterCtrl?.react(moment.outcome === 'goal' ? 'goal' : 'miss', fxRng.float());
+            if (moment.outcome === 'goal') keeperCtrl?.concede();
+          }
           if (moment.outcome === 'goal') {
             applyEffects(director.impact('goal', 1, replaying));
             if (!replaying) {
@@ -626,7 +725,7 @@ export function mountBallSandbox(
         if (heldAfterOutcome > RESULT_HOLD) {
           // A live goal is replayed once from another angle, then the ball goes back.
           if (!replaying && moment.outcome === 'goal' && settings.camera.autoReplay && lastShot) {
-            launch(
+            beginShot(
               lastShot.initial,
               lastShot.momentSeed,
               { ...lastShot.report, replay: true, outcome: null, save: null },
@@ -668,12 +767,30 @@ export function mountBallSandbox(
       ball.rotation.y += w.y * frame.simDt;
       ball.rotation.z += w.z * frame.simDt;
     }
+    shooterCtrl?.update(frame.simDt);
+    if (keeperCtrl && moment.keeper && previousMoment.keeper) {
+      keeperCtrl.character.root.visible = settings.keeper.enabled;
+      keeperCtrl.update(previousMoment.keeper, moment.keeper, moment.tick, a, frame.simDt);
+    }
+    for (let i = 0; i < defenderCtrls.length; i++) {
+      const now = moment.defenders[i];
+      const before = previousMoment.defenders[i] ?? now;
+      if (now && before)
+        (defenderCtrls[i] as DefenderController).update(
+          before,
+          now,
+          ballPos,
+          a,
+          frame.simDt,
+          wallApexSeconds(),
+        );
+    }
     for (let i = 0; i < defenderFigures.length; i++) {
       const now = moment.defenders[i];
       const before = previousMoment.defenders[i] ?? now;
       if (now && before) (defenderFigures[i] as PlayerFigure).update(before, now, a);
     }
-    if (moment.keeper && previousMoment.keeper)
+    if (moment.keeper && previousMoment.keeper && characterAsset === null)
       keeperFigure.update(previousMoment.keeper, moment.keeper, a);
     simTime += frame.simDt;
     stadium.update(simTime);
@@ -682,6 +799,18 @@ export function mountBallSandbox(
 
   applyJuiceSettings();
   placeBall();
+
+  void loadCharacterAsset(options.characterAssetsUrl ?? '/assets/characters/').then((asset) => {
+    if (!asset || disposed) return;
+    characterAsset = asset;
+    const shooter = new Character(asset, HOME_KIT);
+    const keeper = new Character(asset, KEEPER_CHARACTER_KIT);
+    scene.add(shooter.root, keeper.root);
+    shooterCtrl = new ShooterController(shooter);
+    keeperCtrl = new KeeperController(keeper);
+    if (phase === 'aiming') placeBall();
+    else syncDefenderFigures(moment.defenders.length);
+  });
 
   return {
     stats: stage.stats,
@@ -703,7 +832,7 @@ export function mountBallSandbox(
     },
     replay() {
       if (!lastShot || phase === 'tracing') return;
-      launch(
+      beginShot(
         lastShot.initial,
         lastShot.momentSeed,
         { ...lastShot.report, replay: true, outcome: null, save: null },
@@ -734,6 +863,10 @@ export function mountBallSandbox(
       canvas.removeEventListener('pointercancel', onPointerCancel);
       gestureListeners.clear();
       shotListeners.clear();
+      disposed = true;
+      shooterCtrl?.character.dispose();
+      keeperCtrl?.character.dispose();
+      for (const controller of defenderCtrls) controller.character.dispose();
       audio.dispose();
       stadium.dispose();
       stage.dispose();

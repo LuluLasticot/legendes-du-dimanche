@@ -13,7 +13,7 @@ Jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe, f
 
 ## Phase en cours
 
-**Phase 1 — Prototype d'action clé 3D** (Phase 0 terminée le 27/09/2026). Découpage validé : physics ✅ → shot ✅ → render3d/core ✅ → /lab ✅ → stade greybox ✅ → gardien ✅ / défenseurs ✅ → caméra ✅ → juice/audio ✅ → personnages → 3 situations → ambiance/perf.
+**Phase 1 — Prototype d'action clé 3D** (Phase 0 terminée le 27/09/2026). Découpage validé : physics ✅ → shot ✅ → render3d/core ✅ → /lab ✅ → stade greybox ✅ → gardien ✅ / défenseurs ✅ → caméra ✅ → juice/audio ✅ → personnages ✅ → 3 situations → ambiance/perf.
 Mettre à jour cette ligne à chaque changement de phase.
 
 ## Stack
@@ -54,6 +54,7 @@ pnpm + Turborepo · Next.js (App Router) + React + TypeScript strict · Tailwind
 - `pnpm test` (Vitest) · `pnpm test:deno` (déterminisme sous Deno) · `pnpm --filter @legendes/engine test:watch`
 - `pnpm determinism:update` : régénère l'empreinte de référence du moteur, **uniquement volontairement** (casse les replays)
 - `pnpm db:start|stop|reset` (Supabase local, Docker requis) · `pnpm db:new <nom>` (migration)
+- `pnpm --filter @legendes/render3d convert:mixamo` : convertit `assets-src/mixamo/*.fbx` (hors git) en `apps/web/public/assets/characters/` (hors git)
 - Paquets internes livrés en sources `.ts` ; imports relatifs **avec l'extension `.ts`** dans `engine` et `shared` (compatibilité Deno).
 
 ## Méthode
