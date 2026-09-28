@@ -109,6 +109,46 @@ export interface MatchResult {
   readonly duration: number;
 }
 
+export type ShotKind = 'open' | 'header' | 'free-kick' | 'penalty';
+
+/** How a shot ends, whether simulated here or played in 3D. */
+export type ShotOutcome = 'goal' | 'save-catch' | 'save-parry' | 'block' | 'post' | 'miss';
+
+/** The kind of 3D key moment (the Phase 1 situations). */
+export type MomentKind = 'shot' | 'pass-shot' | 'free-kick' | 'penalty' | 'keeper';
+
+/** A key moment for the player: everything the 3D scene needs to set it up. */
+export interface MomentRequest {
+  readonly id: number;
+  readonly kind: MomentKind;
+  readonly t: number;
+  readonly half: 1 | 2;
+  /** Side taking the shot (the opponent's for a 'keeper' moment). */
+  readonly attacking: Side;
+  readonly shooter: MatchPlayer;
+  /** Shooter's attributes now (position, collectifs, fatigue). */
+  readonly shooterAttributes: PlayerAttributes;
+  readonly keeper: MatchPlayer;
+  /** Where the ball is, in the attacking team's frame (y = 1: goal line attacked). */
+  readonly spot: Point;
+  readonly xg: number;
+  /** Sub-seed of the moment (execution errors, keeper draws). */
+  readonly seed: number;
+}
+
+export interface PlayedMoment {
+  readonly id: number;
+  readonly kind: MomentKind;
+  readonly outcome: ShotOutcome;
+}
+
+export interface MatchOptions {
+  /** The side the player controls (key moments), or null for a fully simulated match. */
+  readonly userSide?: Side | null;
+  /** Most key moments per match (GDD §7.1: 3 to 6). */
+  readonly maxMoments?: number;
+}
+
 type Restart = 'kickoff' | 'throw-in' | 'corner' | 'goal-kick' | 'free-kick' | 'penalty' | null;
 
 interface SideState {
@@ -173,9 +213,14 @@ export class MatchSim {
   /** Amateur football: the lower the level, the more mistakes, the more goals. */
   private readonly levelFactor: number;
   private readonly lastSub: [number, number] = [-Infinity, -Infinity];
+  private readonly options: Required<MatchOptions>;
+  private pending: MomentRequest | null = null;
+  private shotContext: { xg: number; quality: number } | null = null;
+  private readonly moments: PlayedMoment[] = [];
 
-  constructor(setup: MatchSetup) {
+  constructor(setup: MatchSetup, options: MatchOptions = {}) {
     this.setup = setup;
+    this.options = { userSide: options.userSide ?? null, maxMoments: options.maxMoments ?? 6 };
     this.rng = Rng.create(setup.seed).fork('match');
     this.sides = [this.side(setup.home), this.side(setup.away)];
     const level = (teamRating(setup.home) + teamRating(setup.away)) / 2;
@@ -192,20 +237,28 @@ export class MatchSim {
   /** Plays one phase; false once the final whistle has gone. */
   step(): boolean {
     if (this.finished) return false;
+    // Waiting for the player's key moment: nothing moves until it is resolved.
+    if (this.pending !== null) return true;
     const rng = this.rng.fork('phase', this.phase++);
     this.autoSubstitutions();
     if (this.restart !== null) this.playRestart(rng);
+    if (this.pending !== null) return true;
     // Open play: a few actions until a shot, a stop or a turnover.
     for (let i = 0; i < 6 && this.restart === null && !this.clockCheck(); i++) {
-      if (!this.playAction(rng)) break;
+      if (!this.playAction(rng) || this.pending !== null) break;
     }
+    if (this.pending !== null) return true;
     this.clockCheck();
     return !this.finished;
   }
 
-  run(): MatchResult {
+  /** Plays to the end; `resolve` answers key moments (none without a user side). */
+  run(resolve?: (moment: MomentRequest) => ShotOutcome): MatchResult {
     while (this.step()) {
-      // phases
+      if (this.pending !== null) {
+        if (!resolve) throw new Error('Key moment pending: pass a resolver');
+        this.resolveMoment(resolve(this.pending));
+      }
     }
     return this.result();
   }
@@ -794,7 +847,7 @@ export class MatchSim {
 
   // ─── Shots ──────────────────────────────────────────────────────────────────
 
-  private shoot(rng: Rng, kind: 'open' | 'header' | 'free-kick' | 'penalty'): void {
+  private shoot(rng: Rng, kind: ShotKind): void {
     const a = this.attack();
     const d = this.defence();
     const side = this.possession;
@@ -821,10 +874,44 @@ export class MatchSim {
     a.stats.xg += xg;
     this.tick(rng.range(2, 5));
     const shooterId = this.id(side, this.carrier);
-    const keeperId = this.id(this.other(side), 0);
     if (xg >= 0.2 || kind === 'penalty') this.event('chance', side, shooterId, null, xg);
 
-    if (rng.chance(xg)) {
+    // A key moment the player plays in 3D: the match waits for its outcome.
+    const moment = this.momentFor(kind, xg);
+    if (moment !== null) {
+      this.pending = {
+        id: this.moments.length,
+        kind: moment,
+        t: this.t,
+        half: this.half,
+        attacking: side,
+        shooter: player,
+        shooterAttributes: shooter,
+        keeper: d.players[0] as MatchPlayer,
+        spot: this.ball,
+        xg,
+        seed: this.rng.fork('moment', this.moments.length).nextU32(),
+      };
+      this.shotContext = { xg, quality };
+      return;
+    }
+
+    let outcome: ShotOutcome;
+    if (rng.chance(xg)) outcome = 'goal';
+    else if (rng.chance(clamp(0.28 + quality / 300, 0.3, 0.65)))
+      outcome = rng.chance(0.25) ? 'save-parry' : 'save-catch';
+    else if (rng.chance(0.2)) outcome = 'block';
+    else outcome = rng.chance(0.06) ? 'post' : 'miss';
+    this.applyShot(outcome, xg, rng);
+  }
+
+  /** Consequences of a shot for the match (score, restart, possession, events). */
+  private applyShot(outcome: ShotOutcome, xg: number, rng: Rng): void {
+    const a = this.attack();
+    const side = this.possession;
+    const shooterId = this.id(side, this.carrier);
+    const keeperId = this.id(this.other(side), 0);
+    if (outcome === 'goal') {
       a.stats.goals++;
       a.stats.onTarget++;
       this.score[side]++;
@@ -835,13 +922,13 @@ export class MatchSim {
       this.restart = 'kickoff';
       return;
     }
-    const onTarget = rng.chance(clamp(0.28 + quality / 300, 0.3, 0.65));
-    this.ball = { x: clamp(0.5 + rng.normal(0, onTarget ? 0.03 : 0.08), 0.35, 0.65), y: 1 };
+    const saved = outcome === 'save-catch' || outcome === 'save-parry';
+    this.ball = { x: clamp(0.5 + rng.normal(0, saved ? 0.03 : 0.08), 0.35, 0.65), y: 1 };
     this.record('shot', null, false);
-    if (onTarget) {
+    if (saved) {
       a.stats.onTarget++;
       this.event('save', this.other(side), keeperId, shooterId, xg);
-      if (rng.chance(0.25)) {
+      if (outcome === 'save-parry') {
         this.restart = 'corner';
       } else {
         this.turnover(0);
@@ -850,7 +937,7 @@ export class MatchSim {
       }
       return;
     }
-    if (rng.chance(0.2)) {
+    if (outcome === 'block') {
       this.event(
         'block',
         this.other(side),
@@ -861,10 +948,54 @@ export class MatchSim {
       this.restart = 'corner';
       return;
     }
-    this.event(rng.chance(0.06) ? 'post' : 'miss', side, shooterId, null, xg);
+    this.event(outcome, side, shooterId, null, xg);
     this.turnover(0);
     this.ball = { x: 0.5, y: 0.05 };
     this.restart = 'goal-kick';
+  }
+
+  // ─── Key moments (3D) ───────────────────────────────────────────────────────
+
+  /** The moment the player gets to play for this shot, if any (3 to 6 per match). */
+  private momentFor(kind: ShotKind, xg: number): MomentKind | null {
+    const user = this.options.userSide;
+    if (user === null || user === undefined || this.moments.length >= this.options.maxMoments)
+      return null;
+    // Fewer than three by the last half hour: lower the bar so every match has its moments.
+    const late = this.half === 2 && this.t > 60 * 60 && this.moments.length < 3;
+    const threshold = late ? 0.1 : 0.2;
+    if (this.possession !== user) {
+      return kind === 'penalty' || xg >= threshold + 0.05 ? 'keeper' : null;
+    }
+    if (kind === 'penalty') return 'penalty';
+    if (kind === 'free-kick') return 'free-kick';
+    if (xg < threshold) return null;
+    const last = this.actions[this.actions.length - 1];
+    return last && last.success && (last.kind === 'pass' || last.kind === 'cross')
+      ? 'pass-shot'
+      : 'shot';
+  }
+
+  /** The key moment waiting for the player, or null. */
+  get pendingMoment(): MomentRequest | null {
+    return this.pending;
+  }
+
+  /** Outcome of the key moment played in 3D (or auto-resolved); the match goes on. */
+  resolveMoment(outcome: ShotOutcome): void {
+    const pending = this.pending;
+    const context = this.shotContext;
+    if (pending === null || context === null) throw new Error('No key moment to resolve');
+    this.pending = null;
+    this.shotContext = null;
+    this.moments.push({ id: pending.id, kind: pending.kind, outcome });
+    this.applyShot(outcome, context.xg, this.rng.fork('moment-outcome', pending.id));
+    this.clockCheck();
+  }
+
+  /** Key moments played so far (the player's inputs to replay the match). */
+  get playedMoments(): readonly PlayedMoment[] {
+    return this.moments;
   }
 }
 
