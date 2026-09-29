@@ -3,6 +3,8 @@
 // where they stand is decided here (pure, no RNG); they never touch the ball, so they keep out of
 // the way of the shot: outside the lane between the ball and the goal, and clear of the players
 // who do take part. Penalty: everyone stands outside the area and the arc (Laws of the Game, 14).
+// Pass: the offside line is the moment's, so no background defender stands deeper than it (they
+// hold the line with the markers) and no background attacker stands beyond it.
 
 import { sqrt } from '../math/index.ts';
 import { PITCH } from '../physics/constants.ts';
@@ -18,6 +20,8 @@ export interface BackgroundPlayer {
 /** Width of the goal mouth (posts at z = ±this), and the room kept around the shot's lane. */
 const POST_Z = 3.66;
 const LANE_MARGIN = 2;
+/** How far short of the offside line background attackers hold their run (m). */
+const ONSIDE_MARGIN = 1.2;
 /** Nearest a background player may stand to a player who takes part (m). */
 const PERSONAL_SPACE = 2.6;
 /** Half width of the pitch, with a margin for the touchline. */
@@ -89,8 +93,21 @@ function toPlayers(
   side: BackgroundPlayer['side'],
   spots: readonly Spot[],
   mirror: number,
+  /** Deepest x allowed (towards the goal at +X). */
+  deepest: number,
 ): BackgroundPlayer[] {
-  return spots.map(([dx, z]) => ({ side, feet: v3(PITCH.goalLineX - dx, 0, z * mirror) }));
+  return spots.map(([dx, z]) => ({
+    side,
+    feet: v3(Math.min(PITCH.goalLineX - dx, deepest), 0, z * mirror),
+  }));
+}
+
+export interface BackgroundOptions {
+  /**
+   * X of the offside line of the moment (pass situation): background defenders line up on it at
+   * the deepest, background attackers stay onside. Without it they stand anywhere.
+   */
+  readonly offsideLine?: number;
 }
 
 /**
@@ -103,12 +120,19 @@ export function backgroundPlayers(
   ball: Vec3,
   busy: readonly Vec3[],
   count: number,
+  options: BackgroundOptions = {},
 ): BackgroundPlayer[] {
   const penalty = situation === 'penalty';
+  const line = options.offsideLine ?? Infinity;
   // The ball's side of the pitch gets the first (most visible) spots.
   const mirror = ball.z < 0 ? -1 : 1;
-  const defend = toPlayers('defend', penalty ? PENALTY_DEFEND : DEFEND, mirror);
-  const attack = toPlayers('attack', penalty ? PENALTY_ATTACK : ATTACK, mirror);
+  const defend = toPlayers('defend', penalty ? PENALTY_DEFEND : DEFEND, mirror, line);
+  const attack = toPlayers(
+    'attack',
+    penalty ? PENALTY_ATTACK : ATTACK,
+    mirror,
+    line - ONSIDE_MARGIN,
+  );
   const usable = (p: BackgroundPlayer, taken: readonly Vec3[]): boolean => {
     if (Math.abs(p.feet.z) > EDGE || p.feet.x < -PITCH.goalLineX) return false;
     if (!penalty && inLane(p.feet, ball)) return false;
