@@ -80,6 +80,13 @@ export class Character {
     });
   }
 
+  /** Casting a shadow costs a second pass: background players skip it. */
+  setShadows(on: boolean): void {
+    this.model.traverse((object) => {
+      if (object instanceof THREE.SkinnedMesh) object.castShadow = on;
+    });
+  }
+
   /** See-through body (e.g. the keeper seen over his shoulder): 1 = opaque. */
   setOpacity(opacity: number): void {
     const transparent = opacity < 1;
