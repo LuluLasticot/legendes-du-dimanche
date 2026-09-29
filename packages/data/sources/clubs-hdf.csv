@@ -1,0 +1,17 @@
+# Clubs of the pilot (Ligue de Football des Hauts-de-France, district de l'Escaut in full).
+# One line per club. Columns:
+#   id          stable identifier (lowercase, dashes): name + commune, e.g. "us-exemple-59000"
+#   name        official name as the club writes it
+#   short_name  ≤ 24 characters, for scoreboards and cards (empty: same as name)
+#   city, insee commune and its INSEE code (5 characters)
+#   district    district id (see src/reference.ts): escaut, artois, flandres…
+#   division    division id of the first team: n2-a…n2-d, n3-hdf, hdf-r1…hdf-r3, escaut-d1…escaut-d6
+#   primary, secondary, tertiary   kit colours as #rrggbb (empty primary/secondary: a guess is made and marked)
+#   pattern     plain | stripes | hoops | sash | checks (empty: a guess is made)
+#   stadium     name of the ground (empty: "Stade municipal de <city>")
+#   surface     grass | artificial | stabilized (empty: grass)
+#   founded     year, if known
+#   verified    "oui" once a person has checked the line against a public source
+#   source      where the line comes from (free text, not used by the game)
+# See SOURCES.md for what may be used and what may not (no fff.fr scraping, no protected API).
+id,name,short_name,city,insee,district,division,primary,secondary,tertiary,pattern,stadium,surface,founded,verified,source

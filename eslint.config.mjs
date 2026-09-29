@@ -81,6 +81,16 @@ export default tseslint.config(
     },
   },
 
+  {
+    files: ['packages/data/scripts/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: join(import.meta.dirname, 'packages/data/tsconfig.scripts.json'),
+      },
+    },
+  },
+
   // ─── Deterministic engine ───────────────────────────────────────────────────
   {
     files: ['packages/engine/src/**/*.ts'],

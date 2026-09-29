@@ -13,7 +13,7 @@ Jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe, f
 
 ## Phase en cours
 
-**Phase 3 — Univers et cartes** (Phase 2 terminée le 29/09/2026). Découpage proposé, en attente de validation.
+**Phase 3 — Univers et cartes** (Phase 2 terminée le 29/09/2026). Découpage validé : univers (schéma, import, seed) → générateur d'effectifs → blasons, maillots, sponsors → cartes 2D → cartes 3D holographiques → personnages aux couleurs du club → pages publiques et images de partage → bilan. Étape 1 en cours : le pipeline est fait, la liste des clubs de l'Escaut reste à compiler.
 Mettre à jour cette ligne à chaque changement de phase.
 
 ## Stack
