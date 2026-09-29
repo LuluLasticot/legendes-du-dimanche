@@ -98,3 +98,29 @@ describe('ratings', () => {
     }
   });
 });
+
+describe('a pass-and-shot moment ending offside', () => {
+  it('gives the ball to the defence and does not count as a shot', () => {
+    for (let seed = 1; seed < 40; seed++) {
+      const sim = new MatchSim(setup(seed), { userSide: 0 });
+      let flagged = 0;
+      while (sim.step()) {
+        const request = sim.pendingMoment;
+        if (sim.waiting !== 'moment' || !request) continue;
+        const before = sim.result();
+        const shotsBefore = before.stats[request.attacking].shots;
+        sim.resolveMoment('offside');
+        flagged++;
+        const after = sim.result();
+        expect(after.stats[request.attacking].shots).toBe(shotsBefore - 1);
+        const last = after.events[after.events.length - 1];
+        expect(last?.kind).toBe('offside');
+        expect(last?.team).toBe(request.attacking);
+        expect(after.score).toEqual(before.score);
+        break;
+      }
+      if (flagged > 0) return;
+    }
+    throw new Error('no key moment came up in 40 matches');
+  });
+});

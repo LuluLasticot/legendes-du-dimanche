@@ -36,13 +36,16 @@ import {
   type KeeperTuning,
 } from './keeper.ts';
 import { DEFAULT_RECEIVER_TUNING, planReception, type ReceiverTuning } from './pass.ts';
+import { PITCH } from '../physics/constants.ts';
 import type { DefenderSetup, KeeperSetup } from './shot-moment.ts';
 
-export type PassOutcome = 'received' | 'intercepted' | 'lost';
+export type PassOutcome = 'received' | 'intercepted' | 'lost' | 'offside';
 
 export type PassEvent =
   | FlightEvent
-  | { readonly tick: Tick; readonly type: 'received'; readonly pos: Vec3 }
+  | { readonly tick: Tick; readonly type: 'received'; readonly by: number; readonly pos: Vec3 }
+  /** The teammate who met the ball was beyond the second-last defender when it was played. */
+  | { readonly tick: Tick; readonly type: 'offside'; readonly by: number; readonly pos: Vec3 }
   | {
       readonly tick: Tick;
       readonly type: 'intercepted';
@@ -52,19 +55,30 @@ export type PassEvent =
       readonly speed: number;
     };
 
+/** A teammate running for the ball. */
+export interface ReceiverSetup {
+  readonly from: Vec3;
+  /** 1–99 pace (VIT). */
+  readonly pace: number;
+  /** Speed of his run when the pass is played (m/s): he is already on the move. */
+  readonly speed?: number;
+  /**
+   * Direction he keeps running in (unit, horizontal) when the ball cannot reach him. Without it
+   * he stands still then.
+   */
+  readonly run?: Vec3;
+  readonly tuning?: ReceiverTuning;
+}
+
 export interface PassMomentSetup {
   /** Ball at the instant of the pass (after execution error). */
   readonly ball: BallState;
   readonly physics: PhysicsParams;
   readonly surface: PhysicsSurface;
-  readonly receiver: {
-    readonly from: Vec3;
-    /** 1–99 pace (VIT). */
-    readonly pace: number;
-    /** Speed of his run when the pass is played (m/s): he is already on the move. */
-    readonly speed?: number;
-    readonly tuning?: ReceiverTuning;
-  };
+  /** The teammates who run for the ball: whoever meets it first gets it. At least one. */
+  readonly receivers: readonly ReceiverSetup[];
+  /** Apply the offside rule at the instant of the pass (default true). */
+  readonly offside?: boolean;
   readonly keeper: KeeperSetup | null;
   readonly defenders?: readonly DefenderSetup[];
   readonly defenderTuning?: DefenderTuning;
@@ -76,12 +90,14 @@ export interface ReceiverState {
   readonly vel: Vec3;
   /** Where and when (absolute tick) he meets the ball, or null if he cannot. */
   readonly meet: { readonly tick: Tick; readonly feet: Vec3 } | null;
+  /** Beyond the second-last defender and the ball when the pass was played. */
+  readonly offside: boolean;
 }
 
 export interface PassMomentState {
   readonly tick: Tick;
   readonly flight: FlightState;
-  readonly receiver: ReceiverState;
+  readonly receivers: readonly ReceiverState[];
   readonly keeper: KeeperState | null;
   readonly defenders: readonly DefenderState[];
   readonly outcome: PassOutcome | null;
@@ -90,7 +106,7 @@ export interface PassMomentState {
 export interface PassMomentContext {
   readonly setup: PassMomentSetup;
   readonly flight: FlightContext;
-  readonly receiverTuning: ReceiverTuning;
+  readonly receiverTunings: readonly ReceiverTuning[];
   readonly keeperTuning: KeeperTuning;
   readonly keeperRng: Rng;
   readonly defenderTuning: DefenderTuning;
@@ -102,8 +118,11 @@ export interface PassMomentContext {
 const PASS_READ_FACTOR = 1.6;
 /** Longest a pass moment lasts (s) before the ball counts as lost. */
 const MAX_SECONDS = 8;
+/** Per tick, the slowing down of a teammate the ball will not reach (0.99⁴ᴵ²⁰: ~0.3 after 1 s). */
+const COAST_DRAG = 0.99;
 
 function plan(
+  index: number,
   feet: Vec3,
   speed: number,
   tick: Tick,
@@ -113,9 +132,9 @@ function plan(
   const path = simulateFlight(ball, { ...context.flight, rng: null }, { maxTicks: 6 * 120 });
   const reception = planReception(
     feet,
-    context.setup.receiver.pace,
+    (context.setup.receivers[index] as ReceiverSetup).pace,
     path.samples,
-    context.receiverTuning,
+    context.receiverTunings[index],
     speed,
   );
   return reception ? { tick: tick + reception.tick, feet: reception.feet } : null;
@@ -139,7 +158,7 @@ export function startPassMoment(setup: PassMomentSetup): {
       surface: setup.surface,
       rng: jitter ? root.fork('bounces') : null,
     },
-    receiverTuning: setup.receiver.tuning ?? DEFAULT_RECEIVER_TUNING,
+    receiverTunings: setup.receivers.map((r) => r.tuning ?? DEFAULT_RECEIVER_TUNING),
     keeperTuning,
     keeperRng,
     defenderTuning,
@@ -166,17 +185,33 @@ export function startPassMoment(setup: PassMomentSetup): {
   const defenders = setups.map((d) =>
     createDefender(d.role, d.feet ?? setup.ball.pos, d.attributes, reading, defenderRng),
   );
-  const from = v3(setup.receiver.from.x, 0, setup.receiver.from.z);
-  const speed = setup.receiver.speed ?? 0;
-  const meet = plan(from, speed, 0, setup.ball, context);
-  const toMeet = meet ? sub(meet.feet, from) : v3(0, 0, 0);
-  const d = length(toMeet);
+  const offsideLine =
+    setup.offside === false
+      ? Infinity
+      : offsideLineX(
+          setup.ball.pos.x,
+          defenders.map((d) => d.feet),
+          keeper?.feet ?? null,
+        );
+  const receivers = setup.receivers.map((r, i): ReceiverState => {
+    const from = v3(r.from.x, 0, r.from.z);
+    const speed = r.speed ?? 0;
+    const meet = plan(i, from, speed, 0, setup.ball, context);
+    const toMeet = meet ? sub(meet.feet, from) : (r.run ?? v3(0, 0, 0));
+    const d = length(toMeet);
+    return {
+      feet: from,
+      vel: d > 1e-6 ? scale(toMeet, speed / d) : v3(0, 0, 0),
+      meet,
+      offside: isOffside(from, offsideLine, setup.ball.pos.x),
+    };
+  });
   return {
     context,
     state: {
       tick: 0,
       flight: startFlight(setup.ball),
-      receiver: { feet: from, vel: d > 1e-6 ? scale(toMeet, speed / d) : v3(0, 0, 0), meet },
+      receivers,
       keeper,
       defenders,
       outcome: null,
@@ -186,18 +221,21 @@ export function startPassMoment(setup: PassMomentSetup): {
 
 /** Runs the receiver towards his meeting point, arriving on time rather than early. */
 function stepReceiver(
+  index: number,
   receiver: ReceiverState,
   tick: Tick,
   context: PassMomentContext,
 ): ReceiverState {
   const meet = receiver.meet;
-  if (meet === null) return { ...receiver, vel: v3(0, 0, 0) };
-  const tuning = context.receiverTuning;
-  const top = lerp(
-    tuning.speedRange[0],
-    tuning.speedRange[1],
-    clamp((context.setup.receiver.pace - 1) / 98, 0, 1),
-  );
+  const setup = context.setup.receivers[index] as ReceiverSetup;
+  if (meet === null) {
+    // The ball cannot reach him: he keeps running the way he was, slowing down, if he has a run.
+    if (setup.run === undefined) return { ...receiver, vel: v3(0, 0, 0) };
+    const vel = scale(receiver.vel, COAST_DRAG);
+    return { ...receiver, feet: add(receiver.feet, scale(vel, TICK_DT)), vel };
+  }
+  const tuning = context.receiverTunings[index] as ReceiverTuning;
+  const top = lerp(tuning.speedRange[0], tuning.speedRange[1], clamp((setup.pace - 1) / 98, 0, 1));
   const toMeet = sub(meet.feet, receiver.feet);
   const distance = length(toMeet);
   if (distance < 1e-6) return { ...receiver, vel: v3(0, 0, 0) };
@@ -281,14 +319,24 @@ export function stepPassMoment(
     }
   }
 
-  let receiver = stepReceiver(state.receiver, tick, context);
+  let receivers = state.receivers.map((r, i) => stepReceiver(i, r, tick, context));
   if (outcome === null) {
     const ball = flight.ball;
-    const gap = length(sub(v3(ball.pos.x, 0, ball.pos.z), receiver.feet));
-    const reach = context.receiverTuning.controlRadius + 0.25;
-    if (gap <= reach && ball.pos.y <= context.receiverTuning.maxHeight) {
-      outcome = 'received';
-      events.push({ tick, type: 'received', pos: ball.pos });
+    const gap = (r: ReceiverState): number => length(sub(v3(ball.pos.x, 0, ball.pos.z), r.feet));
+    const first = receivers.findIndex(
+      (r, i) =>
+        gap(r) <= (context.receiverTunings[i] as ReceiverTuning).controlRadius + 0.25 &&
+        ball.pos.y <= (context.receiverTunings[i] as ReceiverTuning).maxHeight,
+    );
+    if (first >= 0) {
+      const by = state.receivers[first] as ReceiverState;
+      if (by.offside) {
+        outcome = 'offside';
+        events.push({ tick, type: 'offside', by: first, pos: ball.pos });
+      } else {
+        outcome = 'received';
+        events.push({ tick, type: 'received', by: first, pos: ball.pos });
+      }
     } else if (
       (flight.outcome !== null && flight.outcome !== 'stopped') ||
       tick * TICK_DT > MAX_SECONDS
@@ -297,16 +345,16 @@ export function stepPassMoment(
     } else {
       // The path only drifts from the prediction on jittery bounces; re-plan then, or if late.
       const bounced = stepped.events.some((e) => e.type === 'bounce');
-      const late = receiver.meet !== null && tick > receiver.meet.tick + 3;
-      if (late || (bounced && context.flight.rng !== null)) {
-        const speed = length(receiver.vel);
-        receiver = { ...receiver, meet: plan(receiver.feet, speed, tick, ball, context) };
-      }
-      if (receiver.meet === null && flight.outcome === 'stopped') outcome = 'lost';
+      receivers = receivers.map((r, i) => {
+        const late = r.meet !== null && tick > r.meet.tick + 3;
+        if (!late && !(bounced && context.flight.rng !== null)) return r;
+        return { ...r, meet: plan(i, r.feet, length(r.vel), tick, ball, context) };
+      });
+      if (flight.outcome === 'stopped' && receivers.every((r) => r.meet === null)) outcome = 'lost';
     }
   }
 
-  return { state: { tick, flight, receiver, keeper, defenders, outcome }, events };
+  return { state: { tick, flight, receivers, keeper, defenders, outcome }, events };
 }
 
 export interface PassMomentResult {
@@ -339,4 +387,28 @@ export function defendersAfterPass(
     const s = states[i];
     return s ? { ...d, feet: v3(s.feet.x, 0, s.feet.z) } : d;
   });
+}
+
+/**
+ * X of the offside line: the second-last opponent (the keeper counts) as seen from the goal at
+ * +X. Nobody stands in front of the ball or the halfway line for it to matter.
+ */
+export function offsideLineX(
+  ballX: number,
+  defenders: readonly Vec3[],
+  keeper: Vec3 | null,
+): number {
+  const xs = defenders.map((d) => d.x);
+  if (keeper) xs.push(keeper.x);
+  xs.sort((a, b) => b - a);
+  // Fewer than two opponents: only the goal line remains.
+  const line = xs[1] ?? xs[0] ?? PITCH.goalLineX;
+  return Math.max(line, ballX, 0);
+}
+
+/** A little play: a player level with the line, or by a hair beyond it, is onside. */
+const OFFSIDE_TOLERANCE = 0.15;
+
+export function isOffside(feet: Vec3, line: number, ballX: number): boolean {
+  return feet.x > Math.max(line, ballX) + OFFSIDE_TOLERANCE;
 }

@@ -115,7 +115,15 @@ export interface MatchResult {
 export type ShotKind = 'open' | 'header' | 'free-kick' | 'penalty';
 
 /** How a shot ends, whether simulated here or played in 3D. */
-export type ShotOutcome = 'goal' | 'save-catch' | 'save-parry' | 'block' | 'post' | 'miss';
+export type ShotOutcome =
+  | 'goal'
+  | 'save-catch'
+  | 'save-parry'
+  | 'block'
+  | 'post'
+  | 'miss'
+  /** The pass to the shooter was played with him beyond the last defender (key moment only). */
+  | 'offside';
 
 /** The kind of 3D key moment (the Phase 1 situations). */
 export type MomentKind = 'shot' | 'pass-shot' | 'free-kick' | 'penalty' | 'keeper';
@@ -1037,6 +1045,17 @@ export class MatchSim {
       this.tick(rng.range(25, 40));
       this.possession = this.other(side);
       this.restart = 'kickoff';
+      return;
+    }
+    if (outcome === 'offside') {
+      // The flag is up before any shot: it does not count as one.
+      a.stats.shots--;
+      a.stats.xg -= xg;
+      this.record('offside', null, false);
+      this.event('offside', side, shooterId);
+      const winner = this.nearest(this.other(side), toTeamFrame(this.ball, false, false), true);
+      this.turnover(winner);
+      this.restart = 'free-kick';
       return;
     }
     const saved = outcome === 'save-catch' || outcome === 'save-parry';

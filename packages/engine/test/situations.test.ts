@@ -101,7 +101,7 @@ describe('pass moment', () => {
   const pass = (seed: number, markers: number, targetZ = 3) => {
     const target = v3(PITCH.goalLineX - 11, 0, targetZ);
     const profile = passerProfile({ passing: 80, composure: 70 }, 0);
-    const run = receptionTicks(layout.receiver, target, 80, RECEIVER_RUN_SPEED);
+    const run = receptionTicks(layout.receivers[0] as Vec3, target, 80, RECEIVER_RUN_SPEED);
     const solution = solvePass(layout.ball, target, run, profile, DEFAULT_PHYSICS, 'grass');
     const velocity = applyPassError(solution.velocity, profile, Rng.create(seed));
     const defenders = markerSetups(layout, markers, MARKER);
@@ -111,7 +111,8 @@ describe('pass moment', () => {
         ball: passBall(layout.ball, velocity),
         physics: DEFAULT_PHYSICS,
         surface: 'grass',
-        receiver: { from: layout.receiver, pace: 80, speed: RECEIVER_RUN_SPEED },
+        receivers: [{ from: layout.receivers[0] as Vec3, pace: 80, speed: RECEIVER_RUN_SPEED }],
+        offside: false,
         keeper: { attributes: KEEPER },
         defenders,
         seed: seed + 1,
