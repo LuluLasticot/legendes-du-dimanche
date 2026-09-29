@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Imperative Three.js rendering (stage, post-processing, quality, camera, scenes). Mounted by thin React components.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./audio": "./src/audio/match-audio.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

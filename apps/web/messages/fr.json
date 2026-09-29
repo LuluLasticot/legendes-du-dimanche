@@ -520,6 +520,10 @@
     }
   },
   "match": {
+    "sound": {
+      "on": "Couper le son",
+      "off": "Remettre le son"
+    },
     "webglError": "WebGL 2 n'est pas disponible : l'action sera résolue par le coach.",
     "prematch": {
       "title": "Avant-match",

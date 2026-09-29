@@ -1,10 +1,12 @@
 'use client';
 
 import { commentary, sim } from '@legendes/engine';
+import type { MatchAudio } from '@legendes/render3d/audio';
 import type { Phase, Pitch2DHandle, Stoppage, TeamLook, Timeline } from '@legendes/render2d';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildSetup, DEFAULT_CONFIG, SIDE, type MatchConfig } from './match-config';
+import { MatchSounds } from './match-sound';
 import { MomentPlayer } from './moment-player';
 import { FullTime, HalfTime, PreMatch } from './panels';
 
@@ -83,6 +85,42 @@ export function MatchScreen() {
     speedRef.current = speed;
   }, [speed]);
 
+  // Sounds: the audio context needs a gesture to start, so it is created on the first tap.
+  const audioRef = useRef<MatchAudio | null>(null);
+  const [sound, setSound] = useState(true);
+  const soundRef = useRef(sound);
+  useEffect(() => {
+    soundRef.current = sound;
+  }, [sound]);
+  // Loaded up front so that unlocking is synchronous inside the tap (iOS needs that).
+  useEffect(() => {
+    let cancelled = false;
+    void import('@legendes/render3d/audio').then(({ MatchAudio: Audio }) => {
+      if (!cancelled) audioRef.current = new Audio();
+    });
+    return () => {
+      cancelled = true;
+      audioRef.current?.dispose();
+      audioRef.current = null;
+    };
+  }, []);
+  const unlockAudio = useCallback((): void => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.setEnabled(soundRef.current);
+    audio.unlock();
+    if (stageRef.current === 'playing' && soundRef.current) audio.startMurmur();
+  }, []);
+
+  // The stand murmurs while the 2D match plays; the 3D moment has its own sounds.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.setEnabled(sound);
+    if (stage === 'playing' && sound) audio.startMurmur();
+    else audio.stopMurmur();
+  }, [stage, sound]);
+
   const go = useCallback((next: Stage) => {
     stageRef.current = next;
     setStageState(next);
@@ -103,6 +141,7 @@ export function MatchScreen() {
 
   const start = useCallback(
     async (cfg: MatchConfig): Promise<void> => {
+      unlockAudio();
       const { Timeline: TimelineImpl } = await import('@legendes/render2d');
       const setup = buildSetup(cfg);
       const match = new sim.MatchSim(setup, {
@@ -126,7 +165,7 @@ export function MatchScreen() {
       setRunId((n) => n + 1);
       go('playing');
     },
-    [advance, go],
+    [advance, go, unlockAudio],
   );
 
   // Lab controls in the URL: ?seed=N, ?speed=K, ?auto=1 (straight to kick-off, moments by the coach).
@@ -162,6 +201,9 @@ export function MatchScreen() {
       }
       let last = performance.now();
       let uiTimer = 0;
+      const sounds = audioRef.current
+        ? new MatchSounds(audioRef.current, rt.setup.conditions.surface, SIDE)
+        : null;
       const loop = (now: number): void => {
         raf = requestAnimationFrame(loop);
         const dtReal = Math.min(0.1, Math.max(0, (now - last) / 1000));
@@ -179,6 +221,7 @@ export function MatchScreen() {
           const e = events[rt.eventIndex] as sim.MatchEvent;
           if (key(e.half, e.t) > nowKey) break;
           rt.eventIndex++;
+          sounds?.event(e, speedRef.current);
           if (e.kind !== 'sub' && e.kind !== 'red') continue;
           const team = e.team === 0 ? rt.setup.home : rt.setup.away;
           rt.teams = rt.teams.map((tl, side) => {
@@ -198,6 +241,7 @@ export function MatchScreen() {
           }) as [TeamLook, TeamLook];
           handle.setTeams(rt.teams);
         }
+        sounds?.update(cursor, speedRef.current);
         const frame = handle.render(dt, cursor, clock);
         uiTimer += dtReal;
         if (uiTimer > 0.1) {
@@ -275,7 +319,7 @@ export function MatchScreen() {
     setup ? (side === 0 ? setup.home.name : setup.away.name) : '';
 
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden">
+    <div className="relative min-h-0 flex-1 overflow-hidden" onPointerDownCapture={unlockAudio}>
       <div ref={hostRef} className="absolute inset-0" />
 
       {stage !== 'prematch' && setup && (
@@ -325,6 +369,16 @@ export function MatchScreen() {
             ))}
           </ol>
           <div className="absolute right-3 bottom-4 flex gap-1 rounded-pill bg-pitch-950/70 p-1">
+            <button
+              type="button"
+              onClick={() => setSound((on) => !on)}
+              aria-pressed={sound}
+              aria-label={t(sound ? 'sound.on' : 'sound.off')}
+              title={t(sound ? 'sound.on' : 'sound.off')}
+              className="rounded-pill px-2.5 py-1 text-xs text-chalk"
+            >
+              {sound ? '🔊' : '🔇'}
+            </button>
             {SPEEDS.map((s) => (
               <button
                 key={s}
