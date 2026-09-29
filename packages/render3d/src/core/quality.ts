@@ -19,6 +19,8 @@ export interface QualityProfile {
   readonly shadowMapSize: number;
   /** Floor of the dynamic resolution. */
   readonly minRes: number;
+  /** Idle players standing around a key moment (the rest of the 22 on the pitch). */
+  readonly extras: number;
 }
 
 export const QUALITY_PROFILES: Readonly<Record<QualityLevel, QualityProfile>> = {
@@ -30,6 +32,7 @@ export const QUALITY_PROFILES: Readonly<Record<QualityLevel, QualityProfile>> = 
     particles: 0.45,
     shadowMapSize: 0,
     minRes: 0.6,
+    extras: 3,
   },
   medium: {
     level: 'medium',
@@ -39,6 +42,7 @@ export const QUALITY_PROFILES: Readonly<Record<QualityLevel, QualityProfile>> = 
     particles: 0.75,
     shadowMapSize: 1024,
     minRes: 0.55,
+    extras: 6,
   },
   high: {
     level: 'high',
@@ -48,6 +52,7 @@ export const QUALITY_PROFILES: Readonly<Record<QualityLevel, QualityProfile>> = 
     particles: 1,
     shadowMapSize: 2048,
     minRes: 0.55,
+    extras: 9,
   },
 };
 

@@ -22,6 +22,7 @@ import { Stadium } from '../stadium/stadium.ts';
 import { Character, type Kit } from '../players/character.ts';
 import { loadCharacterAsset, type CharacterAsset } from '../players/character-asset.ts';
 import { DefenderController, KeeperController, ShooterController } from '../players/controllers.ts';
+import { PitchExtras } from '../players/extras.ts';
 import { HOME_KIT, KEEPER_KIT, OPPONENT_KIT, PlayerFigure } from '../players/player-figure.ts';
 import {
   keeperSlowMo,
@@ -276,7 +277,25 @@ export function mountBallSandbox(
   let passerCtrl: ShooterController | null = null;
   let keeperCtrl: KeeperController | null = null;
   const defenderCtrls: DefenderController[] = [];
+  let extras: PitchExtras | null = null;
   let disposed = false;
+  /** The rest of the 22 stand around the action: same kits as the players who take part. */
+  const placeExtras = (): void => {
+    if (!extras) return;
+    const situation = settings.situation;
+    const busy: physics.Vec3[] = [spot, moment.keeper?.feet ?? spot];
+    for (const d of moment.defenders) busy.push(d.feet);
+    if (situation === 'pass') {
+      const l = layout();
+      busy.push(l.receiver, ...l.markers);
+    }
+    const attack = situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT;
+    const defend = situation === 'keeper' ? HOME_CHARACTER_KIT : OPPONENT_CHARACTER_KIT;
+    extras.set(moments.backgroundPlayers(situation, spot, busy, stage.profile.extras), spot, {
+      attack,
+      defend,
+    });
+  };
   const syncDefenderCharacters = (count: number): void => {
     if (!characterAsset) return;
     while (defenderCtrls.length > count) defenderCtrls.pop()?.character.dispose();
@@ -566,6 +585,7 @@ export function mountBallSandbox(
         1,
       );
     }
+    placeExtras();
     keeperCtrl?.reset();
     // Keeping goal, the player looks over the keeper's shoulder: see through him.
     keeperCtrl?.character.setOpacity(situation === 'keeper' ? 0.4 : 1);
@@ -1433,6 +1453,7 @@ export function mountBallSandbox(
           wallApexSeconds(),
         );
     }
+    extras?.update(frame.simDt);
     for (let i = 0; i < defenderFigures.length; i++) {
       const cur = now.defenders[i];
       const prev = before.defenders[i] ?? cur;
@@ -1452,6 +1473,7 @@ export function mountBallSandbox(
   void loadCharacterAsset(options.characterAssetsUrl ?? '/assets/characters/').then((asset) => {
     if (!asset || disposed) return;
     characterAsset = asset;
+    extras = new PitchExtras(scene, asset);
     const shooter = new Character(asset, HOME_CHARACTER_KIT);
     const passer = new Character(asset, HOME_CHARACTER_KIT);
     const keeper = new Character(asset, KEEPER_CHARACTER_KIT);
@@ -1539,6 +1561,7 @@ export function mountBallSandbox(
       passerCtrl?.character.dispose();
       keeperCtrl?.character.dispose();
       for (const controller of defenderCtrls) controller.character.dispose();
+      extras?.dispose();
       audio.dispose();
       stadium.dispose();
       stage.dispose();
