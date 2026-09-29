@@ -122,10 +122,59 @@ export function reboundRunners(situation: Situation, ball: Vec3): Vec3[] {
   // Penalty: one teammate ready to follow in, on the edge of the area.
   if (situation === 'penalty') return [v3(g - 17.4, 0, 8.2)];
   if (situation === 'free' || situation === 'free-kick') {
-    const side = ball.z < 0 ? 1 : -1;
-    return [v3(Math.min(g - 13, ball.x + 3), 0, side * 6.5)];
+    // Three runners in the box, in front of the shooter (so the camera sees them) but out of the
+    // shot's way: far post, near post, and one arriving late. Beyond the wall on a free kick.
+    const far = ball.z < 0 ? 1 : -1;
+    const d = g - ball.x;
+    return [
+      alongLane(ball, clamp(Math.max(0.55 * d, 10.5), 0, d - 2.5), far, 2),
+      alongLane(ball, clamp(Math.max(0.72 * d, 11.5), 0, d - 1.5), -far, 2.5),
+      alongLane(ball, clamp(Math.max(0.4 * d, 9.5), 0, d - 3.5), far, 5),
+    ];
   }
   return [];
+}
+
+/** Room kept around the shot's lane (the triangle ball → posts), m. */
+const LANE_MARGIN = 1.5;
+const POST_Z = 3.66;
+
+/** Z of the middle of the shot's lane at `x` (from the ball to the centre of the goal). */
+function laneCentre(x: number, ball: Vec3): number {
+  const span = PITCH.goalLineX - ball.x;
+  const t = span > 1e-6 ? clamp((x - ball.x) / span, 0, 1) : 1;
+  return ball.z * (1 - t);
+}
+
+/**
+ * A point `along` metres from the ball towards the centre of the goal, then `outside` metres
+ * beyond the edge of the shot's lane, on `side` (+1: +Z).
+ */
+function alongLane(ball: Vec3, along: number, side: number, outside: number): Vec3 {
+  const g = PITCH.goalLineX;
+  const dx = g - ball.x;
+  const dz = -ball.z;
+  const len = sqrt(dx * dx + dz * dz) || 1;
+  const x = ball.x + (dx / len) * along;
+  const t = clamp((x - ball.x) / (dx || 1), 0, 1);
+  const half = LANE_MARGIN + POST_Z * t;
+  const edge = laneCentre(x, ball) + side * (half + outside);
+  return v3(Math.min(x, g - 1), 0, clamp(edge, -HALF_WIDTH + 1.5, HALF_WIDTH - 1.5));
+}
+
+/** True if `p` stands out of the triangle between the ball and the posts (widened a little). */
+export function clearOfShot(p: Vec3, ball: Vec3): boolean {
+  if (p.x <= ball.x - LANE_MARGIN) return true;
+  const span = PITCH.goalLineX - ball.x;
+  const t = span > 1e-6 ? clamp((p.x - ball.x) / span, 0, 1) : 1;
+  const half = LANE_MARGIN + POST_Z * t;
+  return Math.abs(p.z - ball.z * (1 - t)) >= half;
+}
+
+function pickClear(ball: Vec3, candidates: readonly Vec3[]): Vec3 {
+  return (
+    candidates.find((c) => clearOfShot(c, ball)) ?? (candidates[candidates.length - 1] as Vec3)
+  );
 }
 
 /**
@@ -167,7 +216,14 @@ export function reboundCovers(situation: Situation, ball: Vec3): Vec3[] {
   const g = PITCH.goalLineX;
   // Level with the runners, on their inside (9.15 m from the mark, outside the area).
   if (situation === 'penalty') return [v3(g - 17, 0, 7), v3(g - 17, 0, -7)];
-  return reboundRunners(situation, ball).map((r) => v3(r.x + 1.6, 0, r.z - Math.sign(r.z) * 0.9));
+  // Goal-side of each runner, a little further from the shot's lane.
+  return reboundRunners(situation, ball).map((r) => {
+    const away = Math.sign(r.z - laneCentre(r.x, ball)) || 1;
+    return pickClear(ball, [
+      v3(Math.min(r.x + 1.4, g - 1), 0, r.z + away * 0.9),
+      v3(Math.min(r.x + 1, g - 1), 0, r.z + away * 2),
+    ]);
+  });
 }
 
 // ─── The chase ────────────────────────────────────────────────────────────────
@@ -200,7 +256,15 @@ export interface ChaseStart {
   readonly defenders: readonly Vec3[];
   /** Keeper's feet and, if he is down, the tick his dive ends. */
   readonly keeper: { readonly feet: Vec3; readonly downUntil: Tick | null } | null;
+  /**
+   * Attackers who were offside when the shot was struck: a ball off the keeper or the woodwork
+   * does not put them back onside (Laws of the Game 11), so they stay out of it.
+   */
+  readonly offside?: readonly boolean[];
 }
+
+/** Start tick of a runner who never goes (offside). */
+export const NEVER = Number.MAX_SAFE_INTEGER;
 
 export function startChase(start: ChaseStart): ChaseState {
   const t = start.tick;
@@ -210,7 +274,9 @@ export function startChase(start: ChaseStart): ChaseState {
     attackers: start.attackers.map((a, i) =>
       idle(
         a.feet,
-        t + secondsToTicks(a.reaction ?? (i === 0 ? SHOOTER_REACTION : ATTACKER_REACTION)),
+        start.offside?.[i] === true
+          ? NEVER
+          : t + secondsToTicks(a.reaction ?? (i === 0 ? SHOOTER_REACTION : ATTACKER_REACTION)),
       ),
     ),
     defenders: start.defenders.map((feet) => idle(feet, t + secondsToTicks(DEFENDER_REACTION))),
@@ -347,5 +413,7 @@ export function stepChase(
 /** Nobody can get to the ball any more (it is rolling out, or out of everyone's reach). */
 export function chaseHopeless(chase: ChaseState, tick: Tick): boolean {
   const runners = [...chase.attackers, ...chase.defenders, ...(chase.keeper ? [chase.keeper] : [])];
-  return runners.every((r) => tick >= r.startTick && r.planned && r.meet === null);
+  return runners
+    .filter((r) => r.startTick !== NEVER)
+    .every((r) => tick >= r.startTick && r.planned && r.meet === null);
 }

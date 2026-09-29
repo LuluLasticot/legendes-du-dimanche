@@ -1655,6 +1655,17 @@ export function mountBallSandbox(
         };
         followers[i]?.follow(feet, r1.vel, ballPos);
       });
+      // Offside when the ball was struck: he stays out of it, a red ring says why.
+      const offside = momentContext.reboundOffside;
+      offsideRings.forEach((ring, k) => {
+        const i = k + 1;
+        const r = chase.attackers[i];
+        ring.visible = r !== undefined && offside[i] === true;
+        if (r && ring.visible) {
+          ring.position.set(r.feet.x, 0.035, r.feet.z);
+          ring.material.color.setHex(0xff4d4d);
+        }
+      });
     }
     homeShooter?.update(frame.simDt);
     for (const ctrl of teammateCtrls) ctrl.update(frame.simDt);
@@ -1706,7 +1717,9 @@ export function mountBallSandbox(
     homeShooter = new ShooterController(shooter);
     shooterCtrl = homeShooter;
     passerCtrl = new ShooterController(passer);
-    for (let i = 1; i < layoutMaxReceivers; i++) {
+    // Teammates: the other receivers of a pass, or the follow-up runners of a shot.
+    const teammates = Math.max(layoutMaxReceivers - 1, 3);
+    for (let i = 0; i < teammates; i++) {
       const teammate = new Character(asset, HOME_CHARACTER_KIT);
       scene.add(teammate.root);
       teammateCtrls.push(new ShooterController(teammate));

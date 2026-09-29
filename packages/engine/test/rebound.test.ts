@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   attackerMover,
+  backgroundPlayers,
+  clearOfShot,
   keeperMover,
   outfieldMover,
   reboundCovers,
@@ -257,5 +259,72 @@ describe('automatic resolution with second balls', () => {
       else expect(rate).toBeGreaterThan(0.1);
       expect(rate).toBeLessThan(0.85);
     }
+  });
+});
+
+describe('who takes part in a second ball', () => {
+  it('puts runners and their markers out of the shot’s way', () => {
+    for (const situation of ['free', 'free-kick'] as const)
+      for (const distance of [12, 16, 20, 25, 30])
+        for (const z of [-16, -8, -4, 0, 4, 8, 16]) {
+          const ball = v3(PITCH.goalLineX - distance, 0.11, z);
+          for (const p of [...reboundRunners(situation, ball), ...reboundCovers(situation, ball)])
+            expect(clearOfShot(p, ball)).toBe(true);
+        }
+  });
+
+  it('keeps idle background players away from where second balls are fought for', () => {
+    for (const situation of ['free', 'free-kick', 'penalty', 'pass'] as const) {
+      const ball = v3(PITCH.goalLineX - 20, 0.11, -4);
+      for (const p of backgroundPlayers(situation, ball, [], 12)) {
+        const inZone = p.feet.x > PITCH.goalLineX - 20 && Math.abs(p.feet.z) < 22;
+        expect(inZone).toBe(false);
+      }
+    }
+  });
+
+  it('leaves out a teammate who was offside when the ball was struck', () => {
+    const from = v3(PITCH.goalLineX - 16, 0.11, -3);
+    const lurking = v3(PITCH.goalLineX - 2.5, 0, 2.5);
+    const covers = reboundCovers('free', from);
+    let checked = 0;
+    for (let i = 0; i < 16; i++) {
+      const target = v3(PITCH.goalLineX, 0.4 + i * 0.12, GOAL.width / 2 + 0.05);
+      const solution = solveShot(
+        from,
+        { target, power: 0.9, bulge: 0, lob: false },
+        SHOOTER,
+        DEFAULT_PHYSICS,
+        'grass',
+      );
+      const setup: ShotMomentSetup = {
+        ball: kickedBall(from, solution.velocity, solution.spin),
+        physics: DEFAULT_PHYSICS,
+        surface: 'grass',
+        keeper: { attributes: KEEPER },
+        defenders: covers.map((feet) => ({ role: 'cover' as const, feet, attributes: DEFENDER })),
+        seed: i,
+        rebound: {
+          attackers: [
+            { feet: v3(from.x - 0.4, 0, from.z), pace: 75 },
+            ...reboundRunners('free', from).map((feet) => ({ feet, pace: 70 })),
+            { feet: lurking, pace: 90 },
+          ],
+        },
+      };
+      const { context } = startShotMoment(setup);
+      const last = (setup.rebound?.attackers.length ?? 0) - 1;
+      // The runners of the situation are onside (their markers stand goal-side of them).
+      expect(context.reboundOffside).toEqual([...Array<boolean>(last).fill(false), true]);
+      const result = simulateShotMoment(setup, 1200);
+      const won = result.events.find((e) => e.type === 'rebound');
+      if (won && 'by' in won) expect(won.by).not.toBe(last);
+      for (const s of result.states) {
+        const r = s.chase?.attackers[last];
+        if (r) expect(r.feet).toEqual(lurking);
+      }
+      if (result.states.some((s) => s.chase !== null)) checked++;
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });

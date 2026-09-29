@@ -60,6 +60,7 @@ import {
   type ChaseState,
   type ReboundSetup,
 } from './rebound.ts';
+import { isOffside, offsideLineX } from './pass-moment.ts';
 
 /**
  * 'rebound': one of ours won the second ball after a save or the woodwork (a second shot
@@ -157,6 +158,8 @@ export interface ShotMomentContext {
   readonly defenderRng: Rng;
   readonly defenderSetups: readonly DefenderSetup[];
   readonly chaseMovers: ChaseMovers | null;
+  /** Rebound attackers offside when the ball was struck (they sit the second ball out). */
+  readonly reboundOffside: readonly boolean[];
 }
 
 /** Creates the mutable context (generators) and the initial state of a shot moment. */
@@ -171,7 +174,7 @@ export function startShotMoment(setup: ShotMomentSetup): {
   const defenderTuning = setup.defenderTuning ?? DEFAULT_DEFENDER_TUNING;
   const defenderRng = root.fork('defenders');
   const setups = setup.defenders ?? [];
-  const context: ShotMomentContext = {
+  let context: ShotMomentContext = {
     setup,
     flight: {
       params: setup.physics,
@@ -183,6 +186,7 @@ export function startShotMoment(setup: ShotMomentSetup): {
     defenderTuning,
     defenderRng,
     defenderSetups: setups,
+    reboundOffside: [],
     chaseMovers: setup.rebound
       ? {
           attackers: setup.rebound.attackers.map((a) => attackerMover(a.pace)),
@@ -222,6 +226,20 @@ export function startShotMoment(setup: ShotMomentSetup): {
     const feet = d.feet ?? wallSlots[wallIndex++] ?? setup.ball.pos;
     return createDefender(d.role, feet, d.attributes, defenderTuning, defenderRng);
   });
+  if (setup.rebound) {
+    // Offside is judged when the ball is struck: second-last opponent, the keeper counting.
+    const line = offsideLineX(
+      setup.ball.pos.x,
+      defenders.map((d) => d.feet),
+      keeper?.feet ?? null,
+    );
+    context = {
+      ...context,
+      reboundOffside: setup.rebound.attackers.map(
+        (a, i) => i > 0 && isOffside(a.feet, line, setup.ball.pos.x),
+      ),
+    };
+  }
   return {
     context,
     state: {
@@ -380,6 +398,7 @@ export function stepShotMoment(
       attackers: rebound.attackers,
       defenders: defenders.map((d) => d.feet),
       keeper: keeper ? { feet: keeper.feet, downUntil: keeperDownTick(keeper) } : null,
+      offside: context.reboundOffside,
     });
   }
 

@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildSetup, DEFAULT_CONFIG, SIDE, type MatchConfig } from './match-config';
 import { MatchSounds } from './match-sound';
+import { teamCode } from './team-code';
 import { MomentPlayer } from './moment-player';
 import { FullTime, HalfTime, PreMatch } from './panels';
 
@@ -61,6 +62,23 @@ const look = (team: sim.MatchTeam): TeamLook => ({
   ids: [...team.lineup],
   numbers: team.lineup.map((id) => sim.playerById(team, id).number),
 });
+
+/** Club name on the scoreboard: a kit swatch and its three-letter code on narrow screens. */
+function TeamName({ team }: { team: sim.MatchTeam }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1.5 text-sm">
+      <span
+        aria-hidden
+        className="size-2.5 shrink-0 rounded-full border border-chalk/40"
+        style={{ background: team.colours.shirt }}
+      />
+      <abbr title={team.name} className="no-underline sm:hidden">
+        {teamCode(team.name)}
+      </abbr>
+      <span className="hidden max-w-[11rem] truncate sm:inline">{team.name}</span>
+    </span>
+  );
+}
 
 /**
  * The match (Phase 2): pre-match, the 2D match at a watchable speed, key moments played in 3D,
@@ -325,18 +343,20 @@ export function MatchScreen() {
       {stage !== 'prematch' && setup && (
         <>
           <div className="pointer-events-none absolute top-3 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
-            <div className="flex items-center gap-3 rounded-md bg-pitch-950/80 px-4 py-2 font-semibold text-chalk backdrop-blur-sm">
-              <span className="text-sm">{setup.home.name}</span>
+            <div className="flex items-center gap-2 rounded-md bg-pitch-950/80 px-3 py-1.5 font-semibold whitespace-nowrap text-chalk backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-2">
+              <TeamName team={setup.home} />
               <span className="font-mono text-lg text-floodlight-300" data-testid="score">
                 {hud.score[0]} – {hud.score[1]}
               </span>
-              <span className="text-sm">{setup.away.name}</span>
+              <TeamName team={setup.away} />
               <span className="font-mono text-xs text-chalk-muted" data-testid="minute">
                 {minute}&apos;
               </span>
             </div>
-            <p className="rounded-pill bg-pitch-950/70 px-3 py-0.5 text-[11px] text-chalk-muted backdrop-blur-sm">
-              {teamName(hud.possession)} · {t(`phase.${hud.phase}`)}
+            <p className="max-w-[calc(100vw-2rem)] truncate rounded-pill bg-pitch-950/70 px-3 py-0.5 text-[11px] text-chalk-muted backdrop-blur-sm">
+              <span className="sm:hidden">{setup && teamCode(teamName(hud.possession))}</span>
+              <span className="hidden sm:inline">{teamName(hud.possession)}</span> ·{' '}
+              {t(`phase.${hud.phase}`)}
             </p>
             {showBanner && hud.stoppage && (
               <p
