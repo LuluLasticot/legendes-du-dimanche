@@ -13,7 +13,7 @@ Jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe, f
 
 ## Phase en cours
 
-**Phase 2 — Moteur de match et rendu 2D** (Phase 1 terminée le 28/09/2026). Découpage validé : modèle + équipes démo → simulation par phases → tactiques/fatigue/cartons/conditions + tests stats → pont actions clés ↔ simulation → render2d (PixiJS) → commentaires v1 → écran `/lab/match` (✅ : reste le bilan de phase).
+**Phase 3 — Univers et cartes** (Phase 2 terminée le 29/09/2026). Découpage proposé, en attente de validation.
 Mettre à jour cette ligne à chaque changement de phase.
 
 ## Stack
