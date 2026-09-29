@@ -3,6 +3,9 @@
 // where they stand is decided here (pure, no RNG); they never touch the ball, so they keep out of
 // the way of the shot: outside the lane between the ball and the goal, and clear of the players
 // who do take part. Penalty: everyone stands outside the area and the arc (Laws of the Game, 14).
+// Shooting situations: they keep out of the box and its surroundings, where second balls are
+// fought for; only the players who take part stand there (an idle player next to a loose ball
+// makes no sense). Keeping goal, there is no second ball for them: they fill the box.
 // Pass: the offside line is the moment's, so no background defender stands deeper than it (they
 // hold the line with the markers) and no background attacker stands beyond it.
 
@@ -31,6 +34,10 @@ const EDGE = PITCH.width / 2 - 1.5;
 // centre (z). Each list is in order of importance: the first ones are the ones the camera sees.
 type Spot = readonly [dx: number, z: number];
 
+/** The second-ball zone they keep out of (box and a margin), relative to the goal line. */
+const ZONE_DEPTH = 20;
+const ZONE_HALF_WIDTH = 22;
+
 const DEFEND: readonly Spot[] = [
   [3.5, 9],
   [4, -9],
@@ -44,6 +51,8 @@ const DEFEND: readonly Spot[] = [
   [30, -6],
   [17, 0],
   [36, 16],
+  [15, 26],
+  [22, -26],
 ];
 
 const ATTACK: readonly Spot[] = [
@@ -59,24 +68,26 @@ const ATTACK: readonly Spot[] = [
   [40, -9],
   [26, 0],
   [45, 15],
+  [13, -27],
+  [24, 25],
 ];
 
 // Penalty: outside the area (x ≤ goalLineX − 16.5) and at least 9.15 m from the mark.
 const PENALTY_DEFEND: readonly Spot[] = [
-  [17.8, 11.4],
-  [17.8, -11.4],
-  [17.8, 17],
-  [17.8, -17],
-  [21, 13],
-  [21, -13],
+  [21, 11],
+  [21, -11],
+  [21.5, 17],
+  [21.5, -17],
+  [24, 5],
+  [24, -5],
 ];
 const PENALTY_ATTACK: readonly Spot[] = [
-  [17.8, 8.6],
-  [17.8, -8.6],
-  [17.8, 14.2],
-  [17.8, -14.2],
-  [21, 10],
-  [21, -10],
+  [20.5, 14],
+  [20.5, -14],
+  [22.5, 8],
+  [22.5, -8],
+  [25, 13],
+  [25, -13],
 ];
 
 /** True if `p` is inside the triangle ball → posts, widened by the lane margin. */
@@ -136,6 +147,12 @@ export function backgroundPlayers(
   const usable = (p: BackgroundPlayer, taken: readonly Vec3[]): boolean => {
     if (Math.abs(p.feet.z) > EDGE || p.feet.x < -PITCH.goalLineX) return false;
     if (!penalty && inLane(p.feet, ball)) return false;
+    if (
+      situation !== 'keeper' &&
+      p.feet.x > PITCH.goalLineX - ZONE_DEPTH &&
+      Math.abs(p.feet.z) < ZONE_HALF_WIDTH
+    )
+      return false;
     return [...busy, ...taken].every((b) => dist(b, p.feet) >= PERSONAL_SPACE);
   };
   const chosen: BackgroundPlayer[] = [];

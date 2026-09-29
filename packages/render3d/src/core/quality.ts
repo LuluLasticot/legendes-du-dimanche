@@ -42,7 +42,7 @@ export const QUALITY_PROFILES: Readonly<Record<QualityLevel, QualityProfile>> = 
     particles: 0.75,
     shadowMapSize: 1024,
     minRes: 0.55,
-    extras: 6,
+    extras: 5,
   },
   high: {
     level: 'high',
@@ -52,7 +52,7 @@ export const QUALITY_PROFILES: Readonly<Record<QualityLevel, QualityProfile>> = 
     particles: 1,
     shadowMapSize: 2048,
     minRes: 0.55,
-    extras: 9,
+    extras: 7,
   },
 };
 

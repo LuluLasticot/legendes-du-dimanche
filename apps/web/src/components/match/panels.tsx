@@ -4,6 +4,7 @@ import { sim } from '@legendes/engine';
 import { useTranslations } from 'next-intl';
 import { useState, type ReactNode } from 'react';
 import { PLAY_STYLES, SIDE, type MatchConfig } from './match-config';
+import { teamCode } from './team-code';
 
 const SURFACES = ['grass', 'artificial', 'muddy', 'dirt'] as const;
 
@@ -11,8 +12,10 @@ const pct = (a: number, b: number): number => (a + b === 0 ? 50 : Math.round((10
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-pitch-950/90 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-xl space-y-4 rounded-lg border border-chalk/10 bg-pitch-900/90 p-5 text-chalk shadow-xl">
+    // Flex + m-auto rather than grid centring: a panel taller than the screen scrolls from its
+    // top instead of being cut off above it.
+    <div className="absolute inset-0 z-20 flex overflow-x-hidden overflow-y-auto overscroll-contain bg-pitch-950/90 p-3 backdrop-blur-sm sm:p-4">
+      <div className="m-auto w-full max-w-xl min-w-0 space-y-4 rounded-lg border border-chalk/10 bg-pitch-900/90 p-4 text-chalk shadow-xl sm:p-5">
         <h2 className="text-center text-lg font-semibold text-floodlight-300">{title}</h2>
         {children}
       </div>
@@ -35,11 +38,11 @@ function Choice<T extends string | number>({
 }) {
   return (
     <label className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-chalk-muted">{label}</span>
+      <span className="shrink-0 text-chalk-muted">{label}</span>
       <select
         value={String(value)}
         onChange={(e) => onChange(options.find((o) => String(o) === e.target.value) ?? value)}
-        className="rounded-md border border-chalk/20 bg-pitch-950 px-2 py-1 text-chalk"
+        className="max-w-[60%] min-w-0 rounded-md border border-chalk/20 bg-pitch-950 px-2 py-1 text-chalk"
       >
         {options.map((o) => (
           <option key={String(o)} value={String(o)}>
@@ -207,12 +210,18 @@ export function StatsTable({
     [t('stats.cards'), `${a.yellows} / ${a.reds}`, `${b.yellows} / ${b.reds}`],
   ];
   return (
-    <table className="w-full text-sm" aria-label={t('stats.title')}>
+    <table className="w-full table-fixed text-sm" aria-label={t('stats.title')}>
       <thead>
         <tr className="text-xs text-chalk-muted">
-          <th className="w-1/3 text-left font-medium">{names[0]}</th>
+          <th className="w-1/4 truncate text-left font-medium" title={names[0]}>
+            <span className="sm:hidden">{teamCode(names[0])}</span>
+            <span className="hidden sm:inline">{names[0]}</span>
+          </th>
           <th />
-          <th className="w-1/3 text-right font-medium">{names[1]}</th>
+          <th className="w-1/4 truncate text-right font-medium" title={names[1]}>
+            <span className="sm:hidden">{teamCode(names[1])}</span>
+            <span className="hidden sm:inline">{names[1]}</span>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -290,12 +299,12 @@ export function HalfTime({
         <p className="text-xs text-chalk-muted">
           {t('halftime.subs', { left: matchSim.subsLeft(SIDE) })}
         </p>
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 text-sm">
           <select
             aria-label={t('halftime.out')}
             value={out}
             onChange={(e) => setOut(e.target.value)}
-            className="rounded-md border border-chalk/20 bg-pitch-950 px-2 py-1"
+            className="w-full min-w-0 truncate rounded-md border border-chalk/20 bg-pitch-950 px-2 py-1"
           >
             {lineup.map((p) => (
               <option key={p.id} value={p.id}>
@@ -308,7 +317,7 @@ export function HalfTime({
             aria-label={t('halftime.in')}
             value={into}
             onChange={(e) => setInto(e.target.value)}
-            className="rounded-md border border-chalk/20 bg-pitch-950 px-2 py-1"
+            className="w-full min-w-0 truncate rounded-md border border-chalk/20 bg-pitch-950 px-2 py-1"
           >
             {bench.map((p) => (
               <option key={p.id} value={p.id}>
