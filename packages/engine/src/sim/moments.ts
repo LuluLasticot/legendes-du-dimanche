@@ -6,9 +6,16 @@ import { kickedBall } from '../physics/ball.ts';
 import { BALL, PITCH } from '../physics/constants.ts';
 import { DEFAULT_PHYSICS, withWind, type PhysicsParams } from '../physics/params.ts';
 import { v3, type Vec3 } from '../physics/vec3.ts';
-import { clamp, cos, degToRad, sin } from '../math/index.ts';
+import { clamp, cos, degToRad, sin, sqrt } from '../math/index.ts';
 import { Rng } from '../rng/index.ts';
-import { simulateShotMoment } from '../moments/shot-moment.ts';
+import {
+  secondBallSetup,
+  simulateShotMoment,
+  type ShotMomentSetup,
+} from '../moments/shot-moment.ts';
+import { reboundCovers, reboundSetup, type ReboundSetup } from '../moments/rebound.ts';
+import { firstTimeDifficulty } from '../moments/shot.ts';
+import type { Situation } from '../moments/situations.ts';
 import { shooterProfile, type ShotAttributes } from '../moments/shot.ts';
 import { opponentShot, penaltyKeeperFeet, penaltySpot, wallSize } from '../moments/situations.ts';
 import type { DefenderSetup } from '../moments/shot-moment.ts';
@@ -36,12 +43,43 @@ const AUTO_REACH = 0.7;
 
 /** Who stands in the way: the wall on a free kick, a marker in open play, nobody on a penalty. */
 export function momentDefenders(request: MomentRequest, from: Vec3): DefenderSetup[] {
-  if (request.kind === 'penalty') return [];
+  const covers: DefenderSetup[] = reboundCovers(momentSituation(request), from).map((feet) => ({
+    role: 'cover',
+    feet,
+    attributes: MARKER,
+  }));
+  if (request.kind === 'penalty') return covers;
   if (request.kind === 'free-kick') {
     const n = Math.max(2, wallSize(PITCH.goalLineX - from.x, from.z));
-    return Array.from({ length: n }, () => ({ role: 'wall' as const, attributes: MARKER }));
+    return [
+      ...Array.from({ length: n }, () => ({ role: 'wall' as const, attributes: MARKER })),
+      ...covers,
+    ];
   }
-  return [{ role: 'marker', feet: v3(from.x + 5, 0, from.z * 0.8), attributes: MARKER }];
+  return [{ role: 'marker', feet: v3(from.x + 5, 0, from.z * 0.8), attributes: MARKER }, ...covers];
+}
+
+/** The 3D situation a key moment is played as (auto-resolution uses the same geometry). */
+export function momentSituation(request: MomentRequest): Situation {
+  switch (request.kind) {
+    case 'penalty':
+      return 'penalty';
+    case 'free-kick':
+      return 'free-kick';
+    case 'keeper':
+      return 'keeper';
+    default:
+      return 'free';
+  }
+}
+
+/** Who follows up: the shooter, then the runners of the situation (none when keeping goal). */
+export function momentRebound(request: MomentRequest, from: Vec3): ReboundSetup | undefined {
+  return reboundSetup(
+    momentSituation(request),
+    v3(from.x - 0.4, 0, from.z),
+    request.shooterAttributes.pace,
+  );
 }
 
 /** Card attributes → shot attributes of the moment models. */
@@ -91,22 +129,54 @@ export function autoResolveMoment(
     AUTO_REACH,
   );
   const penalty = request.kind === 'penalty';
-  const result = simulateShotMoment(
-    {
-      ball: kickedBall(from, shot.velocity, shot.spin),
-      physics,
-      surface: conditions.surface,
-      keeper: {
-        attributes: request.keeper.keeper,
-        ...(penalty ? { feet: penaltyKeeperFeet(), mode: 'penalty' as const } : {}),
-      },
-      // A defender closing the shooter down (none on a penalty).
-      defenders: momentDefenders(request, from),
-      seed: rng.nextU32(),
+  const rebound = momentRebound(request, from);
+  const setup: ShotMomentSetup = {
+    ball: kickedBall(from, shot.velocity, shot.spin),
+    physics,
+    surface: conditions.surface,
+    keeper: {
+      attributes: request.keeper.keeper,
+      ...(penalty ? { feet: penaltyKeeperFeet(), mode: 'penalty' as const } : {}),
     },
+    // A defender closing the shooter down (none on a penalty), and the covers of the runners.
+    defenders: momentDefenders(request, from),
+    seed: rng.nextU32(),
+    ...(rebound ? { rebound } : {}),
+  };
+  const result = simulateShotMoment(setup, 720);
+  const last = result.states[result.states.length - 1];
+  if (result.outcome !== 'rebound' || !last) return shotOutcome(result.outcome, result.events);
+
+  // Second ball won: strike it again first time, a little harder to control.
+  const again = last.flight.ball.pos;
+  const secondFrom = v3(again.x, Math.max(again.y, BALL.radius), again.z);
+  const toGoal = v3(PITCH.goalLineX - secondFrom.x, 0, -secondFrom.z);
+  const len = sqrt(toGoal.x * toGoal.x + toGoal.z * toGoal.z) || 1;
+  const secondProfile = shooterProfile(momentShotAttributes(request), {
+    weakFoot: false,
+    weakFootStars: request.shooter.weakFoot,
+    pressure: 0.8,
+    difficulty: firstTimeDifficulty(last.flight.ball, v3(toGoal.x / len, 0, toGoal.z / len)),
+  });
+  const second = opponentShot(
+    secondFrom,
+    secondProfile,
+    physics,
+    conditions.surface,
+    rng.fork('second-ball'),
+    undefined,
+    AUTO_REACH,
+  );
+  const followUp = simulateShotMoment(
+    secondBallSetup(
+      setup,
+      last,
+      kickedBall(secondFrom, second.velocity, second.spin),
+      rng.fork('second-moment').nextU32(),
+    ),
     720,
   );
-  return shotOutcome(result.outcome, result.events);
+  return shotOutcome(followUp.outcome, followUp.events);
 }
 
 /** Moment outcome (and its events) → match outcome. */
@@ -116,9 +186,15 @@ export function shotOutcome(
 ): ShotOutcome {
   if (outcome === 'goal') return 'goal';
   if (outcome === 'saved') {
-    const save = events.find((e) => e.type === 'save');
+    // The last touch counts: a parry gathered at the second attempt is a catch.
+    const save = events.filter((e) => e.type === 'save').pop();
     return save?.kind === 'catch' ? 'save-catch' : 'save-parry';
   }
   if (outcome === 'blocked') return 'block';
+  if (outcome === 'cleared') {
+    // Second ball cleared by a defender: the shot was a save, or it hit the woodwork.
+    if (events.some((e) => e.type === 'save')) return 'save-parry';
+    return events.some((e) => e.type === 'frame') ? 'post' : 'block';
+  }
   return events.some((e) => e.type === 'frame') ? 'post' : 'miss';
 }

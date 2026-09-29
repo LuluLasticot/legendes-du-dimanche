@@ -264,7 +264,9 @@
         "blocked": "Contré",
         "intercepted": "Passe interceptée",
         "lost": "Passe perdue",
-        "offside": "Hors-jeu"
+        "offside": "Hors-jeu",
+        "rebound": "Second ballon",
+        "cleared": "Dégagé"
       },
       "webglError": "WebGL 2 n'est pas disponible sur cet appareil ou ce navigateur.",
       "saves": {
@@ -281,6 +283,7 @@
         "keeper-ready": "Tu es dans les cages. Tape pour que l'attaquant s'élance, puis glisse vers le coin où tu plonges.",
         "keeper-dive": "Glisse vers le coin : ton gardien plonge là où ton doigt se lève.",
         "offside": "Hors-jeu ! Le drapeau est levé, la passe est sifflée.",
+        "aim-rebound": "Second ballon ! Reprends-le vers le but avant que la défense ne revienne.",
         "playing": ""
       },
       "situations": {

@@ -394,7 +394,15 @@ function defenderAttributes(s: SandboxSettings): moments.DefenderAttributes {
 export function toDefenderSetups(s: SandboxSettings, spot: physics.Vec3): moments.DefenderSetup[] {
   const d = s.defenders;
   const attributes = defenderAttributes(s);
-  if (s.situation === 'penalty' || s.situation === 'keeper') return [];
+  // Defenders marking our follow-up runners: they go for second balls.
+  const covers: moments.DefenderSetup[] =
+    s.situation === 'pass' || s.situation === 'keeper'
+      ? []
+      : moments
+          .reboundCovers(s.situation, spot)
+          .map((feet) => ({ role: 'cover' as const, feet, attributes }));
+  if (s.situation === 'keeper') return [];
+  if (s.situation === 'penalty') return covers;
   if (s.situation === 'pass') {
     const layout = moments.passLayout(s.situations.passLayout);
     return moments.markerSetups(layout, layout.markers.length, attributes);
@@ -404,7 +412,7 @@ export function toDefenderSetups(s: SandboxSettings, spot: physics.Vec3): moment
   const wall =
     s.situation === 'free-kick' ? moments.wallSize(distance, spot.z) : distance > 11 ? d.wall : 0;
   for (let i = 0; i < wall; i++) out.push({ role: 'wall', attributes });
-  if (s.situation === 'free-kick') return out;
+  if (s.situation === 'free-kick') return [...out, ...covers];
   const toGoal = physics.v3(physics.PITCH.goalLineX - spot.x, 0, -spot.z);
   const len = Math.hypot(toGoal.x, toGoal.z);
   const dir = physics.v3(toGoal.x / len, 0, toGoal.z / len);
@@ -422,7 +430,7 @@ export function toDefenderSetups(s: SandboxSettings, spot: physics.Vec3): moment
       attributes,
     });
   }
-  return out;
+  return [...out, ...covers];
 }
 
 const MOMENT_SITUATION: Readonly<Record<sim.MomentKind, moments.Situation>> = {

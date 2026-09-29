@@ -76,6 +76,7 @@ export type SandboxStep =
   | 'keeper-ready'
   | 'keeper-dive'
   | 'offside'
+  | 'aim-rebound'
   | 'playing';
 
 export interface SandboxHandle {
@@ -335,6 +336,7 @@ export function mountBallSandbox(
       const l = layout();
       busy.push(...l.receivers, ...l.markers);
     }
+    busy.push(...moments.reboundRunners(situation, spot));
     const attack = situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT;
     const defend = situation === 'keeper' ? HOME_CHARACTER_KIT : OPPONENT_CHARACTER_KIT;
     const players = moments.backgroundPlayers(
@@ -415,8 +417,16 @@ export function mountBallSandbox(
     if (outcome === 'goal') return 'goal';
     if (outcome === 'saved') return currentReport?.save === 'catch' ? 'save-catch' : 'save-parry';
     if (outcome === 'blocked') return 'block';
+    // Second ball cleared by a defender: it was a save, or it came off the woodwork.
+    if (outcome === 'cleared') return parried ? 'save-parry' : postHit ? 'post' : 'block';
     return postHit ? 'post' : 'miss';
   };
+  /** The keeper parried the current shot (its second ball can be cleared). */
+  let parried = false;
+  /** The current shot is the follow-up of a second ball: there is no third. */
+  let secondBall = false;
+  /** Who follows up the current shot: the shooter, then his teammates (same order as the engine). */
+  let followers: (ShooterController | null)[] = [];
   let replaying = false;
   let shotIndex = 0;
   let lastShot: StoredShot | null = null;
@@ -483,6 +493,7 @@ export function mountBallSandbox(
     if (phase === 'result' && passEnd === 'offside') return 'offside';
     if (phase === 'aiming' || phase === 'tracing') {
       if (settings.situation === 'keeper') return 'keeper-ready';
+      if (reception && secondBall) return 'aim-rebound';
       if (reception) return 'aim-first-time';
       if (settings.situation === 'pass') return 'aim-pass';
       if (settings.situation === 'penalty') return 'aim-penalty';
@@ -675,6 +686,8 @@ export function mountBallSandbox(
       situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT,
     );
     passEnd = null;
+    secondBall = false;
+    followers = [];
     if (situation === 'pass') {
       const l = layout();
       l.receivers.forEach((r, i) => receiverCtrl(i)?.follow(r, { x: 0, y: 0, z: 0 }, spot));
@@ -683,8 +696,13 @@ export function mountBallSandbox(
       shooterCtrl?.standAt(spot, GOAL_CENTRE);
     }
     if (passerCtrl) passerCtrl.character.root.visible = situation === 'pass';
+    // Teammates: the other receivers of a pass, or the runners who follow up a shot.
+    const runners = moments.reboundRunners(situation, spot);
     teammateCtrls.forEach((ctrl, i) => {
-      ctrl.character.root.visible = situation === 'pass' && i + 1 < layout().receivers.length;
+      const runner = runners[i];
+      ctrl.character.root.visible =
+        situation === 'pass' ? i + 1 < layout().receivers.length : runner !== undefined;
+      if (situation !== 'pass' && runner) ctrl.standAt(runner, GOAL_CENTRE);
     });
     receiverFigures.forEach((figure, i) => {
       const r = situation === 'pass' ? layout().receivers[i] : undefined;
@@ -897,7 +915,9 @@ export function mountBallSandbox(
       ball: { ...initial, vel: physics.v3(0, 0, 0), spin: physics.v3(0, 0, 0) },
     }));
     previousMoment = moment;
-    keeperCtrl?.reset();
+    // A keeper still down after his dive stays down for the follow-up.
+    if (stored.setup.keeper?.down) keeperCtrl?.down();
+    else keeperCtrl?.reset();
     for (const controller of defenderCtrls) controller.reset();
     ballTrail.clear();
     if (!shooterCtrl) {
@@ -948,6 +968,7 @@ export function mountBallSandbox(
     ({ context: momentContext, state: moment } = moments.startShotMoment(stored.setup));
     previousMoment = moment;
     postHit = false;
+    parried = false;
     showing = 'moment';
     const initial = stored.setup.ball;
     samples.length = 0;
@@ -1009,6 +1030,58 @@ export function mountBallSandbox(
     };
   };
 
+  /**
+   * Who follows up a shot from `from` (nobody when keeping goal): the shooter, then the other
+   * receivers of a pass or the runners of the situation. Also records their controllers.
+   */
+  const reboundFor = (from: physics.Vec3): moments.ReboundSetup | undefined => {
+    const situation = settings.situation;
+    const pace = settings.situations.receiverPace;
+    if (situation === 'pass') {
+      if (!reception || !pass) return undefined;
+      const others = pass.state.receivers
+        .map((r, i) => ({ feet: r.feet, i }))
+        .filter(({ i }) => i !== receivedBy);
+      followers = [shooterCtrl, ...others.map(({ i }) => receiverCtrl(i))];
+      return moments.reboundSetup(
+        'pass',
+        reception.receiverFeet,
+        pace,
+        others.map(({ feet }) => ({ feet, pace })),
+      );
+    }
+    followers = [
+      shooterCtrl,
+      ...moments.reboundRunners(situation, from).map((_, i) => teammateCtrls[i] ?? null),
+    ];
+    return moments.reboundSetup(situation, physics.v3(from.x - 0.4, 0, from.z), pace);
+  };
+
+  /** One of ours won the second ball: time almost stops, the player strikes it again. */
+  const secondBallWon = (by: number): void => {
+    if (!lastShot) return;
+    const ball = moment.flight.ball;
+    const second = moments.secondBallSetup(lastShot.setup, moment, ball, 0);
+    const runners = moment.chase?.attackers ?? [];
+    // The others stop where they are; the one who got there strikes.
+    runners.forEach((r, i) => {
+      if (i !== by) followers[i]?.follow(r.feet, { x: 0, y: 0, z: 0 }, ball.pos);
+    });
+    shooterCtrl = followers[by] ?? shooterCtrl;
+    reception = {
+      ball,
+      keeper: second.keeper,
+      defenders: [...(second.defenders ?? [])],
+      receiverFeet: runners[by]?.feet ?? ball.pos,
+    };
+    secondBall = true;
+    spot = ball.pos;
+    phase = 'aiming';
+    heldAfterOutcome = 0;
+    stage.clock.setTimeScale(BULLET_TIME, 0.12);
+    emitStep();
+  };
+
   /** The player's shot (free shot, free kick, penalty after the gauge, first-time shot). */
   const shoot = (
     intent: moments.ShotIntent,
@@ -1051,9 +1124,11 @@ export function mountBallSandbox(
     );
     const initial = kickedBall(from, struck.velocity, struck.spin);
     const seed = shotRng.fork('moment').nextU32();
-    const setup = reception
+    const base = reception
       ? momentSetup(initial, seed, reception.keeper, reception.defenders)
       : momentSetup(initial, seed, toKeeperSetup(settings), toDefenderSetups(settings, from));
+    const rebound = secondBall ? undefined : reboundFor(from);
+    const setup = rebound ? { ...base, rebound } : base;
     const stored: StoredShot = {
       setup,
       runUp: reception ? 'first-time' : 'full',
@@ -1288,7 +1363,7 @@ export function mountBallSandbox(
       emitStep();
       return;
     }
-    if (settings.situation === 'penalty') {
+    if (settings.situation === 'penalty' && !reception) {
       gauge = { intent: current.intent, features: current.features, elapsed: 0, value: 0 };
       phase = 'gauge';
       emitStep();
@@ -1337,12 +1412,13 @@ export function mountBallSandbox(
   };
 
   const stepShot = (ticks: number): void => {
-    for (let i = 0; i < ticks; i++) {
+    for (let i = 0; i < ticks && phase === 'flying'; i++) {
       previousMoment = moment;
       const next = moments.stepShotMoment(moment, momentContext);
       moment = next.state;
       samples.push(moment.flight.ball);
       for (const event of next.events) {
+        if (event.type === 'save' && event.kind === 'parry') parried = true;
         if (event.type === 'save' && currentReport) {
           currentReport = { ...currentReport, save: event.kind, replay: replaying };
           emitShot(currentReport);
@@ -1391,6 +1467,10 @@ export function mountBallSandbox(
           if (besidePost || overBar) cheer('ooh');
         }
         emitStep();
+        if (moment.outcome === 'rebound' && !replaying) {
+          const won = next.events.find((e) => e.type === 'rebound');
+          secondBallWon(won?.type === 'rebound' ? won.by : 0);
+        }
       }
     }
   };
@@ -1446,7 +1526,7 @@ export function mountBallSandbox(
     if (phase === 'flying') {
       stepShot(frame.ticks);
       if (settings.debug.trail) setLine(trail, samples, 2);
-      if (moment.outcome !== null) {
+      if (phase === 'flying' && moment.outcome !== null) {
         heldAfterOutcome += frame.wallDt;
         if (heldAfterOutcome > RESULT_HOLD) {
           // The highlight (a goal, or a save when keeping goal) is replayed once from another
@@ -1560,6 +1640,21 @@ export function mountBallSandbox(
     if (reception || (phase === 'flying' && showing === 'moment')) {
       for (const ring of offsideRings) ring.visible = false;
       offsideLine.visible = false;
+    }
+    // Second ball: our players go for it (the defence and the keeper are in the moment state).
+    const chase = moment.chase;
+    if (showing === 'moment' && chase && phase === 'flying') {
+      const before = previousMoment.chase ?? chase;
+      chase.attackers.forEach((r1, i) => {
+        if (moment.tick < r1.startTick) return;
+        const r0 = before.attackers[i] ?? r1;
+        const feet = {
+          x: r0.feet.x + (r1.feet.x - r0.feet.x) * a,
+          y: 0,
+          z: r0.feet.z + (r1.feet.z - r0.feet.z) * a,
+        };
+        followers[i]?.follow(feet, r1.vel, ballPos);
+      });
     }
     homeShooter?.update(frame.simDt);
     for (const ctrl of teammateCtrls) ctrl.update(frame.simDt);
