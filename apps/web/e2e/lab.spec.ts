@@ -9,6 +9,8 @@ test('the ball lab mounts and switches situations', async ({ page }) => {
   await expect(page.locator('canvas')).toBeVisible();
   const tabs = page.getByRole('tab');
   await expect(tabs).toHaveCount(5);
+  // The scene is up once the first step's hint shows: tabs only work from then on.
+  await expect(page.getByText(/Trace ta frappe/)).toBeVisible({ timeout: 30_000 });
 
   await page.getByRole('tab', { name: 'Penalty' }).click();
   await expect(page.getByRole('tab', { name: 'Penalty' })).toHaveAttribute('aria-selected', 'true');
@@ -20,19 +22,39 @@ test('the ball lab mounts and switches situations', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('the match lab plays a match on the 2D pitch', async ({ page }) => {
+test('a whole match: kick-off, half-time, full time, and a deterministic replay', async ({
+  page,
+}) => {
+  test.slow();
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/lab/match?speed=6');
+  // Straight to kick-off, key moments left to the coach, fast-forward.
+  await page.goto('/lab/match?auto=1&speed=40&seed=2');
 
   await expect(page.locator('canvas')).toBeVisible();
-  // The clock runs: after a few seconds of fast-forward the minute has moved on.
-  const clock = page.getByText(/^\d+'$/);
-  await expect
-    .poll(async () => Number.parseInt((await clock.first().textContent()) ?? '0', 10), {
-      timeout: 20_000,
-    })
-    .toBeGreaterThan(4);
-  await expect(page.getByRole('button', { name: '×1' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Deuxième mi-temps' })).toBeVisible({
+    timeout: 45_000,
+  });
+  await page.getByRole('button', { name: 'Deuxième mi-temps' }).click();
+  await expect(page.getByRole('button', { name: 'Nouveau match' })).toBeVisible({
+    timeout: 45_000,
+  });
+  await page.getByRole('button', { name: 'Rejouer avec les mêmes entrées' }).click();
+  await expect(page.getByRole('status')).toContainText('Même match');
   expect(errors).toEqual([]);
+});
+
+test('the pre-match screen starts a match', async ({ page }) => {
+  await page.goto('/lab/match?seed=3&speed=6');
+  await expect(page.getByRole('button', { name: "Coup d'envoi" })).toBeVisible();
+  // Key moments left to the coach: no 3D wait in this test.
+  await page.getByLabel('Jouer les actions clés en 3D').uncheck();
+  await page.getByRole('button', { name: "Coup d'envoi" }).click();
+  // The clock runs: after a few seconds the minute has moved on.
+  const minute = page.getByTestId('minute');
+  await expect
+    .poll(async () => Number.parseInt((await minute.textContent()) ?? '0', 10), {
+      timeout: 25_000,
+    })
+    .toBeGreaterThan(3);
 });

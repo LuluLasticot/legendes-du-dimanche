@@ -4,6 +4,7 @@
 // feel parameter comes from SandboxSettings (tuning panel).
 
 import { moments, physics, Rng, TICK_DT, TICK_RATE } from '@legendes/engine';
+import type { sim } from '@legendes/engine';
 import * as THREE from 'three';
 import {
   CameraDirector,
@@ -36,6 +37,12 @@ import {
 const { BALL, PITCH, kickedBall, restingBall, simulateFlight } = physics;
 
 export type SandboxOutcome = moments.MomentOutcome | 'intercepted' | 'lost';
+
+/** How a key moment played inside a match ended (fed back to the match simulation). */
+export interface MomentResult {
+  readonly outcome: sim.ShotOutcome;
+  readonly report: ShotReport | null;
+}
 
 export interface ShotReport {
   readonly index: number;
@@ -158,6 +165,11 @@ export function mountBallSandbox(
   options: StageOptions & {
     /** Base URL of the converted character asset (player.glb + player.meta.json). */
     characterAssetsUrl?: string;
+    /**
+     * Key moment of a match: the scene plays this one situation, then hands over the outcome
+     * instead of resetting the ball (no automatic replay).
+     */
+    moment?: { onOutcome(result: MomentResult): void };
   } = {},
 ): SandboxHandle {
   const stage = Stage.mount(canvas, { fov: 50, ...options });
@@ -317,6 +329,22 @@ export function mountBallSandbox(
   let { context: momentContext, state: moment } = restingMoment(restingBall(0, 0));
   let previousMoment = moment;
   let heldAfterOutcome = 0;
+  // Key moment of a match: the outcome is handed over once.
+  let momentDone = false;
+  let postHit = false;
+  const finishMoment = (outcome: sim.ShotOutcome): void => {
+    if (momentDone || !options.moment) return;
+    momentDone = true;
+    options.moment.onOutcome({ outcome, report: currentReport });
+  };
+  /** The shot's end, in the match simulation's terms. */
+  const shotOutcome = (): sim.ShotOutcome => {
+    const outcome = moment.outcome;
+    if (outcome === 'goal') return 'goal';
+    if (outcome === 'saved') return currentReport?.save === 'catch' ? 'save-catch' : 'save-parry';
+    if (outcome === 'blocked') return 'block';
+    return postHit ? 'post' : 'miss';
+  };
   let replaying = false;
   let shotIndex = 0;
   let lastShot: StoredShot | null = null;
@@ -784,6 +812,7 @@ export function mountBallSandbox(
   const launch = (stored: StoredShot, replay: boolean): void => {
     ({ context: momentContext, state: moment } = moments.startShotMoment(stored.setup));
     previousMoment = moment;
+    postHit = false;
     showing = 'moment';
     const initial = stored.setup.ball;
     samples.length = 0;
@@ -1148,6 +1177,7 @@ export function mountBallSandbox(
   // ─── Loop ───────────────────────────────────────────────────────────────────
   const flightEvent = (event: physics.FlightEvent, i: number): void => {
     if (event.type === 'frame') {
+      postHit = true;
       applyEffects(director.impact('post', event.speed, replaying));
       particles.emit('glint', event.pos, 14, fxRng, { x: -1, y: 0.3, z: 0 }, 1);
       audio.post(event.speed, panOf(event.pos.z));
@@ -1288,7 +1318,9 @@ export function mountBallSandbox(
             settings.situation === 'keeper'
               ? moment.outcome === 'saved'
               : moment.outcome === 'goal';
-          if (!replaying && highlight && settings.camera.autoReplay && lastShot) {
+          if (options.moment) {
+            finishMoment(shotOutcome());
+          } else if (!replaying && highlight && settings.camera.autoReplay && lastShot) {
             beginShot(
               {
                 ...lastShot,
@@ -1305,7 +1337,11 @@ export function mountBallSandbox(
     if (phase === 'passing' && settings.debug.trail) setLine(trail, samples, 2);
     if (phase === 'result') {
       heldAfterOutcome += frame.wallDt;
-      if (heldAfterOutcome > RESULT_HOLD) placeBall();
+      if (heldAfterOutcome > RESULT_HOLD) {
+        // A pass that never reached the shooter: no shot, the chance is gone.
+        if (options.moment) finishMoment('miss');
+        else placeBall();
+      }
     }
 
     const { now, before } = shown();

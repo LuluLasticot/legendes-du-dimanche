@@ -7,3 +7,4 @@ export * from './shape.ts';
 export * from './match.ts';
 export * from './stats.ts';
 export * from './moments.ts';
+export * from './ratings.ts';

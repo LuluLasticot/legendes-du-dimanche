@@ -150,6 +150,31 @@ export interface MatchOptions {
   readonly userSide?: Side | null;
   /** Most key moments per match (GDD §7.1: 3 to 6). */
   readonly maxMoments?: number;
+  /** Stop at half-time for the coach's changes (`resumeSecondHalf` to go on). */
+  readonly pauseAtHalfTime?: boolean;
+}
+
+/** A change made by the player (half-time talk, live): part of the inputs that replay a match. */
+export type MatchChange =
+  | {
+      readonly phase: number;
+      readonly type: 'tactic';
+      readonly side: Side;
+      readonly tactic: Tactic;
+    }
+  | {
+      readonly phase: number;
+      readonly type: 'sub';
+      readonly side: Side;
+      readonly out: string;
+      readonly in: string;
+    };
+
+/** Everything the player did in a match: replaying it with the same setup gives the same match. */
+export interface MatchInputs {
+  /** Outcomes of the key moments, in order. */
+  readonly moments: readonly ShotOutcome[];
+  readonly changes: readonly MatchChange[];
 }
 
 type Restart = 'kickoff' | 'throw-in' | 'corner' | 'goal-kick' | 'free-kick' | 'penalty' | null;
@@ -220,10 +245,16 @@ export class MatchSim {
   private pending: MomentRequest | null = null;
   private shotContext: { xg: number; quality: number } | null = null;
   private readonly moments: PlayedMoment[] = [];
+  private readonly changes: MatchChange[] = [];
+  private halfBreak = false;
 
   constructor(setup: MatchSetup, options: MatchOptions = {}) {
     this.setup = setup;
-    this.options = { userSide: options.userSide ?? null, maxMoments: options.maxMoments ?? 6 };
+    this.options = {
+      userSide: options.userSide ?? null,
+      maxMoments: options.maxMoments ?? 6,
+      pauseAtHalfTime: options.pauseAtHalfTime ?? false,
+    };
     this.rng = Rng.create(setup.seed).fork('match');
     this.sides = [this.side(setup.home), this.side(setup.away)];
     const level = (teamRating(setup.home) + teamRating(setup.away)) / 2;
@@ -237,11 +268,57 @@ export class MatchSim {
     return this.finished;
   }
 
+  /** Why the match is not moving: a key moment to play, or the half-time break. */
+  get waiting(): 'moment' | 'half-time' | null {
+    if (this.pending !== null) return 'moment';
+    return this.halfBreak ? 'half-time' : null;
+  }
+
+  /** Number of phases played so far (the clock of the player's inputs). */
+  get phaseIndex(): number {
+    return this.phase;
+  }
+
+  /** Ends the half-time break. */
+  resumeSecondHalf(): void {
+    this.halfBreak = false;
+  }
+
+  /** Players on the pitch of `side`, by formation slot. */
+  lineup(side: Side): readonly MatchPlayer[] {
+    return this.sides[side].players;
+  }
+
+  /** Substitutes still on the bench of `side`. */
+  benchOf(side: Side): readonly MatchPlayer[] {
+    return this.sides[side].bench;
+  }
+
+  /** Slots of `side` whose player has been sent off. */
+  sentOffSlots(side: Side): readonly boolean[] {
+    return this.sides[side].sentOff;
+  }
+
+  /** Substitutions `side` can still make. */
+  subsLeft(side: Side): number {
+    return MAX_SUBS - this.sides[side].stats.subs;
+  }
+
+  /** The team's tactic now. */
+  tacticOf(side: Side): Tactic {
+    return this.sides[side].tactic;
+  }
+
+  /** What the player has done so far (moments' outcomes and coach's changes). */
+  get inputs(): MatchInputs {
+    return { moments: this.moments.map((m) => m.outcome), changes: this.changes };
+  }
+
   /** Plays one phase; false once the final whistle has gone. */
   step(): boolean {
     if (this.finished) return false;
-    // Waiting for the player's key moment: nothing moves until it is resolved.
-    if (this.pending !== null) return true;
+    // Waiting for the player's key moment or the half-time break: nothing moves.
+    if (this.pending !== null || this.halfBreak) return true;
     const rng = this.rng.fork('phase', this.phase++);
     this.autoSubstitutions();
     if (this.restart !== null) this.playRestart(rng);
@@ -258,6 +335,7 @@ export class MatchSim {
   /** Plays to the end; `resolve` answers key moments (none without a user side). */
   run(resolve?: (moment: MomentRequest) => ShotOutcome): MatchResult {
     while (this.step()) {
+      if (this.halfBreak) this.resumeSecondHalf();
       if (this.pending !== null) {
         if (!resolve) throw new Error('Key moment pending: pass a resolver');
         this.resolveMoment(resolve(this.pending));
@@ -360,10 +438,18 @@ export class MatchSim {
   /** Changes a team's tactic from now on. */
   setTactic(side: Side, tactic: Tactic): void {
     this.sides[side].tactic = tactic;
+    this.changes.push({ phase: this.phase, type: 'tactic', side, tactic });
   }
 
   /** Replaces the player `outId` by the substitute `inId`; false if not allowed. */
   substitute(side: Side, outId: string, inId: string): boolean {
+    const done = this.swap(side, outId, inId);
+    if (done) this.changes.push({ phase: this.phase, type: 'sub', side, out: outId, in: inId });
+    return done;
+  }
+
+  /** The substitution itself (the coach's own changes are not the player's inputs). */
+  private swap(side: Side, outId: string, inId: string): boolean {
     const s = this.sides[side];
     const slot = s.players.findIndex((p) => p.id === outId);
     const bench = s.bench.findIndex((p) => p.id === inId);
@@ -403,8 +489,7 @@ export class MatchSim {
         s.bench.find((p) => POSITION_LINE[p.positions[0] ?? 'CM'] === line) ??
         s.bench.find((p) => p.positions[0] !== 'GK');
       const out = s.players[slot];
-      if (incoming && out && this.substitute(side, out.id, incoming.id))
-        this.lastSub[side] = this.t;
+      if (incoming && out && this.swap(side, out.id, incoming.id)) this.lastSub[side] = this.t;
     });
   }
 
@@ -421,6 +506,7 @@ export class MatchSim {
       this.ball = { x: 0.5, y: 0.5 };
       this.restart = 'kickoff';
       this.event('kickoff', this.possession, null);
+      this.halfBreak = this.options.pauseAtHalfTime;
       return true;
     }
     this.event('full-time', 0, null);
@@ -1033,4 +1119,40 @@ export class MatchSim {
 /** Plays a whole match without player input (tests, quick simulation, server checks). */
 export function simulateMatch(setup: MatchSetup): MatchResult {
   return new MatchSim(setup).run();
+}
+
+/**
+ * Replays a match from the player's inputs: same setup, same options, same key-moment
+ * outcomes and coach's changes ⇒ the same match, bit for bit (server-side validation, replays).
+ */
+export function replayMatch(
+  setup: MatchSetup,
+  options: MatchOptions,
+  inputs: MatchInputs,
+): MatchResult {
+  const sim = new MatchSim(setup, options);
+  let moment = 0;
+  let change = 0;
+  for (;;) {
+    // Changes made at phase n are applied before the phase that follows them (or the break).
+    while (
+      change < inputs.changes.length &&
+      (inputs.changes[change]?.phase ?? Infinity) <= sim.phaseIndex
+    ) {
+      const c = inputs.changes[change++] as MatchChange;
+      if (c.type === 'tactic') sim.setTactic(c.side, c.tactic);
+      else sim.substitute(c.side, c.out, c.in);
+    }
+    if (sim.waiting === 'half-time') {
+      sim.resumeSecondHalf();
+      continue;
+    }
+    if (!sim.step()) break;
+    if (sim.pendingMoment) {
+      const outcome = inputs.moments[moment++];
+      if (outcome === undefined) throw new Error('Missing key-moment outcome to replay');
+      sim.resolveMoment(outcome);
+    }
+  }
+  return sim.result();
 }
