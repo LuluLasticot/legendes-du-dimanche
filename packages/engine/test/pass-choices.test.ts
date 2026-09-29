@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyPassError,
+  backgroundPlayers,
   DEFAULT_KEEPER_TUNING,
   chooseReceiver,
   isOffside,
@@ -171,5 +172,25 @@ describe('several receivers', () => {
         expect(r.x).toBeLessThan(PITCH.goalLineX);
         expect(Math.abs(r.z)).toBeLessThan(PITCH.width / 2);
       }
+  });
+});
+
+describe('background players and the offside line', () => {
+  it('never move the line nor stand offside themselves', () => {
+    for (const layout of PASS_LAYOUTS) {
+      const keeper = keeperSetPosition(layout.ball, KEEPER, DEFAULT_KEEPER_TUNING);
+      const line = offsideLineX(layout.ball.x, layout.markers, keeper);
+      const busy = [layout.ball, keeper, ...layout.receivers, ...layout.markers];
+      const players = backgroundPlayers('pass', layout.ball, busy, 12, { offsideLine: line });
+      expect(players.length).toBeGreaterThanOrEqual(6);
+      const defenders = players.filter((p) => p.side === 'defend').map((p) => p.feet);
+      // Whatever the camera shows as the last line is the line the rule uses.
+      expect(offsideLineX(layout.ball.x, [...layout.markers, ...defenders], keeper)).toBe(line);
+      for (const p of players.filter((q) => q.side === 'attack'))
+        expect(isOffside(p.feet, line, layout.ball.x)).toBe(false);
+      // The trap is still a trap, the others still onside.
+      const flags = layout.receivers.map((r) => isOffside(r, line, layout.ball.x));
+      expect(flags.filter(Boolean).length).toBeGreaterThanOrEqual(1);
+    }
   });
 });

@@ -337,7 +337,14 @@ export function mountBallSandbox(
     }
     const attack = situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT;
     const defend = situation === 'keeper' ? HOME_CHARACTER_KIT : OPPONENT_CHARACTER_KIT;
-    extras.set(moments.backgroundPlayers(situation, spot, busy, stage.profile.extras), spot, {
+    const players = moments.backgroundPlayers(
+      situation,
+      spot,
+      busy,
+      stage.profile.extras,
+      situation === 'pass' ? { offsideLine: offsideX } : {},
+    );
+    extras.set(players, spot, {
       attack,
       defend,
     });
