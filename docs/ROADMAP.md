@@ -53,6 +53,8 @@ L'objectif est de **valider le ressenti** avant de construire quoi que ce soit d
 
 Si le ressenti n'y est pas : itérer sur la caméra, le timing et les animations **avant** de continuer. Plan B si ça coince durablement : actions clés en 2.5D (caméra fixe, sprites) — le reste du jeu n'en dépend pas.
 
+✅ **Terminée le 28/09/2026** — trois situations et le gardien jouables, 60 i/s sur iPhone 13, déterminisme vérifié (Node, Deno, navigateurs).
+
 ---
 
 ## Phase 2 — Moteur de match et rendu 2D (≈ 3-4 semaines)
@@ -67,6 +69,13 @@ Si le ressenti n'y est pas : itérer sur la caméra, le timing et les animations
 - **Tests statistiques** : 10 000 matchs → buts/match par niveau, avantage à domicile, écart de note → probabilité de victoire
 
 **Critère de fin :** un match complet se joue de bout en bout (2D + 3-6 actions clés 3D), les statistiques sont crédibles, et un match rejoué avec la même graine et les mêmes entrées donne le même score.
+
+✅ **Terminée le 29/09/2026** — bilan :
+- **De bout en bout** : `/lab/match` enchaîne avant-match, match 2D (sons, commentaires, arrêts de jeu), actions clés 3D, mi-temps (tactique, remplacements) et fin de match (notes, homme du match). Sur 1 000 matchs, 99,4 % comptent 3 à 6 actions clés (les autres n'ont eu aucune occasion en fin de match).
+- **Statistiques crédibles** (10 000 matchs, `pnpm --filter @legendes/engine stats`) : domicile / nul / extérieur ≈ 46 / 22 / 31 % en District 9 ; 3,3 buts par match en District 9 contre 2,5 en National 2 ; écart de note +10 ⇒ 70 % de victoires, +20 ⇒ 87 %.
+- **Rejouable** : même graine et mêmes entrées (issues des actions clés, changements du coach) ⇒ même match au bit près, vérifié par le moteur, en E2E et par le bouton « Rejouer avec les mêmes entrées ».
+- **Au-delà du plan**, sur les retours de jeu : passes à choix et hors-jeu en 3D, seconds ballons (parades, montants), figurants et coureurs dans la surface, affichage mobile (D-029, D-030).
+- **Reste ouvert** : enregistrer les gestes bruts pour la validation serveur (Phase 4, D-028) ; mesurer les actions clés sur un vrai mobile avec les joueurs ajoutés.
 
 ---
 

@@ -38,7 +38,8 @@ describe('key moments in a match', () => {
       expect(sim.playedMoments).toHaveLength(requests.length);
       if (requests.length >= 3) within++;
     }
-    expect(within).toBeGreaterThanOrEqual(36);
+    // Late in the match any chance becomes a moment until there are three: ~99 % of matches.
+    expect(within).toBeGreaterThanOrEqual(39);
   });
 
   it("the player's outcomes decide the score", () => {

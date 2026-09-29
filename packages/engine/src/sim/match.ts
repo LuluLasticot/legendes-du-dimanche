@@ -1097,9 +1097,10 @@ export class MatchSim {
     const user = this.options.userSide;
     if (user === null || user === undefined || this.moments.length >= this.options.maxMoments)
       return null;
-    // Fewer than three by the last half hour: lower the bar so every match has its moments.
-    const late = this.half === 2 && this.t > 60 * 60 && this.moments.length < 3;
-    const threshold = late ? 0.1 : 0.2;
+    // Fewer than three by the last half hour: lower the bar so every match has its moments;
+    // in the last quarter of an hour, any chance will do.
+    const short = this.half === 2 && this.moments.length < 3;
+    const threshold = short && this.t > 75 * 60 ? 0 : short && this.t > 60 * 60 ? 0.1 : 0.2;
     if (this.possession !== user) {
       return kind === 'penalty' || xg >= threshold + 0.05 ? 'keeper' : null;
     }
