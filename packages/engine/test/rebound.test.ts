@@ -243,7 +243,8 @@ describe('automatic resolution with second balls', () => {
   };
   const conditions = { surface: 'grass' as const, rain: false, windSpeed: 0, windDirection: 0 };
 
-  it('stays deterministic and in credible ranges', () => {
+  // 1 800 moments: statistical, slower on CI runners.
+  it('stays deterministic and in credible ranges', { timeout: 60_000 }, () => {
     for (const kind of ['shot', 'penalty', 'free-kick'] as const) {
       let goals = 0;
       for (let seed = 0; seed < 300; seed++) {
