@@ -38,7 +38,7 @@ export const DISTRICTS: readonly District[] = [
 
 const HDF = 'hauts-de-france';
 
-function national(rank: 2 | 3, pool: string, name: string): Division {
+function national(rank: 1 | 2, pool: string, name: string): Division {
   return {
     id: `n${rank}-${pool.toLowerCase()}`,
     scope: 'national',
@@ -51,10 +51,13 @@ function national(rank: 2 | 3, pool: string, name: string): Division {
   };
 }
 
-/** Divisions of the pilot: N2 groups, N3 Hauts-de-France, R1 to R3, and Escaut D1 to D6. */
+/** Divisions of the pilot: National 1 (groups A–C), National 2 (A–H), R1 to R3, and Escaut D1 to D6.
+ * Since 2026-27 the fourth level is called National 1 and the fifth National 2 (the old National 3 is gone). */
 export const DIVISIONS: readonly Division[] = [
-  ...['A', 'B', 'C', 'D'].map((pool) => national(2, pool, `National 2 groupe ${pool}`)),
-  ...['HDF'].map((pool) => national(3, pool, 'National 3 Hauts-de-France')),
+  ...['A', 'B', 'C'].map((pool) => national(1, pool, `National 1 groupe ${pool}`)),
+  ...['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map((pool) =>
+    national(2, pool, `National 2 groupe ${pool}`),
+  ),
   ...([1, 2, 3] as const).map((rank): Division => ({
     id: `hdf-r${rank}`,
     scope: 'league',

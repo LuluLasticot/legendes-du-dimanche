@@ -123,7 +123,7 @@ Sortie : chronologie d'événements horodatés → rendu 2D + commentaires
 ```
 
 - **Positions des joueurs** : ancres de formation déplacées selon la position du ballon et la phase (bloc offensif ou défensif), plus un pilotage simple (steering) pour le rendu 2D. Le moteur ne simule pas chaque déplacement finement : il produit des cibles, le rendu 2D les interpole.
-- **Calibrage statistique** (tests Vitest sur 10 000 matchs) : moyenne de buts par match cohérente avec le niveau (les matchs de district sont plus prolifiques que le N2), avantage à domicile, distribution des scores réaliste, écart de note → probabilité de victoire.
+- **Calibrage statistique** (tests Vitest sur 10 000 matchs) : moyenne de buts par match cohérente avec le niveau (les matchs de district sont plus prolifiques que le National 1), avantage à domicile, distribution des scores réaliste, écart de note → probabilité de victoire.
 
 ### 4.3 Actions clés
 

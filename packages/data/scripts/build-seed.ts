@@ -44,7 +44,7 @@ if (process.argv.includes('--check')) {
   );
 }
 
-/** Whitespace and trailing commas are Prettier's: compare the content without them. */
+/** Whitespace, commas, quotes and semicolons are Prettier's: compare the content without them. */
 function normalise(text: string): string {
-  return text.replace(/[\s,]+/g, '');
+  return text.replace(/[\s,"'`;]+/g, '');
 }

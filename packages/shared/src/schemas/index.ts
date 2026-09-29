@@ -51,8 +51,8 @@ export const divisionRefSchema = z
     level: z.enum(COMPETITION_LEVELS),
     rank: z.number().int().min(1).max(DISTRICT_MAX_RANK),
   })
-  .refine((d) => d.level !== 'national' || d.rank === 2 || d.rank === 3, {
-    message: 'National divisions are N2 and N3 only (Ligue 3 is professional)',
+  .refine((d) => d.level !== 'national' || d.rank === 1 || d.rank === 2, {
+    message: 'National divisions are N1 and N2 only (Ligue 3 is professional)',
   })
   .refine((d) => d.level !== 'regional' || d.rank <= 4, {
     message: 'Regional divisions go from R1 to R4',

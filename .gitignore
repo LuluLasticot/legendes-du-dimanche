@@ -11,6 +11,7 @@ build/
 next-env.d.ts
 
 # Turbo / tooling
+packages/data/.cache/
 .turbo/
 coverage/
 test-results/
