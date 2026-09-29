@@ -56,7 +56,12 @@ export const DEFAULT_DEFENDER_TUNING: DefenderTuning = {
   deflectSpread: 0.25,
 };
 
-export type DefenderRole = 'wall' | 'marker';
+/**
+ * 'wall': jumps in the free-kick wall. 'marker': closes the shooter down. 'cover': holds his
+ * position (marking a runner in the box); he only blocks what comes at him, and goes for loose
+ * balls after a save or a post.
+ */
+export type DefenderRole = 'wall' | 'marker' | 'cover';
 
 export interface DefenderState {
   readonly role: DefenderRole;
@@ -134,6 +139,24 @@ export function createDefender(
   };
 }
 
+/** Top running speed of a defender (m/s). */
+export function defenderTopSpeed(attributes: DefenderAttributes, tuning: DefenderTuning): number {
+  return pick(tuning.speedRange, attributes.pace);
+}
+
+/** Highest ball a defender can play (header at the top of his jump), m. */
+export function defenderReachHeight(
+  attributes: DefenderAttributes,
+  tuning: DefenderTuning,
+): number {
+  return headHeight(attributes) + pick(tuning.jumpRange, attributes.physical) + 0.15;
+}
+
+/** Standing head height (m). */
+export function defenderHeadHeight(attributes: DefenderAttributes): number {
+  return headHeight(attributes);
+}
+
 /** Height of a jump `t` seconds after take-off (0 on the ground). */
 function jumpHeight(t: number, apex: number): number {
   if (t <= 0) return 0;
@@ -198,6 +221,9 @@ export function stepDefender(
       head: v3(defender.feet.x, standingHead + h, defender.feet.z),
     };
   }
+
+  // Cover: stays where he is until the ball is loose (see rebound.ts).
+  if (defender.role === 'cover') return defender;
 
   // Marker.
   if (tick < defender.reactionTick) return defender;

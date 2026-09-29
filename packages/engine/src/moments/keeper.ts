@@ -136,6 +136,8 @@ export interface KeeperState {
   /** −1 dives to his left side (−Z), +1 right (+Z), 0 no dive. */
   readonly diveSide: -1 | 0 | 1;
   readonly lastContactTick: Tick;
+  /** Down on the grass at the start of the moment (second ball): when he is back on his feet. */
+  readonly getUpTick: Tick | null;
   /** Player's keeper: the swiped dive, held until `startTick` (then the dive starts). */
   readonly command: {
     readonly target: Vec3;
@@ -196,24 +198,37 @@ export function keeperSetPosition(
   return v3(gx - depth, 0, z);
 }
 
+export interface KeeperDown {
+  readonly hands: Vec3;
+  readonly head: Vec3;
+  readonly seconds: number;
+}
+
 export function createKeeper(
   feet: Vec3,
   attributes: KeeperAttributes,
   tuning: KeeperTuning,
   rng: Rng,
   mode: KeeperMode = 'react',
+  /**
+   * Still down after a dive (second ball): where his hands and head lie, and the seconds before
+   * he is back on his feet; he reacts only then.
+   */
+  down: KeeperDown | null = null,
 ): KeeperState {
   const base =
     mode === 'penalty' ? tuning.penaltyReaction : pick(tuning.reactionRange, attributes.reflexes);
   const reaction = base * (1 + rng.normal(0, 0.08));
+  const getUp = down ? secondsToTicks(Math.max(0, down.seconds)) : 0;
   return {
     mode,
-    phase: 'set',
+    phase: down ? 'grounded' : 'set',
     feet,
     setFeet: feet,
-    hands: restingHands(feet),
-    head: restingHead(feet, attributes),
-    reactionTick: Math.max(1, secondsToTicks(reaction)),
+    hands: down ? down.hands : restingHands(feet),
+    head: down ? down.head : restingHead(feet, attributes),
+    getUpTick: down ? getUp : null,
+    reactionTick: Math.max(1, getUp + secondsToTicks(reaction)),
     target: null,
     arrivalTick: null,
     crossing: null,
@@ -429,6 +444,20 @@ export function stepKeeper(
   let keeper = current;
   if (keeper.phase === 'holding') return keeper;
 
+  if (keeper.phase === 'grounded' && keeper.getUpTick !== null && tick >= keeper.getUpTick) {
+    // Back on his feet where he lay (second ball): set again, he reacts from there.
+    const feet = v3(keeper.feet.x, 0, keeper.head.z);
+    return {
+      ...keeper,
+      phase: 'set',
+      feet,
+      setFeet: feet,
+      hands: restingHands(feet),
+      head: restingHead(feet, attributes),
+      getUpTick: null,
+    };
+  }
+
   if (keeper.phase === 'grounded') {
     // Landed: hands and head fall back to the ground.
     const fall = 3.5 * TICK_DT;
@@ -632,6 +661,42 @@ export function keeperContact(
 /** After a catch: the keeper holds the ball in his hands. */
 export function holdingKeeper(keeper: KeeperState, tick: Tick): KeeperState {
   return { ...keeper, phase: 'holding', lastContactTick: tick };
+}
+
+/** The keeper on his feet at `feet`, hands at rest (running for a loose ball). */
+export function standingKeeper(
+  keeper: KeeperState,
+  feet: Vec3,
+  attributes: KeeperAttributes,
+): KeeperState {
+  return {
+    ...keeper,
+    phase: 'set',
+    feet,
+    setFeet: feet,
+    hands: restingHands(feet),
+    head: restingHead(feet, attributes),
+    target: null,
+    crossing: null,
+    arrivalTick: null,
+  };
+}
+
+/** Tick at which a diving keeper is down on the grass (his dive is over), or null. */
+export function keeperDownTick(keeper: KeeperState): Tick | null {
+  return keeper.phase === 'diving' || keeper.phase === 'grounded'
+    ? keeper.diveStartTick + keeper.diveTicks
+    : null;
+}
+
+/** Top running speed of a keeper off his line (m/s). */
+export function keeperRunSpeed(attributes: KeeperAttributes): number {
+  return lerp(5, 7, t01(attributes.speed));
+}
+
+/** Highest ball a standing keeper can take (m). */
+export function keeperStandingReach(attributes: KeeperAttributes): number {
+  return standingReach(attributes) + 0.3;
 }
 
 /** After a parry: remember the contact (cooldown) and keep going. */

@@ -7,3 +7,4 @@ export * from './pass.ts';
 export * from './pass-moment.ts';
 export * from './situations.ts';
 export * from './background.ts';
+export * from './rebound.ts';

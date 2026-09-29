@@ -201,7 +201,8 @@ const KEEPER_YAW = Character.yawFacing(-1, 0);
 export class KeeperController {
   readonly character: Character;
   private lastPhase: moments.KeeperPhase | null = null;
-  private action: 'idle' | 'sidestep' | 'dive' | 'standing' | 'holding' | 'down' | 'reaction' =
+  private action:
+    'idle' | 'sidestep' | 'running' | 'dive' | 'standing' | 'holding' | 'down' | 'reaction' =
     'idle';
   private diveStart = 0;
   private diveTicks = 1;
@@ -239,6 +240,24 @@ export class KeeperController {
       if (travel.z > 0 === towardsPositiveZ) return name;
     }
     return names[0] ?? 'gk_dive_left';
+  }
+
+  /**
+   * Still down after his dive when a new moment starts (second ball): he stays on the grass
+   * (the dive clip held at its end) until the engine gets him up.
+   */
+  down(): void {
+    this.lastPhase = 'grounded';
+    this.reacted = false;
+    this.holdTick = null;
+    if (this.action === 'dive' || this.action === 'down') {
+      this.action = 'down';
+      return;
+    }
+    const clip = this.diveClip(true, true);
+    const duration = this.character.asset.clips.get(clip)?.duration ?? 1;
+    this.character.play(clip, { fade: 0.1, startAt: Math.max(0, duration - 0.02), timeScale: 0 });
+    this.action = 'down';
   }
 
   /** Conceded a goal: the keeper shows it. */
@@ -301,6 +320,23 @@ export class KeeperController {
       }
     }
 
+    // Off his line for a loose ball: he runs, facing where he goes.
+    const run = Math.hypot(current.feet.x - previous.feet.x, current.feet.z - previous.feet.z);
+    const runSpeed = dt > 0 ? run / Math.max(dt, 1e-3) : 0;
+    let yaw = KEEPER_YAW;
+    if (
+      phase === 'set' &&
+      (this.action === 'idle' || this.action === 'running') &&
+      run > 1e-3 &&
+      runSpeed > 1
+    ) {
+      c.loop('player_run', 0.15, Math.min(1.6, runSpeed / 5.5));
+      this.action = 'running';
+      yaw = Character.yawFacing(current.feet.x - previous.feet.x, current.feet.z - previous.feet.z);
+    } else if (this.action === 'running') {
+      this.action = 'idle';
+    }
+
     if (this.action === 'idle' || this.action === 'sidestep') {
       const moving = Math.abs(current.feet.z - previous.feet.z) > 1e-4;
       if (phase === 'tracking' && moving) {
@@ -313,7 +349,7 @@ export class KeeperController {
       }
     }
 
-    c.place(new THREE.Vector3(feet.x, 0, feet.z), KEEPER_YAW);
+    c.place(new THREE.Vector3(feet.x, 0, feet.z), yaw);
     c.update(dt);
     // Gloves on the engine's hands while saving (what you see is what was simulated).
     // Once the ball is held, or the dive is over, the height lets go: he lands instead of
@@ -329,6 +365,9 @@ export class KeeperController {
         this.holdTick === null ? 1 : landing(this.holdTick, LAND_TICKS),
       );
       c.anchor('hands', hands, w, w * release);
+    } else if (this.action === 'down') {
+      // Lying where the engine's hands are, at the clip's own height.
+      c.anchor('hands', hands, 1, 0);
     } else if (this.action === 'standing' || this.action === 'holding') {
       const release = this.holdTick === null ? 1 : landing(this.holdTick, LAND_TICKS);
       c.anchor('hands', hands, 0.85, 0.85 * release);
