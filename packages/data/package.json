@@ -1,0 +1,27 @@
+{
+  "name": "@legendes/data",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The game's world: leagues, districts, divisions and clubs (pilot: Hauts-de-France), and the seeded generators of players, crests and kits.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./universe": "./src/universe.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "lint": "eslint .",
+    "test": "vitest run && node scripts/build-seed.ts --check",
+    "build:seed": "node scripts/build-seed.ts"
+  },
+  "dependencies": {
+    "@legendes/engine": "workspace:*",
+    "@legendes/shared": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
