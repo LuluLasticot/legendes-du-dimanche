@@ -33,13 +33,13 @@ export const divisionSchema = z
     id: idSchema,
     scope: z.enum(DIVISION_SCOPES),
     level: z.enum(COMPETITION_LEVELS),
-    /** N2 = 2, R1 = 1, D5 = 5… (see `divisionCode`). */
+    /** N1 = 1, R1 = 1, D5 = 5… (see `divisionCode`). */
     rank: z.number().int().min(1).max(DISTRICT_MAX_RANK),
     /** Display name, e.g. "Régional 1 Hauts-de-France". */
     name: z.string().min(1),
     leagueId: idSchema.nullable(),
     districtId: idSchema.nullable(),
-    /** Pool / group letter for divisions split in groups (N2 groupe C). */
+    /** Pool / group letter for divisions split in groups (N1 groupe C). */
     pool: z.string().nullable(),
   })
   .refine((d) => (d.level === 'regional' ? d.rank <= REGIONAL_MAX_RANK : true), {
@@ -75,6 +75,11 @@ export const clubSchema = z.object({
   districtId: idSchema,
   /** Division of the first team this season. */
   divisionId: idSchema,
+  /**
+   * False when the division is provisional (drawn, no open source gives a district club's
+   * division): a person has to correct it. True when it comes from a public source.
+   */
+  divisionKnown: z.boolean(),
   colours: z.object({
     primary: hexColour,
     secondary: hexColour,

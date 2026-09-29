@@ -77,6 +77,7 @@ export function parseClubs(csv: string): Club[] {
       insee: text(row, 'insee'),
       districtId: text(row, 'district'),
       divisionId: text(row, 'division'),
+      divisionKnown: text(row, 'division_known').toLowerCase() === 'oui',
       colours: {
         primary: known ? text(row, 'primary').toLowerCase() : guessed.primary,
         secondary: known ? text(row, 'secondary').toLowerCase() : guessed.secondary,

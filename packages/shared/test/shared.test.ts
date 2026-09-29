@@ -53,8 +53,8 @@ describe('ratings and tiers', () => {
       { level: 'regional', rank: 3 },
       { level: 'regional', rank: 2 },
       { level: 'regional', rank: 1 },
-      { level: 'national', rank: 3 },
       { level: 'national', rank: 2 },
+      { level: 'national', rank: 1 },
     ] as const;
     const ranges = order.map(baseRatingRange);
     for (let i = 0; i < ranges.length; i++) {
@@ -65,8 +65,9 @@ describe('ratings and tiers', () => {
     expect(divisionCode({ level: 'district', rank: 5 })).toBe('D5');
   });
 
-  it('rejects Ligue 3 / National 1 and R5', () => {
-    expect(divisionRefSchema.safeParse({ level: 'national', rank: 1 }).success).toBe(false);
+  it('rejects National 3 (gone in 2026-27) and R5', () => {
+    expect(divisionRefSchema.safeParse({ level: 'national', rank: 3 }).success).toBe(false);
+    expect(divisionRefSchema.safeParse({ level: 'national', rank: 1 }).success).toBe(true);
     expect(divisionRefSchema.safeParse({ level: 'regional', rank: 5 }).success).toBe(false);
     expect(divisionRefSchema.safeParse({ level: 'district', rank: 7 }).success).toBe(true);
   });

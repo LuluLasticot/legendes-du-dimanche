@@ -19,11 +19,11 @@ import {
 
 // Fictional clubs only: fixtures never carry the name of a real club.
 const HEADER =
-  'id,name,short_name,city,insee,district,division,primary,secondary,tertiary,pattern,stadium,surface,founded,verified,source';
+  'id,name,short_name,city,insee,district,division,division_known,primary,secondary,tertiary,pattern,stadium,surface,founded,verified,source';
 const CSV = [
   HEADER,
-  'us-exemplaire-59999,US Exemplaire,Exemplaire,Exemplaire-sur-Escaut,59999,escaut,escaut-d3,#0b3d91,#ffffff,,hoops,Stade des Tests,grass,1931,oui,fixture',
-  'fc-fictif-59998,"FC Fictif ""1er""",,Fictif,59998,escaut,hdf-r2,,,,,,,,,fixture',
+  'us-exemplaire-59999,US Exemplaire,Exemplaire,Exemplaire-sur-Escaut,59999,escaut,escaut-d3,oui,#0b3d91,#ffffff,,hoops,Stade des Tests,grass,1931,oui,fixture',
+  'fc-fictif-59998,"FC Fictif ""1er""",,Fictif,59998,escaut,hdf-r2,non,,,,,,,,,fixture',
 ].join('\n');
 
 describe('CSV reader', () => {
@@ -48,11 +48,13 @@ describe('club list', () => {
   it('validates lines and fills what is missing, marking guesses', () => {
     const [known, guessed] = clubs;
     expect(known?.coloursSource).toBe('known');
+    expect(known?.divisionKnown).toBe(true);
     expect(known?.stadium).toEqual({ name: 'Stade des Tests', surface: 'grass' });
     expect(guessed?.coloursSource).toBe('guess');
     expect(guessed?.shortName).toBe('FC Fictif "1er"');
     expect(guessed?.stadium.name).toBe('Stade municipal de Fictif');
     expect(guessed?.verified).toBe(false);
+    expect(guessed?.divisionKnown).toBe(false);
   });
 
   it('guesses the same colours for the same club, everywhere', () => {
@@ -67,23 +69,25 @@ describe('club list', () => {
   });
 
   it('says which line is wrong', () => {
-    expect(() => parseClubs(`${HEADER}\nx,X,,Ville,12,escaut,escaut-d3,,,,,,,,,`)).toThrow(/insee/);
-    expect(() => parseClubs(`${HEADER}\nBAD ID,X,,Ville,59000,escaut,escaut-d3,,,,,,,,,`)).toThrow(
-      /BAD ID/,
+    expect(() => parseClubs(`${HEADER}\nx,X,,Ville,12,escaut,escaut-d3,non,,,,,,,,,`)).toThrow(
+      /insee/,
     );
     expect(() =>
-      parseClubs(`${HEADER}\nx-59000,X,,Ville,59000,escaut,escaut-d3,,,,,,moon,,,`),
+      parseClubs(`${HEADER}\nBAD ID,X,,Ville,59000,escaut,escaut-d3,non,,,,,,,,,`),
+    ).toThrow(/BAD ID/);
+    expect(() =>
+      parseClubs(`${HEADER}\nx-59000,X,,Ville,59000,escaut,escaut-d3,non,,,,,,moon,,,`),
     ).toThrow(/unknown surface/);
   });
 
   it('builds a consistent world, and rejects an inconsistent one', () => {
     expect(buildUniverse(clubs).clubs).toHaveLength(2);
-    const stray = parseClubs(`${HEADER}\nx-62000,X,,Arras,62000,escaut,escaut-d3,,,,,,,,,`);
+    const stray = parseClubs(`${HEADER}\nx-62000,X,,Arras,62000,escaut,escaut-d3,non,,,,,,,,,`);
     expect(() => buildUniverse(stray)).toThrow(/outside/);
-    const unknown = parseClubs(`${HEADER}\nx-59000,X,,Ville,59000,escaut,escaut-d9,,,,,,,,,`);
+    const unknown = parseClubs(`${HEADER}\nx-59000,X,,Ville,59000,escaut,escaut-d9,non,,,,,,,,,`);
     expect(() => buildUniverse(unknown)).toThrow(/unknown division/);
     const wrongDistrict = parseClubs(
-      `${HEADER}\nx-59000,X,,Ville,59000,flandres,escaut-d3,,,,,,,,,`,
+      `${HEADER}\nx-59000,X,,Ville,59000,flandres,escaut-d3,non,,,,,,,,,`,
     );
     expect(() => buildUniverse(wrongDistrict)).toThrow(/belongs to flandres/);
     const twice = [...clubs, ...clubs];
@@ -118,15 +122,15 @@ describe('reference tables', () => {
       'R2',
       'R3',
     ]);
+    // Since 2026-27: National 1 (three groups) and National 2 (eight). Ligue 3 is out of the game.
     expect(DIVISIONS.filter((d) => d.level === 'national').map((d) => d.id)).toEqual([
-      'n2-a',
-      'n2-b',
-      'n2-c',
-      'n2-d',
-      'n3-hdf',
+      'n1-a',
+      'n1-b',
+      'n1-c',
+      ...['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((g) => `n2-${g}`),
     ]);
-    // Ligue 3 is professional and out of the game: nothing above N2.
-    expect(DIVISIONS.every((d) => d.level !== 'national' || d.rank >= 2)).toBe(true);
+    // Ligue 3 is professional and out of the game: nothing above N1.
+    expect(DIVISIONS.every((d) => d.level !== 'national' || d.rank <= 2)).toBe(true);
   });
 
   it('are consistent by themselves', () => {
@@ -154,6 +158,16 @@ describe('the pilot list', () => {
     );
   });
 
-  it.todo('has 150 to 250 clubs: the whole Escaut district and the divisions above it');
+  it('holds the top of the pyramid known from a public source, and the Escaut district', () => {
+    const national = WORLD.clubs.filter((c) => getDivision(c.divisionId)?.level === 'national');
+    expect(national.length).toBeGreaterThanOrEqual(9);
+    // A national club's division is never a draw.
+    expect(national.every((c) => c.divisionKnown)).toBe(true);
+    expect(clubsOf({ districtId: 'escaut' }).length).toBeGreaterThanOrEqual(150);
+    // District divisions are provisional until a person has checked them.
+    const district = WORLD.clubs.filter((c) => getDivision(c.divisionId)?.level === 'district');
+    expect(district.every((c) => c.divisionKnown || !c.verified)).toBe(true);
+  });
+
   it.todo('every club of the pilot has been verified by a person');
 });

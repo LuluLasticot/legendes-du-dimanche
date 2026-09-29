@@ -6,13 +6,17 @@ import type { RatingRange } from './cards.ts';
 export const COMPETITION_LEVELS = ['national', 'regional', 'district'] as const;
 export type CompetitionLevel = (typeof COMPETITION_LEVELS)[number];
 
-/** A division: level plus rank inside the level (N2 = national 2, R1 = regional 1, D5 = district 5). */
+/** A division: level plus rank inside the level (N1 = national 1, R1 = regional 1, D5 = district 5). */
 export interface DivisionRef {
   readonly level: CompetitionLevel;
   readonly rank: number;
 }
 
-export const NATIONAL_RANKS = [2, 3] as const;
+/**
+ * Since 2026-27 the amateur top is National 1 (4th level, ex-National 2) then National 2 (5th level,
+ * ex-National 3); Ligue 3 above them is professional and out of the game.
+ */
+export const NATIONAL_RANKS = [1, 2] as const;
 export const REGIONAL_MAX_RANK = 4;
 /** Deepest district division modelled (some districts go below D5). */
 export const DISTRICT_MAX_RANK = 9;
@@ -22,7 +26,7 @@ export function baseRatingRange(division: DivisionRef): RatingRange {
   const { level, rank } = division;
   switch (level) {
     case 'national':
-      return rank <= 2 ? { min: 74, max: 82 } : { min: 70, max: 78 };
+      return rank <= 1 ? { min: 74, max: 82 } : { min: 70, max: 78 };
     case 'regional':
       if (rank <= 1) return { min: 66, max: 74 };
       if (rank === 2) return { min: 62, max: 70 };

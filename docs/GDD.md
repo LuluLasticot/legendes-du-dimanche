@@ -8,11 +8,11 @@
 
 ## 0. Résumé en une page
 
-**Légendes du Dimanche** est un jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe inspiré des modes « équipe ultime » des grands jeux de foot, **entièrement consacré au football amateur français** : District, Régional (R1 à R3/R4), National 2 et National 3.
+**Légendes du Dimanche** est un jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe inspiré des modes « équipe ultime » des grands jeux de foot, **entièrement consacré au football amateur français** : District, Régional (R1 à R3/R4), National 2 et National 1.
 
 - Tu **ouvres des packs**, tu **collectionnes les cartes** de joueurs amateurs, tu **construis ton onze** en jouant sur les collectifs (même club, même district, même ligue).
 - Tu **joues des matchs** : simulation 2D vue de dessus, avec des **actions clés jouables en 3D** façon *Score! Hero* (tu traces la passe ou la frappe, la caméra s'emballe, ralenti, filet qui tremble).
-- Tu **gagnes des crédits**, tu **échanges** sur le **marché des transferts**, tu relèves des **défis de création d'équipe**, tu grimpes la **pyramide** du District 5 jusqu'au National 2.
+- Tu **gagnes des crédits**, tu **échanges** sur le **marché des transferts**, tu relèves des **défis de création d'équipe**, tu grimpes la **pyramide** du District 5 jusqu'au National 1.
 - À terme, **les vrais joueurs réclament leur carte**, les clubs animent leur communauté, les vrais résultats du week-end font évoluer les cartes, et chaque dimanche à 15h, toute la France joue en direct.
 
 **Double objectif :**
@@ -74,12 +74,12 @@ Mon club (communauté du vrai club), derbies, amis, échanges, partage de cartes
 
 ### 4.1 Structure (saison 2026-27)
 
-Depuis le 1er juillet 2026, le National est remplacé par la **Ligue 3, division professionnelle**. **Elle est donc exclue du jeu** (droits des joueurs pros). Le sommet de l'univers du jeu est le **National 2**.
+Depuis le 1er juillet 2026, la **Ligue 3** est une division professionnelle : **elle est exclue du jeu** (droits des joueurs pros). En dessous, l'ancien National 2 devient le **National 1** (4e niveau, 3 groupes de 16 clubs) et l'ancien National 3 devient le **National 2** (5e niveau, 8 groupes régionaux de 14 clubs). Le sommet de l'univers du jeu est le **National 1**.
 
 | Échelon | Niveau | Tier de carte |
 |---|---|---|
+| National 1 | National (amateur) | **Or** |
 | National 2 | National (amateur) | **Or** |
-| National 3 | National (amateur) | **Or** |
 | Régional 1 | Ligue régionale | **Argent** |
 | Régional 2 | Ligue régionale | **Argent** |
 | Régional 3 (et R4 selon les ligues) | Ligue régionale | **Argent / Bronze** |
@@ -139,7 +139,7 @@ Depuis le 1er juillet 2026, le National est remplacé par la **Ligue 3, division
 |---|---|---|---|
 | **Bronze** | 40-64 | District | Commune / Rare |
 | **Argent** | 65-74 | Régional | Commune / Rare |
-| **Or** | 75-82 (base) | National 2-3, stars régionales | Commune / Rare |
+| **Or** | 75-82 (base) | National 1-2, stars régionales | Commune / Rare |
 | **Spéciales** | jusqu'à 95 | Promos, événements, légendes | Selon la promo |
 
 **Plages de note par division** (le recouvrement est voulu : la star d'un D1 peut dépasser un joueur moyen de R3) :
@@ -151,8 +151,8 @@ Depuis le 1er juillet 2026, le National est remplacé par la **Ligue 3, division
 | R3 / R4 | 58-67 |
 | R2 | 62-70 |
 | R1 | 66-74 |
-| N3 | 70-78 |
-| N2 | 74-82 |
+| N2 | 70-78 |
+| N1 | 74-82 |
 
 « Rare » = design brillant et probabilité plus faible en pack, mêmes règles de note.
 
@@ -355,10 +355,10 @@ Un match dure **3 à 5 minutes réelles** (vitesse réglable, option « simulati
 
 ## 8. Modes de jeu
 
-### 8.1 Carrière — « De District 5 à National 2 » (solo)
+### 8.1 Carrière — « De District 5 à National 1 » (solo)
 - Tu démarres dans un championnat de District 5 **réel** (les autres équipes sont de vrais clubs du district, avec des effectifs générés).
 - Saisons courtes (10-14 journées), **montées et descentes**, coupes départementales et régionales, **Coupe de France** (tours préliminaires jusqu'au rêve d'affronter un pro fictif).
-- Objectif long terme : atteindre le National 2. Récompenses à chaque montée.
+- Objectif long terme : atteindre le National 1. Récompenses à chaque montée.
 - Mode de progression principal pour débuter.
 
 ### 8.2 Défis de création d'équipe (DCE)
@@ -374,7 +374,7 @@ Les DCE sont le **principal puits de cartes** de l'économie.
 
 ### 8.3 Championnat en ligne (PvP asynchrone)
 - Tu affrontes l'équipe d'un autre joueur, contrôlée par l'IA (il n'a pas besoin d'être connecté).
-- **Divisions** nommées comme la pyramide réelle : District 5 → … → R1 → N3 → N2 → **Élite**.
+- **Divisions** nommées comme la pyramide réelle : District 5 → … → R1 → N2 → N1 → **Élite**.
 - Points par semaine, montées et descentes, récompenses hebdomadaires selon la division.
 
 ### 8.4 Le Dimanche (PvP en direct, événement phare)
@@ -409,7 +409,7 @@ Les DCE sont le **principal puits de cartes** de l'économie.
 
 | Source | Crédits |
 |---|---|
-| Victoire en Carrière | 300 (District) → 900 (N2) |
+| Victoire en Carrière | 300 (District) → 900 (N1) |
 | Nul / défaite | 50 % / 25 % de la victoire |
 | Action clé réussie | +25 |
 | Objectifs quotidiens (3/jour) | ~1 500 / jour |
