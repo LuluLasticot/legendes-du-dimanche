@@ -263,7 +263,8 @@
         "saved": "Arrêt",
         "blocked": "Contré",
         "intercepted": "Passe interceptée",
-        "lost": "Passe perdue"
+        "lost": "Passe perdue",
+        "offside": "Hors-jeu"
       },
       "webglError": "WebGL 2 n'est pas disponible sur cet appareil ou ce navigateur.",
       "saves": {
@@ -273,12 +274,13 @@
       },
       "hints": {
         "aim-shot": "Trace ta frappe depuis le ballon vers le but : la courbe de ton geste donne l'effet, sa vitesse donne la puissance.",
-        "aim-pass": "Trace ta passe sur la pelouse, là où ton coéquipier doit la recevoir. Il y court, elle arrive dans sa course.",
+        "aim-pass": "Choisis ton coéquipier : trace ta passe vers lui, ou devant lui pour le lancer. Ligne jaune = hors-jeu : évite les ronds rouges.",
         "aim-first-time": "Il est lancé ! Trace la reprise vers le but. Plus la balle arrive vite et de travers, plus c'est dur.",
         "aim-penalty": "Vise un coin : ton geste donne la direction et l'effet. La puissance se dose ensuite avec la jauge.",
         "gauge": "Tape pour doser ta frappe. Trop fort, et le ballon finit dans le parking.",
         "keeper-ready": "Tu es dans les cages. Tape pour que l'attaquant s'élance, puis glisse vers le coin où tu plonges.",
         "keeper-dive": "Glisse vers le coin : ton gardien plonge là où ton doigt se lève.",
+        "offside": "Hors-jeu ! Le drapeau est levé, la passe est sifflée.",
         "playing": ""
       },
       "situations": {

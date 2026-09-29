@@ -37,7 +37,7 @@ import {
 
 const { BALL, PITCH, kickedBall, restingBall, simulateFlight } = physics;
 
-export type SandboxOutcome = moments.MomentOutcome | 'intercepted' | 'lost';
+export type SandboxOutcome = moments.MomentOutcome | 'intercepted' | 'lost' | 'offside';
 
 /** How a key moment played inside a match ended (fed back to the match simulation). */
 export interface MomentResult {
@@ -75,6 +75,7 @@ export type SandboxStep =
   | 'gauge'
   | 'keeper-ready'
   | 'keeper-dive'
+  | 'offside'
   | 'playing';
 
 export interface SandboxHandle {
@@ -117,6 +118,8 @@ const BULLET_TIME = 0.04;
 /** Last part of the swing played for a first-time shot, seconds. */
 const FIRST_TIME_LEAD = 0.2;
 const GOAL_CENTRE = { x: PITCH.goalLineX, y: 0, z: 0 };
+/** Most teammates any pass layout offers. */
+const layoutMaxReceivers = Math.max(...moments.PASS_LAYOUTS.map((l) => l.receivers.length));
 
 function makeLine(color: number, opacity: number): THREE.Line {
   const geometry = new THREE.BufferGeometry();
@@ -267,13 +270,56 @@ export function mountBallSandbox(
 
   const keeperFigure = new PlayerFigure(KEEPER_KIT);
   scene.add(keeperFigure.group);
-  const receiverFigure = new PlayerFigure(HOME_KIT, 0x8d5a3b);
-  scene.add(receiverFigure.group);
+  // Greybox stand-ins for the teammates of a pass (only if the character asset does not load).
+  const receiverFigures = [0x8d5a3b, 0xd8a47f, 0x6b4a33].map((skin) => {
+    const figure = new PlayerFigure(HOME_KIT, skin);
+    scene.add(figure.group);
+    return figure;
+  });
+  // The offside line and a ring under each teammate: green = onside, red = offside.
+  const offsideLine = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.3, PITCH.width - 2),
+    new THREE.MeshBasicMaterial({
+      color: 0xffe066,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+    }),
+  );
+  offsideLine.rotation.x = -Math.PI / 2;
+  offsideLine.position.y = 0.03;
+  offsideLine.visible = false;
+  scene.add(offsideLine);
+  const offsideRings = [0, 1, 2].map(() => {
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.62, 0.82, 28),
+      new THREE.MeshBasicMaterial({
+        color: 0x3ddc84,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+      }),
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.035;
+    ring.visible = false;
+    scene.add(ring);
+    return ring;
+  });
+  /** X of the offside line for the pass being played, and who starts beyond it. */
+  let offsideX = 0;
+  let offsideFlags: boolean[] = [];
   const defenderFigures: PlayerFigure[] = [];
   // ─── Characters (converted Mixamo asset; greybox figures until / unless it loads) ───
   let characterAsset: CharacterAsset | null = null;
   /** The shooter: the receiver on a pass, the opponent when the player keeps goal. */
   let shooterCtrl: ShooterController | null = null;
+  /** Receiver 0 of a pass, and the shooter of every other situation. */
+  let homeShooter: ShooterController | null = null;
+  /** The other teammates of a pass (receivers 1 and 2). */
+  const teammateCtrls: ShooterController[] = [];
+  const receiverCtrl = (index: number): ShooterController | null =>
+    index === 0 ? homeShooter : (teammateCtrls[index - 1] ?? null);
   let passerCtrl: ShooterController | null = null;
   let keeperCtrl: KeeperController | null = null;
   const defenderCtrls: DefenderController[] = [];
@@ -287,7 +333,7 @@ export function mountBallSandbox(
     for (const d of moment.defenders) busy.push(d.feet);
     if (situation === 'pass') {
       const l = layout();
-      busy.push(l.receiver, ...l.markers);
+      busy.push(...l.receivers, ...l.markers);
     }
     const attack = situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT;
     const defend = situation === 'keeper' ? HOME_CHARACTER_KIT : OPPONENT_CHARACTER_KIT;
@@ -385,6 +431,8 @@ export function mountBallSandbox(
   } | null = null;
   /** Which moment the renderer shows. */
   let showing: 'moment' | 'pass' = 'moment';
+  /** How the last pass ended, for the result screen and the outcome given to the match. */
+  let passEnd: 'intercepted' | 'lost' | 'offside' | null = null;
   /** The pass the player is tracing (ground target), for the camera framing. */
   let passFocus: physics.Vec3 | null = null;
 
@@ -425,6 +473,7 @@ export function mountBallSandbox(
   let lastStep: SandboxStep | null = null;
   const currentStep = (): SandboxStep => {
     if (phase === 'gauge') return 'gauge';
+    if (phase === 'result' && passEnd === 'offside') return 'offside';
     if (phase === 'aiming' || phase === 'tracing') {
       if (settings.situation === 'keeper') return 'keeper-ready';
       if (reception) return 'aim-first-time';
@@ -499,6 +548,14 @@ export function mountBallSandbox(
     return 'aiming';
   };
 
+  /** Where the pass is going to be met: the teammate who gets there first. */
+  const earliestMeet = (): physics.Vec3 | null => {
+    let best: { tick: number; feet: physics.Vec3 } | null = null;
+    for (const r of pass?.state.receivers ?? [])
+      if (r.meet && (best === null || r.meet.tick < best.tick)) best = r.meet;
+    return best?.feet ?? null;
+  };
+
   const directorInput = (): DirectorInput => {
     const { now } = shown();
     return {
@@ -512,10 +569,7 @@ export function mountBallSandbox(
       result: resultKind(),
       view: view(),
       aspect: camera.aspect,
-      focus:
-        pass?.state.receiver.meet?.feet ??
-        passFocus ??
-        (settings.situation === 'pass' ? passZone() : null),
+      focus: earliestMeet() ?? passFocus ?? (settings.situation === 'pass' ? passZone() : null),
     };
   };
 
@@ -547,8 +601,52 @@ export function mountBallSandbox(
   const layout = (): moments.PassLayout => moments.passLayout(settings.situations.passLayout);
   /** Where passes are played to, framed before the pass: between the runner and the box. */
   const passZone = (): physics.Vec3 => {
-    const r = layout().receiver;
-    return physics.v3((r.x + PITCH.goalLineX - 11) / 2, 0, r.z / 2);
+    const rs = layout().receivers;
+    const x = rs.reduce((sum, r) => sum + r.x, 0) / rs.length;
+    const z = rs.reduce((sum, r) => sum + r.z, 0) / rs.length;
+    return physics.v3((x + PITCH.goalLineX - 11) / 2, 0, z / 2);
+  };
+  /** Teammates of the pass as engine setups: he who meets the ball first gets it. */
+  const receiverSetups = (): moments.ReceiverSetup[] =>
+    layout().receivers.map((from) => {
+      const toGoal = Math.hypot(PITCH.goalLineX - from.x, from.z) || 1;
+      return {
+        from,
+        pace: settings.situations.receiverPace,
+        speed: moments.RECEIVER_RUN_SPEED,
+        run: physics.v3((PITCH.goalLineX - from.x) / toGoal, 0, -from.z / toGoal),
+      };
+    });
+  /** Places the offside line and the rings for the pass about to be played. */
+  const placeOffsideGuides = (): void => {
+    const on = settings.situation === 'pass';
+    offsideLine.visible = on;
+    for (const ring of offsideRings) ring.visible = false;
+    if (!on) return;
+    const keeperSetup = toKeeperSetup(settings);
+    const keeperFeet = keeperSetup
+      ? (keeperSetup.feet ??
+        moments.keeperSetPosition(
+          spot,
+          keeperSetup.attributes,
+          keeperSetup.tuning ?? moments.DEFAULT_KEEPER_TUNING,
+        ))
+      : null;
+    offsideX = moments.offsideLineX(
+      spot.x,
+      toDefenderSetups(settings, spot).map((d) => d.feet ?? spot),
+      keeperFeet,
+    );
+    offsideLine.position.x = offsideX;
+    const rs = layout().receivers;
+    offsideFlags = rs.map((r) => moments.isOffside(r, offsideX, spot.x));
+    rs.forEach((r, i) => {
+      const ring = offsideRings[i];
+      if (!ring) return;
+      ring.visible = true;
+      ring.position.set(r.x, 0.035, r.z);
+      ring.material.color.setHex(offsideFlags[i] ? 0xff4d4d : 0x3ddc84);
+    });
   };
 
   const placeBall = (): void => {
@@ -565,26 +663,33 @@ export function mountBallSandbox(
     keeperFigure.group.visible = moment.keeper !== null && characterAsset === null;
     pending = null;
     const situation = settings.situation;
+    shooterCtrl = homeShooter;
     shooterCtrl?.character.setKit(
       situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT,
     );
+    passEnd = null;
     if (situation === 'pass') {
       const l = layout();
-      shooterCtrl?.follow(l.receiver, { x: 0, y: 0, z: 0 }, spot);
+      l.receivers.forEach((r, i) => receiverCtrl(i)?.follow(r, { x: 0, y: 0, z: 0 }, spot));
       passerCtrl?.standAt(spot, { x: PITCH.goalLineX - 11, y: 0, z: 0 });
     } else {
       shooterCtrl?.standAt(spot, GOAL_CENTRE);
     }
     if (passerCtrl) passerCtrl.character.root.visible = situation === 'pass';
-    receiverFigure.group.visible = situation === 'pass' && characterAsset === null;
-    if (situation === 'pass') {
-      const r = layout().receiver;
-      receiverFigure.update(
-        { feet: r, head: { x: r.x, y: 1.75, z: r.z } },
-        { feet: r, head: { x: r.x, y: 1.75, z: r.z } },
-        1,
-      );
-    }
+    teammateCtrls.forEach((ctrl, i) => {
+      ctrl.character.root.visible = situation === 'pass' && i + 1 < layout().receivers.length;
+    });
+    receiverFigures.forEach((figure, i) => {
+      const r = situation === 'pass' ? layout().receivers[i] : undefined;
+      figure.group.visible = r !== undefined && characterAsset === null;
+      if (r)
+        figure.update(
+          { feet: r, head: { x: r.x, y: 1.75, z: r.z } },
+          { feet: r, head: { x: r.x, y: 1.75, z: r.z } },
+          1,
+        );
+    });
+    placeOffsideGuides();
     placeExtras();
     keeperCtrl?.reset();
     // Keeping goal, the player looks over the keeper's shoulder: see through him.
@@ -668,10 +773,13 @@ export function mountBallSandbox(
 
   /** Ideal pass to `target` (before the passer's error). */
   const solvePassTo = (target: physics.Vec3): moments.PassSolution | null => {
+    const teammates = receiverSetups();
+    const chosen = teammates[moments.chooseReceiver(teammates, target, moments.RECEIVER_RUN_SPEED)];
+    if (!chosen) return null;
     const run = moments.receptionTicks(
-      layout().receiver,
+      chosen.from,
       target,
-      settings.situations.receiverPace,
+      chosen.pace,
       moments.RECEIVER_RUN_SPEED,
     );
     try {
@@ -1024,11 +1132,7 @@ export function mountBallSandbox(
       ball: initial,
       physics: params,
       surface: settings.pitch.surface,
-      receiver: {
-        from: layout().receiver,
-        pace: settings.situations.receiverPace,
-        speed: moments.RECEIVER_RUN_SPEED,
-      },
+      receivers: receiverSetups(),
       keeper: toKeeperSetup(settings),
       defenders: toDefenderSetups(settings, initial.pos),
       defenderTuning: toDefenderTuning(settings),
@@ -1047,15 +1151,16 @@ export function mountBallSandbox(
   };
 
   /** Pass received: time almost stops, the player aims the first-time shot. */
-  const receive = (): void => {
+  const receive = (by: number): void => {
     if (!pass) return;
     const s = pass.state;
+    shooterCtrl = receiverCtrl(by) ?? homeShooter;
     const keeperSetup = toKeeperSetup(settings);
     reception = {
       ball: s.flight.ball,
       keeper: keeperSetup && s.keeper ? { ...keeperSetup, feet: s.keeper.feet } : keeperSetup,
       defenders: moments.defendersAfterPass(pass.context.defenderSetups, s.defenders),
-      receiverFeet: s.receiver.feet,
+      receiverFeet: (s.receivers[by] ?? s.receivers[0])?.feet ?? spot,
     };
     spot = s.flight.ball.pos;
     phase = 'aiming';
@@ -1063,15 +1168,17 @@ export function mountBallSandbox(
     emitStep();
   };
 
-  const passOver = (outcome: 'intercepted' | 'lost'): void => {
+  const passOver = (outcome: 'intercepted' | 'lost' | 'offside'): void => {
     phase = 'result';
+    passEnd = outcome;
     heldAfterOutcome = 0;
     if (currentReport) {
       currentReport = { ...currentReport, outcome };
       emitShot(currentReport);
     }
     shooterCtrl?.react('miss', 0);
-    cheer('ooh');
+    if (outcome === 'offside') audio.whistle(0.6);
+    else cheer('ooh');
     emitStep();
   };
 
@@ -1281,6 +1388,7 @@ export function mountBallSandbox(
     }
   };
 
+  let receivedBy = 0;
   const stepPass = (ticks: number): void => {
     if (!pass) return;
     for (let i = 0; i < ticks && phase === 'passing'; i++) {
@@ -1289,6 +1397,7 @@ export function mountBallSandbox(
       pass.state = next.state;
       samples.push(pass.state.flight.ball);
       for (const event of next.events) {
+        if (event.type === 'received') receivedBy = event.by;
         if (event.type === 'intercepted') {
           applyEffects(director.impact('block', event.speed, false));
           audio.block(event.speed, panOf(event.pos.z));
@@ -1297,8 +1406,9 @@ export function mountBallSandbox(
         }
       }
       const outcome = pass.state.outcome;
-      if (outcome === 'received') receive();
-      else if (outcome === 'intercepted' || outcome === 'lost') passOver(outcome);
+      if (outcome === 'received') receive(receivedBy);
+      else if (outcome === 'intercepted' || outcome === 'lost' || outcome === 'offside')
+        passOver(outcome);
     }
   };
 
@@ -1359,7 +1469,7 @@ export function mountBallSandbox(
       heldAfterOutcome += frame.wallDt;
       if (heldAfterOutcome > RESULT_HOLD) {
         // A pass that never reached the shooter: no shot, the chance is gone.
-        if (options.moment) finishMoment('miss');
+        if (options.moment) finishMoment(passEnd === 'offside' ? 'offside' : 'miss');
         else placeBall();
       }
     }
@@ -1409,30 +1519,43 @@ export function mountBallSandbox(
       }
     }
 
-    // Receiver's run (pass situation, until he strikes).
+    // Teammates' runs (pass situation, until one of them strikes).
     if (showing === 'pass' && pass && phase !== 'striking') {
-      const r0 = pass.previous.receiver;
-      const r1 = pass.state.receiver;
-      const feet = {
-        x: r0.feet.x + (r1.feet.x - r0.feet.x) * a,
-        y: 0,
-        z: r0.feet.z + (r1.feet.z - r0.feet.z) * a,
-      };
-      shooterCtrl?.follow(feet, r1.vel, ballPos);
-      receiverFigure.update(
-        { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
-        { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
-        1,
-      );
+      const running = phase === 'passing' || phase === 'aiming';
+      pass.state.receivers.forEach((r1, i) => {
+        const r0 = pass?.previous.receivers[i] ?? r1;
+        const feet = {
+          x: r0.feet.x + (r1.feet.x - r0.feet.x) * a,
+          y: 0,
+          z: r0.feet.z + (r1.feet.z - r0.feet.z) * a,
+        };
+        receiverCtrl(i)?.follow(feet, running ? r1.vel : { x: 0, y: 0, z: 0 }, ballPos);
+        receiverFigures[i]?.update(
+          { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
+          { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
+          1,
+        );
+        const ring = offsideRings[i];
+        if (ring) {
+          ring.position.set(feet.x, 0.035, feet.z);
+          // The rings are a hint before the pass: gone once one of them has the ball.
+          ring.visible = phase === 'passing';
+        }
+      });
     } else if (reception && characterAsset === null) {
       const feet = reception.receiverFeet;
-      receiverFigure.update(
+      receiverFigures[0]?.update(
         { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
         { feet, head: { x: feet.x, y: 1.75, z: feet.z } },
         1,
       );
     }
-    shooterCtrl?.update(frame.simDt);
+    if (reception || (phase === 'flying' && showing === 'moment')) {
+      for (const ring of offsideRings) ring.visible = false;
+      offsideLine.visible = false;
+    }
+    homeShooter?.update(frame.simDt);
+    for (const ctrl of teammateCtrls) ctrl.update(frame.simDt);
     passerCtrl?.update(frame.simDt);
     if (keeperCtrl && now.keeper && before.keeper) {
       keeperCtrl.character.root.visible = true;
@@ -1478,13 +1601,19 @@ export function mountBallSandbox(
     const passer = new Character(asset, HOME_CHARACTER_KIT);
     const keeper = new Character(asset, KEEPER_CHARACTER_KIT);
     scene.add(shooter.root, passer.root, keeper.root);
-    shooterCtrl = new ShooterController(shooter);
+    homeShooter = new ShooterController(shooter);
+    shooterCtrl = homeShooter;
     passerCtrl = new ShooterController(passer);
+    for (let i = 1; i < layoutMaxReceivers; i++) {
+      const teammate = new Character(asset, HOME_CHARACTER_KIT);
+      scene.add(teammate.root);
+      teammateCtrls.push(new ShooterController(teammate));
+    }
     keeperCtrl = new KeeperController(keeper);
     if (phase === 'aiming' && !reception) placeBall();
     else {
       passer.root.visible = settings.situation === 'pass';
-      receiverFigure.group.visible = false;
+      for (const figure of receiverFigures) figure.group.visible = false;
       keeperFigure.group.visible = false;
       syncDefenderFigures(moment.defenders.length);
     }
@@ -1557,7 +1686,8 @@ export function mountBallSandbox(
       stepListeners.clear();
       gaugeListeners.clear();
       disposed = true;
-      shooterCtrl?.character.dispose();
+      homeShooter?.character.dispose();
+      for (const ctrl of teammateCtrls) ctrl.character.dispose();
       passerCtrl?.character.dispose();
       keeperCtrl?.character.dispose();
       for (const controller of defenderCtrls) controller.character.dispose();

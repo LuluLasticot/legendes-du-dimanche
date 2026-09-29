@@ -46,31 +46,47 @@ export function wallSize(distance: number, offset: number): number {
 /** Speed of the receiver's run when the pass is played (m/s). */
 export const RECEIVER_RUN_SPEED = 5;
 
-/** Layout of a pass situation: passer (ball), receiver's starting point and markers. */
+/**
+ * Layout of a pass situation: passer (ball), the teammates who run for it (at least two are
+ * onside, at least one offside when the ball is played) and the markers.
+ */
 export interface PassLayout {
   readonly ball: Vec3;
-  readonly receiver: Vec3;
+  readonly receivers: readonly Vec3[];
   readonly markers: readonly Vec3[];
 }
 
 /**
- * Pass layouts: a wide player cuts it back to a runner arriving in the box, a through ball from
- * midfield, and a square ball on the edge of the box.
+ * Pass layouts: a wide player cuts it back to runners arriving in the box, a through ball from
+ * midfield, and a square ball on the edge of the box. Each one offers a choice of teammates, and
+ * a trap: one of them starts beyond the second-last defender.
  */
 export const PASS_LAYOUTS: readonly PassLayout[] = [
   {
     ball: v3(PITCH.goalLineX - 6, 0, 15),
-    receiver: v3(PITCH.goalLineX - 19, 0, 5),
+    receivers: [
+      v3(PITCH.goalLineX - 19, 0, 5),
+      v3(PITCH.goalLineX - 12, 0, -10),
+      v3(PITCH.goalLineX - 4, 0, -1.5),
+    ],
     markers: [v3(PITCH.goalLineX - 16, 0, 7), v3(PITCH.goalLineX - 6, 0, -4)],
   },
   {
     ball: v3(PITCH.goalLineX - 32, 0, 0),
-    receiver: v3(PITCH.goalLineX - 23, 0, 13),
+    receivers: [
+      v3(PITCH.goalLineX - 23, 0, 13),
+      v3(PITCH.goalLineX - 26, 0, -11),
+      v3(PITCH.goalLineX - 14, 0, -1),
+    ],
     markers: [v3(PITCH.goalLineX - 19, 0, 3), v3(PITCH.goalLineX - 19, 0, -5)],
   },
   {
     ball: v3(PITCH.goalLineX - 22, 0, 16),
-    receiver: v3(PITCH.goalLineX - 24, 0, 1),
+    receivers: [
+      v3(PITCH.goalLineX - 24, 0, 1),
+      v3(PITCH.goalLineX - 27, 0, -10),
+      v3(PITCH.goalLineX - 12, 0, 8),
+    ],
     markers: [v3(PITCH.goalLineX - 17, 0, 3)],
   },
 ];

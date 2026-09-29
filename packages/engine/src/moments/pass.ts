@@ -281,3 +281,25 @@ export function planReception(
 export function passBall(from: Vec3, velocity: Vec3): BallState {
   return kickedBall(v3(from.x, BALL.radius, from.z), velocity, v3(0, 0, 0));
 }
+
+/**
+ * The teammate a pass to `target` is meant for: the one who gets there soonest (his run and the
+ * ball are weighted together). Ties go to the lowest index.
+ */
+export function chooseReceiver(
+  receivers: readonly { readonly from: Vec3; readonly pace: number }[],
+  target: Vec3,
+  speed: number,
+  tuning: ReceiverTuning = DEFAULT_RECEIVER_TUNING,
+): number {
+  let best = 0;
+  let bestTicks = Infinity;
+  receivers.forEach((r, i) => {
+    const ticks = receptionTicks(r.from, target, r.pace, speed, tuning);
+    if (ticks < bestTicks) {
+      best = i;
+      bestTicks = ticks;
+    }
+  });
+  return best;
+}

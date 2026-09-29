@@ -392,12 +392,16 @@ function situationSection(fp: Fingerprint): void {
       ball: passBall(from, velocity),
       physics: SELFTEST_PHYSICS,
       surface: PHYSICS_SURFACES[i % PHYSICS_SURFACES.length] ?? 'grass',
-      receiver: {
-        from: receiver,
-        pace: r.int(30, 95),
-        speed: r.range(0, 6),
-        tuning: SELFTEST_RECEIVER_TUNING,
-      },
+      receivers: [
+        {
+          from: receiver,
+          pace: r.int(30, 95),
+          speed: r.range(0, 6),
+          tuning: SELFTEST_RECEIVER_TUNING,
+        },
+      ],
+      // The fingerprint predates the offside rule: it stays what it was.
+      offside: false,
       keeper: { attributes: keeper(r), tuning: SELFTEST_KEEPER_TUNING },
       defenders: [
         {
@@ -416,7 +420,10 @@ function situationSection(fp: Fingerprint): void {
     });
     for (const state of result.states) {
       const b = state.flight.ball.pos;
-      fp.f64(b.x).f64(b.z).f64(state.receiver.feet.x).f64(state.receiver.feet.z);
+      fp.f64(b.x)
+        .f64(b.z)
+        .f64(state.receivers[0]?.feet.x ?? 0)
+        .f64(state.receivers[0]?.feet.z ?? 0);
       if (state.keeper) fp.f64(state.keeper.feet.z);
       for (const d of state.defenders) fp.f64(d.feet.x).f64(d.feet.z);
     }
