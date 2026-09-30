@@ -368,6 +368,19 @@ export class Pack3D {
     return this.inner.localToWorld(out);
   }
 
+  /**
+   * The plane of the torn edge in world space (normal along the pack's height, pointing up), as
+   * `(n, −n·p)`: what lies below it is still inside the pack.
+   */
+  tearPlane(out = new THREE.Vector4()): THREE.Vector4 {
+    const line = (this.tearUniforms['uTearV'] as THREE.IUniform).value as number[];
+    const v = Math.max(...line);
+    this.inner.updateWorldMatrix(true, false);
+    const p = this.inner.localToWorld(new THREE.Vector3(0, (v - 0.5) * PACK3D_HEIGHT, 0));
+    const n = new THREE.Vector3(0, 1, 0).transformDirection(this.inner.matrixWorld);
+    return out.set(n.x, n.y, n.z, -n.dot(p));
+  }
+
   /** The strip comes off and flies away with the finger's velocity. */
   fling(vx: number, vy: number): void {
     this.done = true;

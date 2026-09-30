@@ -32,17 +32,19 @@ import {
 } from '@/components/card/player-card';
 
 const TUNING_KEY = 'ld.lab.pack.tuning';
+/** A club's pitch as the 3D stadium paints it. */
+const SURFACE_KEY = { grass: 'grass', artificial: 'artificial', stabilized: 'dirt' } as const;
 const MUTED_KEY = 'ld.lab.pack.muted';
 
 const tuningSchema = z.object({
   walkoutRank: z.number().int().min(0).max(8),
   lightsGap: z.number().min(0.1).max(1.5),
   clueHold: z.number().min(0.3).max(3),
+  clueGap: z.number().min(0).max(1.5),
   tension: z.number().min(0.3).max(4),
   flash: z.number().min(0).max(2),
   shake: z.number().min(0).max(2),
   particles: z.number().min(0).max(2),
-  gagChance: z.number().min(0).max(1),
   speed: z.number().min(0.25).max(3),
 });
 
@@ -50,11 +52,11 @@ const SLIDERS: readonly (readonly [keyof PackTuning, number, number, number])[] 
   ['walkoutRank', 0, 8, 1],
   ['lightsGap', 0.1, 1.5, 0.02],
   ['clueHold', 0.3, 3, 0.05],
+  ['clueGap', 0, 1.5, 0.05],
   ['tension', 0.3, 4, 0.05],
   ['flash', 0, 2, 0.05],
   ['shake', 0, 2, 0.05],
   ['particles', 0, 2, 0.05],
-  ['gagChance', 0, 1, 0.05],
   ['speed', 0.25, 3, 0.05],
 ];
 
@@ -62,8 +64,9 @@ function loadTuning(defaults: PackTuning): PackTuning {
   try {
     const raw = window.localStorage.getItem(TUNING_KEY);
     if (!raw) return defaults;
-    const parsed = tuningSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : defaults;
+    // A setting added since the last visit takes its default; the others are kept.
+    const parsed = tuningSchema.partial().safeParse(JSON.parse(raw));
+    return parsed.success ? { ...defaults, ...parsed.data } : defaults;
   } catch {
     return defaults;
   }
@@ -140,6 +143,7 @@ async function buildAssets(
     cards,
     crest,
     clubColours: [bestClub.colours.primary, bestClub.colours.secondary],
+    surface: SURFACE_KEY[bestClub.stadium.surface],
   };
 }
 
@@ -244,11 +248,10 @@ export function PackLab() {
   const walkoutSteps: readonly PackStep[] = [
     'lights',
     'league',
+    'pause',
     'club',
     'position',
     'tension',
-    'gag-flicker',
-    'gag-dog',
   ];
   const heroPlayer = best?.card.player;
   const heroDivision = best ? getDivision(best.club.divisionId) : undefined;
@@ -467,12 +470,6 @@ export function PackLab() {
             {tPos(`${heroPlayer.positions[0] ?? 'CM'}.long`)}
           </p>
         )}
-        {(step === 'gag-flicker' || step === 'gag-dog') && (
-          <p key={step} className="ld-rise absolute bottom-[14%] text-lg text-chalk-muted italic">
-            {t(step === 'gag-flicker' ? 'gag.flicker' : 'gag.dog')}
-          </p>
-        )}
-        {step === 'gag-dog' && <DogCrossing />}
       </div>
 
       {/* Bottom: hint and actions. */}
@@ -554,22 +551,3 @@ const formatPercent = (p: number): string =>
     : p < 0.001
       ? '< 0,1 %'
       : `${(p * 100).toFixed(p < 0.1 ? 1 : 0).replace('.', ',')} %`;
-
-/** A dog running across the pitch, left to right (the joke of a small pack). */
-function DogCrossing() {
-  return (
-    <svg
-      viewBox="0 0 120 70"
-      className="ld-dog absolute bottom-[22%] left-0 h-16 w-28 text-pitch-950 drop-shadow-[0_0_12px_rgb(255_209_102/0.5)]"
-      aria-hidden
-    >
-      <path
-        fill="currentColor"
-        stroke="#ffd166"
-        strokeOpacity="0.6"
-        strokeWidth="1.5"
-        d="M8 38 C14 30 26 28 36 30 L70 30 C78 22 86 18 94 20 L100 12 L104 22 C110 24 114 28 114 32 L106 34 C102 40 96 42 90 42 L86 56 L80 56 L80 44 L56 44 L50 58 L44 58 L46 44 C38 44 32 40 30 36 L24 48 L18 48 L22 36 C16 38 12 40 8 38 Z"
-      />
-    </svg>
-  );
-}

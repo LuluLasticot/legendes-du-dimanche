@@ -131,11 +131,11 @@ const packTuning = (overrides: Record<string, number>) => ({
   walkoutRank: 4,
   lightsGap: 0.42,
   clueHold: 1.25,
+  clueGap: 0.3,
   tension: 1.5,
   flash: 1,
   shake: 1,
   particles: 1,
-  gagChance: 0,
   speed: 3,
   ...overrides,
 });
@@ -164,7 +164,7 @@ test('a pack opens: tear, the best card, the grid, the summary', async ({ page }
   expect(errors).toEqual([]);
 });
 
-test('a small pack can play a joke, and the odds are shown', async ({ page }) => {
+test('a small pack turns its best card over simply, and the odds are shown', async ({ page }) => {
   test.slow();
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -172,7 +172,7 @@ test('a small pack can play a joke, and the odds are shown', async ({ page }) =>
     (tuning) => {
       window.localStorage.setItem('ld.lab.pack.tuning', JSON.stringify(tuning));
     },
-    packTuning({ gagChance: 1, speed: 1.5 }),
+    packTuning({ speed: 1.5 }),
   );
   await page.goto('/lab/pack?q=low');
   const stage = page.locator('[data-step]');
@@ -186,8 +186,21 @@ test('a small pack can play a joke, and the odds are shown', async ({ page }) =>
   await page.getByRole('button', { name: 'Probabilités' }).click();
   await expect(page.getByRole('region', { name: 'Probabilités' })).toContainText('Bronze rare');
 
+  // Every step the scene goes through: a bronze card gets no walkout (no floodlights, no clue).
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as { packSteps: string[] }).packSteps = seen;
+    const node = document.querySelector('[data-step]');
+    if (!node) return;
+    new MutationObserver(() => seen.push(node.getAttribute('data-step') ?? '')).observe(node, {
+      attributes: true,
+      attributeFilter: ['data-step'],
+    });
+  });
   await page.getByRole('button', { name: 'Ouvrir le pack' }).click();
-  await expect(stage).toHaveAttribute('data-step', /^gag-(flicker|dog)$/, { timeout: 60_000 });
   await expect(stage).toHaveAttribute('data-step', 'hero', { timeout: 60_000 });
+  const steps = await page.evaluate(() => (window as unknown as { packSteps: string[] }).packSteps);
+  expect(steps).toContain('tension');
+  expect(steps).not.toContain('lights');
   expect(errors).toEqual([]);
 });

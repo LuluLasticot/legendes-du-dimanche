@@ -78,6 +78,11 @@ export class Card3D {
   sweep = -3;
   /** Holographic strength multiplier. */
   holo = 1;
+  /**
+   * World-space plane (normal, offset): the card is only drawn where `n·p + w ≥ 0`. The default
+   * keeps everything; a pack uses it to hide the cards below its torn edge.
+   */
+  readonly clip = new THREE.Vector4(0, 0, 0, 1);
 
   private readonly textures: THREE.Texture[];
   private readonly materials: THREE.ShaderMaterial[];
@@ -128,6 +133,7 @@ export class Card3D {
         uHolo: { value: 1 },
         uSweep: { value: -3 },
         uTime: { value: 0 },
+        uClip: { value: this.clip },
       };
     };
     this.frontUniforms = surface(faceTex, faceMask, sources.faceMask, f.foil);
@@ -139,6 +145,7 @@ export class Card3D {
       uGlow: { value: 0 },
       uGlowCol: { value: glowColour },
       uDim: { value: 0 },
+      uClip: { value: this.clip },
     };
     const material = (uniforms: Record<string, THREE.IUniform>, fs: string, vs: string) =>
       new THREE.ShaderMaterial({ uniforms, vertexShader: vs, fragmentShader: CARD_COMMON + fs });

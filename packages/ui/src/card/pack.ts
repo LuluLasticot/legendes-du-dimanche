@@ -65,6 +65,26 @@ interface Parts {
   readonly metalPrint: SvgElement[];
 }
 
+/** Widest the pack's name may be (the panel is 254 wide). */
+const TITLE_WIDTH = 220;
+/** Advance of a capital of the display face, in em (measured on Big Shoulders Black). */
+const CAP_ADVANCE = 0.52;
+
+/**
+ * The pack's name, on one line or two, sized to fit the panel from an estimate of its width
+ * (`textLength` is not honoured everywhere the SVG is rasterised).
+ */
+export function titleLines(title: string): { text: string; y: number; size: number }[] {
+  const text = title.toUpperCase();
+  const fit = (line: string, max: number): number =>
+    Math.min(max, Math.floor(TITLE_WIDTH / (Math.max(1, line.length) * CAP_ADVANCE)));
+  const space = text.lastIndexOf(' ', Math.ceil(text.length / 2) + 1);
+  if (text.length <= 11 || space < 0) return [{ text, y: 360, size: fit(text, 46) }];
+  const lines = [text.slice(0, space), text.slice(space + 1)];
+  const size = Math.min(...lines.map((line) => fit(line, 36)));
+  return lines.map((line, i) => ({ text: line, y: 340 + i * size * 0.95, size }));
+}
+
 const PANEL = { x: 18, y: 72, w: PACK_WIDTH - 36, h: 364, r: 14 };
 
 function parts(type: PackType, labels: PackLabels, uid: string, back: boolean): Parts {
@@ -280,16 +300,8 @@ function parts(type: PackType, labels: PackLabels, uid: string, back: boolean): 
         display(14, metal, { x: cx, y: 292, 'letter-spacing': 5, 'font-weight': 800 }),
         'DU DIMANCHE',
       ),
-      el(
-        'text',
-        display(labels.title.length > 10 ? 38 : 46, metal, {
-          x: cx,
-          y: 360,
-          ...(labels.title.length > 12
-            ? { textLength: 230, lengthAdjust: 'spacingAndGlyphs' }
-            : {}),
-        }),
-        labels.title.toUpperCase(),
+      ...titleLines(labels.title).map(({ text, y, size }) =>
+        el('text', display(size, metal, { x: cx, y }), text),
       ),
       el(
         'text',

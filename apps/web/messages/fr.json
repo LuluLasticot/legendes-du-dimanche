@@ -487,10 +487,6 @@
       "unmute": "Remettre le son",
       "showOdds": "Probabilités",
       "tuningToggle": "Réglages",
-      "gag": {
-        "flicker": "Le projecteur fait des siennes…",
-        "dog": "Un chien traverse le terrain…"
-      },
       "hero": {
         "next": "Touche pour voir le reste du pack",
         "new": "Nouvelle carte"
@@ -508,11 +504,11 @@
         "walkoutRank": "Sortie des vestiaires dès le rang",
         "lightsGap": "Écart entre projecteurs (s)",
         "clueHold": "Durée d'un indice (s)",
+        "clueGap": "Blanc entre deux indices (s)",
         "tension": "Tension (s)",
         "flash": "Flash",
         "shake": "Secousse",
         "particles": "Particules",
-        "gagChance": "Chance d'un gag (bronze)",
         "speed": "Vitesse",
         "reset": "Valeurs par défaut"
       }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PACK_TYPES, toSvgString } from '@legendes/data';
-import { PACK_HEIGHT, PACK_TEAR_V, packMaskNode, packNode } from '../src/card/index.ts';
+import { PACK_HEIGHT, PACK_TEAR_V, packMaskNode, packNode, titleLines } from '../src/card/index.ts';
 
 const labels = {
   title: 'Pack Or Premium',
@@ -43,7 +43,18 @@ describe('packs', () => {
     const y = PACK_HEIGHT * (1 - PACK_TEAR_V);
     expect(svg).toContain(`M6 ${Math.round(y * 100) / 100} H284`);
     expect(svg).toContain('stroke-dasharray="6 5"');
-    expect(svg).toContain('>PACK OR PREMIUM<');
+    expect(svg).toContain('>PACK OR<');
+    expect(svg).toContain('>PREMIUM<');
     expect(toSvgString(packNode('gold', labels, 'p', true))).toContain(labels.odds);
+  });
+
+  it('fits every pack name in the panel, on two lines when it is long', () => {
+    for (const title of ['Pack Bronze', 'Pack Argent', 'Pack Or', 'Pack Or Premium']) {
+      const lines = titleLines(title);
+      expect(lines.map((l) => l.text).join(' ')).toBe(title.toUpperCase());
+      for (const { text, size } of lines)
+        expect(text.length * size * 0.52).toBeLessThanOrEqual(220);
+    }
+    expect(titleLines('Pack Or Premium')).toHaveLength(2);
   });
 });

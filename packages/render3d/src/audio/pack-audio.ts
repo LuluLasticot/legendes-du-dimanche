@@ -342,39 +342,6 @@ export class PackAudio extends MatchAudio {
     hum.stop(t + 1.5);
   }
 
-  /** A floodlight that will not start: buzz and sparks. */
-  flicker(): void {
-    if (!this.ready) return;
-    for (let i = 0; i < 6; i++) {
-      this.burst(
-        this.effects,
-        'bandpass',
-        180 + i * 20,
-        6,
-        0.25,
-        0.005,
-        0.07,
-        0.4,
-        0.2,
-        i * 0.13 + this.jitter() * 0.05,
-      );
-      this.burst(this.effects, 'highpass', 5000, 1, 0.12, 0.001, 0.03, 0.4, 0.1, i * 0.13 + 0.02);
-    }
-  }
-
-  /** The ball hits the metal stand: a thud and the ring of the sheet. */
-  metal(pan = 0): void {
-    if (!this.ready) return;
-    this.thump(this.effects, 220, 90, 0.45, 0.12, pan);
-    for (const [f, peak, decay] of [
-      [612, 0.18, 0.9],
-      [1377, 0.1, 0.6],
-      [2210, 0.05, 0.4],
-    ] as const) {
-      this.burst(this.effects, 'bandpass', f, 40, peak, 0.002, decay, pan, 0.4);
-    }
-  }
-
   /** The flip of a card; louder for the rarer. `rank` 0 to 7. */
   flip(rank = 0): void {
     this.whoosh(0.34, 700, 3200, 0.14 + rank * 0.02);

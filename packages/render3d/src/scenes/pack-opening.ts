@@ -1,12 +1,14 @@
 // Pack opening (GDD §12.4, D-036): tear the foil along the dotted line, the cards come out, the
-// pack's best card gets its reveal — a full "walkout" for the great ones (the floodlights switch
-// on one by one, the league, the club's crest, the position, then the card in a halo), a short
-// one for the good ones, a joke now and then for the small ones — then the eleven others are
-// dealt face down and turned over one by one. Every duration and intensity is a setting.
+// pack's best card gets its reveal — a full "walkout" for the great ones (the ground goes dark,
+// its floodlights switch on one by one, the league, the club's crest, the position, then the
+// card in a halo), a short one for the good ones, a simple turn for the small ones — then the
+// eleven others are dealt face down and turned over one by one. It all happens at night, on the
+// pitch of the best card's club. Every duration and intensity is a setting.
 //
 // Imperative scene (mount → handle → dispose). What the player reads (the clues, the buttons)
 // is drawn by React from the steps this scene announces.
 
+import type { physics } from '@legendes/engine';
 import * as THREE from 'three';
 import { PackAudio } from '../audio/pack-audio.ts';
 import {
@@ -18,10 +20,12 @@ import {
 } from '../cards/card3d.ts';
 import { Flare, Particles, Rays } from '../cards/fx.ts';
 import { Pack3D, PACK3D_HEIGHT, PACK3D_WIDTH, type Pack3DSources } from '../cards/pack3d.ts';
-import { BACKDROP_FS, BACKDROP_VS } from '../cards/shaders.ts';
+import { HALO_FS, HALO_VS } from '../cards/shaders.ts';
 import { prefersReducedMotion } from '../core/device.ts';
 import { clamp01, ease, Spring, type Ease } from '../core/easing.ts';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
+import { FloodlightMasts } from '../stadium/masts.ts';
+import { Stadium } from '../stadium/stadium.ts';
 
 export interface PackCardAssets extends Card3DSources {
   /** 0 (bronze common) to 7 (top promo). */
@@ -36,6 +40,8 @@ export interface PackOpeningAssets {
   readonly crest: TexImageSource;
   /** The club's colours, for the confetti of the promos. */
   readonly clubColours: readonly [string, string];
+  /** The club's pitch (default grass). */
+  readonly surface?: physics.PhysicsSurface;
 }
 
 /** Settings of the feel, exposed in /lab/pack. */
@@ -46,14 +52,14 @@ export interface PackTuning {
   lightsGap: number;
   /** Seconds each clue stays on screen. */
   clueHold: number;
+  /** Seconds of empty screen between two clues. */
+  clueGap: number;
   /** Seconds of tension before the impact. */
   tension: number;
   /** Multipliers of the flash, the shake and the particles. */
   flash: number;
   shake: number;
   particles: number;
-  /** Chance of a joke when the best card is a bronze one. */
-  gagChance: number;
   /** Global speed (1 = normal). */
   speed: number;
 }
@@ -62,11 +68,11 @@ export const DEFAULT_PACK_TUNING: PackTuning = {
   walkoutRank: 4,
   lightsGap: 0.42,
   clueHold: 1.25,
+  clueGap: 0.3,
   tension: 1.5,
   flash: 1,
   shake: 1,
   particles: 1,
-  gagChance: 0.4,
   speed: 1,
 };
 
@@ -76,12 +82,11 @@ export type PackStep =
   | 'opening'
   | 'lights'
   | 'league'
+  | 'pause'
   | 'club'
   | 'position'
   | 'tension'
   | 'impact'
-  | 'gag-flicker'
-  | 'gag-dog'
   | 'hero'
   | 'grid'
   | 'summary';
@@ -92,7 +97,7 @@ export interface PackOpeningOptions extends StageOptions {
   readonly onStep?: (step: PackStep) => void;
   /** A card of the grid has been turned over (its index in the pack). */
   readonly onReveal?: (index: number) => void;
-  /** Random source for the jokes (the lab's; cosmetic only). */
+  /** Random source of the effects (cosmetic only). */
   readonly random?: () => number;
 }
 
@@ -169,6 +174,14 @@ class Actor {
 }
 
 const TEAR_ZONE = 0.12;
+/** Height of the camera above the grass (metres = scene units). */
+const STADIUM_EYE = 4;
+/** Distance behind the cards of the halo plane. */
+const HALO_DEPTH = 22;
+/** Where the four floodlights shine, in shares of the view (x, then y on a wide / tall screen). */
+const SPOTS = [-0.42, 0.42, -0.15, 0.15] as const;
+/** How far behind the cards each mast stands (the inner two are further away). */
+const MAST_DEPTH = [46, 46, 70, 70] as const;
 
 /** Haptics, only after the player has touched the page (browsers refuse them before). */
 function vibrate(pattern: number | number[]): void {
@@ -206,25 +219,42 @@ export function mountPackOpening(
   if (!best) throw new Error('A pack holds at least one card');
   const bestColour = new THREE.Color(best.finish.glow);
 
-  const backdropUniforms = {
+  // The club's ground at night, seen from the pitch towards its stand. The camera's eye is
+  // STADIUM_EYE metres above the grass (the cards stay clear of it), CAMERA_SPOT on the pitch.
+  const stadium = new Stadium(scene, {
+    surface: assets.surface ?? 'grass',
+    profile: stage.profile,
+    masts: false,
+    shadows: false,
+  });
+  const CAMERA_SPOT = { x: 22, z: -5 };
+  stadium.root.rotation.y = Math.PI;
+  stadium.root.position.set(CAMERA_SPOT.x, -STADIUM_EYE, camera.position.z + CAMERA_SPOT.z);
+  const masts = new FloodlightMasts(4);
+  scene.add(masts.group);
+  /** How bright the ground is compared with a match night (it dims while the card rises). */
+  const ground = { light: 1 };
+
+  const haloUniforms = {
     uTime: { value: 0 },
     uTint: { value: new THREE.Color(assets.pack.tint) },
     uPower: { value: 0.3 },
-    uRes: { value: new THREE.Vector2(1, 1) },
+    uAspect: { value: 1 },
   };
-  const backdrop = new THREE.Mesh(
-    new THREE.PlaneGeometry(2, 2),
+  const halo = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
     new THREE.ShaderMaterial({
-      vertexShader: BACKDROP_VS,
-      fragmentShader: BACKDROP_FS,
-      uniforms: backdropUniforms,
+      vertexShader: HALO_VS,
+      fragmentShader: HALO_FS,
+      uniforms: haloUniforms,
+      transparent: true,
       depthWrite: false,
-      depthTest: false,
+      blending: THREE.AdditiveBlending,
     }),
   );
-  backdrop.frustumCulled = false;
-  backdrop.renderOrder = -2;
-  scene.add(backdrop);
+  halo.position.z = -HALO_DEPTH;
+  halo.frustumCulled = false;
+  scene.add(halo);
 
   const pack = new Pack3D(assets.pack);
   scene.add(pack.group);
@@ -316,11 +346,46 @@ export function mountPackOpening(
     );
   }
 
+  /** Brings a floodlight mast to `value` (0 = off, 1 = on). */
+  const fadeMast = (i: number, value: number, duration: number, delay = 0): Promise<void> => {
+    let from = 0;
+    return tween(
+      duration,
+      (t) => (masts.levels[i] = from + (value - from) * ease.quadOut(t)),
+      delay,
+      () => (from = masts.levels[i] ?? 0),
+    );
+  };
+
   // ─── Layout ───────────────────────────────────────────────────────────────────────────────
   const view = { h: 1, w: 1 };
+  /** Where floodlight `i` shines on the plane of the cards (below the page's top bar and the bars). */
+  const spotOf = (i: number): { x: number; y: number } => ({
+    x: (SPOTS[i] ?? 0) * view.w,
+    y: view.h * (camera.aspect < 1 ? 0.36 : 0.4),
+  });
+  const mastHead = new THREE.Vector3();
+  const mastTarget = new THREE.Vector3(0, -STADIUM_EYE, -10);
   const layout = (): void => {
     view.h = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     view.w = view.h * camera.aspect;
+    // Each mast's head sits on the line from the eye through its spot, far behind the cards.
+    for (let i = 0; i < masts.levels.length; i++) {
+      const depth = MAST_DEPTH[i] ?? 60;
+      const k = (camera.position.z + depth) / camera.position.z;
+      const { x, y } = spotOf(i);
+      mastHead.set(x * k, y * k, -depth);
+      masts.place(
+        i,
+        mastHead,
+        -STADIUM_EYE,
+        mastTarget,
+        Math.min(1, Math.max(0.42, camera.aspect)),
+      );
+    }
+    const k = (camera.position.z + HALO_DEPTH) / camera.position.z;
+    halo.scale.set(view.w * k, view.h * k, 1);
+    haloUniforms.uAspect.value = camera.aspect;
   };
   layout();
   const packScale = (): number =>
@@ -668,28 +733,29 @@ export function mountPackOpening(
   };
 
   // ─── The best card ────────────────────────────────────────────────────────────────────────
+  /** The ground goes dark: the floodlights cut out one after the other, the bars close in. */
   const darken = async (amount: number): Promise<void> => {
     audio.droneStart();
     audio.startMurmur();
-    void to(backdropUniforms.uPower, { value: 0.02 }, 0.6);
+    void to(haloUniforms.uPower, { value: 0.02 }, 0.6);
     void to(
       post,
       { vignette: 0.55 + 0.3 * amount, bars: (camera.aspect < 1 ? 0.06 : 0.085) * amount },
       0.7,
       ease.cubicInOut,
     );
-    await wait(0.5);
+    masts.levels.forEach((_, i) => void fadeMast(i, 0, 0.12, 0.05 + 0.09 * i));
+    sound(() => audio.boom(0.4, 70, 30, 0.7));
+    await wait(0.9);
   };
 
   const lightsOn = async (count: number): Promise<void> => {
     announce('lights');
-    const spots = [-0.42, 0.42, -0.15, 0.15];
     for (let i = 0; i < count; i++) {
       const { light, beam } = floodlights[i] as { light: Flare; beam: Rays };
-      const x = (spots[i] ?? 0) * view.w;
-      // Below the page's top bar, a little lower on a phone held upright.
-      const y = view.h * (camera.aspect < 1 ? 0.36 : 0.42);
-      light.mesh.position.set(x, y, -0.5);
+      const { x, y } = spotOf(i);
+      const k = (camera.position.z + 0.5) / camera.position.z;
+      light.mesh.position.set(x * k, y * k, -0.5);
       light.colour.setRGB(1, 0.95, 0.85);
       beam.mesh.position.set(x, y, -1.5);
       beam.mesh.rotation.z = Math.PI + Math.atan2(x, y + view.h * 0.2) * -1;
@@ -697,12 +763,20 @@ export function mountPackOpening(
       sound(() => audio.floodlight(x / (view.w / 2)));
       void to(light, { intensity: 1.5 }, 0.08, ease.quadOut);
       void to(beam, { intensity: 0.55 }, 0.25, ease.quadOut);
-      void to(backdropUniforms.uPower, { value: 0.06 + 0.07 * (i + 1) }, 0.3);
+      void fadeMast(i, 1, 0.08);
+      void to(haloUniforms.uPower, { value: 0.06 + 0.07 * (i + 1) }, 0.3);
       shake(0.05);
       await wait(tuning.lightsGap);
     }
     sound(() => audio.whistle(0.55));
     await wait(0.35);
+  };
+
+  /** Every floodlight back on (after the reveal). */
+  const allLightsOn = (): void => {
+    masts.levels.forEach((level, i) => {
+      if (level < 1) void fadeMast(i, 1, 0.25, 0.06 * i);
+    });
   };
 
   const lightsOff = (): void => {
@@ -733,6 +807,7 @@ export function mountPackOpening(
   };
 
   const hideCrest = async (): Promise<void> => {
+    announce('pause');
     void to(flare, { intensity: 0.2, size: 2 }, 0.4);
     const s0 = crest.scale.x;
     await tween(0.35, (t) => {
@@ -762,6 +837,7 @@ export function mountPackOpening(
       audio.droneSwell(3000, seconds);
     });
     if (!reduced) void to(post, { zoomBlur: 0.45 * strength }, seconds, ease.quadIn);
+    void to(ground, { light: 0.45 }, seconds * 0.8);
     void to(flare, { intensity: 1.6 + strength, size: 3 + 3 * strength }, seconds, ease.cubicIn);
     flare.mesh.position.set(0, view.h * 0.02, -0.4);
     const converge = window.setInterval(() => {
@@ -847,8 +923,11 @@ export function mountPackOpening(
     void to(hero.card, { glow: 0.14, flash: 0 }, 1.4, ease.quadOut);
     void tween(0.9, (t) => (hero.card.sweep = -1.2 + 4 * ease.quadInOut(t)), 0.5);
     void to(post, { bars: 0, vignette: 0.55 }, 1.2, ease.cubicInOut, 0.5);
-    void to(backdropUniforms.uPower, { value: 0.35 + 0.25 * strength }, 1.2);
-    backdropUniforms.uTint.value.copy(bestColour);
+    void to(haloUniforms.uPower, { value: 0.35 + 0.25 * strength }, 1.2);
+    haloUniforms.uTint.value.copy(bestColour);
+    allLightsOn();
+    void to(ground, { light: 1 }, 0.9, ease.quadOut, 0.15);
+    if (rank >= 4) stadium.crowdReaction('goal');
     if (rank >= 6) void celebrate();
     await wait(1.2);
   };
@@ -903,15 +982,19 @@ export function mountPackOpening(
         audio.bell(587.33, 0.12, 1.8);
       });
       await wait(tuning.clueHold);
+      // Each clue leaves the screen before the next one comes (they must never overlap).
+      announce('pause');
+      await wait(tuning.clueGap);
     }
     await showCrest();
     await wait(tuning.clueHold * (full ? 1 : 0.7));
+    await hideCrest();
     if (full) {
+      await wait(tuning.clueGap);
       announce('position');
       sound(() => audio.bell(739.99, 0.12, 1.8));
       await wait(tuning.clueHold * 0.9);
     }
-    await hideCrest();
     lightsOff();
     await tension(full ? tuning.tension : tuning.tension * 0.55, strength);
     skipping = false;
@@ -920,28 +1003,8 @@ export function mountPackOpening(
     enterHero();
   };
 
-  /** A bronze card: a quick turn — and now and then, the ground plays a joke first. */
+  /** A bronze card: a quick turn, the ground stays lit. */
   const smallReveal = async (): Promise<void> => {
-    const joke = random() < tuning.gagChance ? (random() < 0.5 ? 'gag-flicker' : 'gag-dog') : null;
-    if (joke === 'gag-flicker') {
-      announce('gag-flicker');
-      await darken(0.4);
-      const { light } = floodlights[0] as { light: Flare; beam: Rays };
-      light.mesh.position.set(0, view.h * 0.4, -0.5);
-      light.size = 1.4;
-      sound(() => audio.flicker());
-      await tween(1.4, (t) => {
-        light.intensity = Math.sin(t * 40 + Math.sin(t * 13) * 3) > 0.3 ? 1.2 * (1 - t) : 0;
-      });
-      light.intensity = 0;
-      await wait(0.3);
-    } else if (joke === 'gag-dog') {
-      announce('gag-dog');
-      await wait(1.6);
-      sound(() => audio.metal(0.5));
-      shake(0.08);
-      await wait(0.7);
-    }
     await tension(0.6, 0);
     await impact(0);
     enterHero();
@@ -963,7 +1026,7 @@ export function mountPackOpening(
     hero.tiltX.target = 0;
     hero.tiltY.target = 0;
     void to(heroRays, { intensity: 0 }, 0.6);
-    void to(backdropUniforms.uPower, { value: 0.3 }, 0.8);
+    void to(haloUniforms.uPower, { value: 0.3 }, 0.8);
     const heroCell = g.pos(actors.length - 1);
     void to(
       hero.pose,
@@ -1025,6 +1088,8 @@ export function mountPackOpening(
     if (actors.every((x) => x.faceUp)) announce('summary');
   };
 
+  const tearPlane = new THREE.Vector4();
+
   // ─── Frame ────────────────────────────────────────────────────────────────────────────────
   const unsubscribe = stage.onFrame((frame) => {
     const dt = frame.wallDt * tuning.speed * boost;
@@ -1079,7 +1144,15 @@ export function mountPackOpening(
         });
       }
     }
-    for (const a of actors) a.apply(now, dt);
+    // While the cards are inside the pack, nothing of them shows below its torn edge (the pack
+    // sways and falls: a corner would poke through its front).
+    const inside = step === 'opening' && pack.group.visible;
+    if (inside) pack.tearPlane(tearPlane);
+    for (const a of actors) {
+      if (inside) a.card.clip.copy(tearPlane);
+      else a.card.clip.set(0, 0, 0, 1);
+      a.apply(now, dt);
+    }
 
     particles.pixelScale = canvas.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
     particles.update(dt);
@@ -1090,8 +1163,10 @@ export function mountPackOpening(
       light.update(camera);
       beam.update(now);
     }
-    backdropUniforms.uTime.value = now;
-    backdropUniforms.uRes.value.set(canvas.width, canvas.height);
+    haloUniforms.uTime.value = now;
+    masts.update();
+    stadium.setLighting((0.12 + 0.88 * masts.power) * ground.light);
+    stadium.update(now);
     // A flash hits hard and fades fast (a white-out must not linger).
     post.flash = Math.max(0, post.flash * Math.exp(-5 * frame.wallDt) - frame.wallDt * 0.3);
     post.chromatic = Math.max(0, post.chromatic - frame.wallDt * 0.04);
@@ -1160,6 +1235,8 @@ export function mountPackOpening(
         beam.dispose();
       }
       crestTexture.dispose();
+      masts.dispose();
+      stadium.dispose();
       stage.dispose();
     },
   };
