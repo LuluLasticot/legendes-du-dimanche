@@ -58,3 +58,25 @@ test('the pre-match screen starts a match', async ({ page }) => {
     })
     .toBeGreaterThan(3);
 });
+
+test('the clubs lab searches the pilot and opens a club sheet', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/lab/clubs');
+
+  await expect(page.getByRole('status')).toContainText('clubs');
+  await page.getByRole('searchbox').fill('cambrai');
+  await expect(page.getByRole('status')).toContainText(/\d+ clubs?/);
+  await page.getByRole('button', { name: /AC Cambrai/ }).click();
+
+  // Crest, kits, sponsors and squad of the club.
+  await expect(page.getByRole('heading', { level: 2, name: 'AC Cambrai' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'AC Cambrai' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Maillots' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sponsors fictifs' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Gardiens' })).toBeVisible();
+
+  await page.getByRole('button', { name: /Retour à la galerie/ }).click();
+  await expect(page.getByRole('searchbox')).toBeVisible();
+  expect(errors).toEqual([]);
+});

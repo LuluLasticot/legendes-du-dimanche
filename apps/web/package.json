@@ -14,7 +14,9 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@legendes/data": "workspace:*",
     "@legendes/engine": "workspace:*",
+    "@legendes/render2d": "workspace:*",
     "@legendes/render3d": "workspace:*",
     "@legendes/shared": "workspace:*",
     "@legendes/ui": "workspace:*",
@@ -24,8 +26,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tweakpane": "^4.0.5",
-    "zod": "catalog:",
-    "@legendes/render2d": "workspace:*"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
