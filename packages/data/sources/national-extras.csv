@@ -1,0 +1,10 @@
+# National 1 / National 2 clubs of the Hauts-de-France outside the district de l'Escaut (Wikipédia, 2026-27).
+# Same columns as clubs-hdf.csv; merged in by scripts/import-fff-export.ts.
+id,name,short_name,city,insee,district,division,division_known,primary,secondary,tertiary,pattern,stadium,surface,founded,verified,source
+as-steenvoorde-59580,AS Steenvoorde,Steenvoorde,Steenvoorde,59580,flandres,n2-d,oui,,,,,Stade municipal de Steenvoorde,grass,,non,"Wikipédia, Championnat de France de football de quatrième / cinquième division 2026-2027"
+fc-chambly-oise-60139,FC Chambly Oise,Chambly,Chambly,60139,oise,n1-a,oui,,,,,Stade du Marais,grass,,non,"Wikipédia, Championnat de France de football de quatrième / cinquième division 2026-2027"
+ic-croix-59163,IC Croix,IC Croix,Croix,59163,flandres,n2-d,oui,,,,,Complexe Henri Seigneur,artificial,,non,"Wikipédia, Championnat de France de football de quatrième / cinquième division 2026-2027"
+olympique-saint-quentin-02691,Olympique Saint-Quentin,OSQ,Saint-Quentin,02691,aisne,n2-d,oui,,,,,Stade Paul Debresie,grass,,non,"Wikipédia, Championnat de France de football de quatrième / cinquième division 2026-2027"
+us-chantilly-60141,US Chantilly,Chantilly,Chantilly,60141,oise,n1-a,oui,,,,,Stade des Bourgognes,grass,,non,"Wikipédia, Championnat de France de football de quatrième / cinquième division 2026-2027"
+us-le-pays-du-valois-60500,US Le Pays du Valois,Pays du Valois,Le Plessis-Belleville,60500,oise,n1-a,oui,,,,,Stade municipal de Le Plessis-Belleville,grass,,non,"Wikipédia, Championnat de France de football de quatrième / cinquième division 2026-2027"
+us-vimy-62861,US Vimy,US Vimy,Vimy,62861,artois,n2-d,oui,,,,,Stade de la Mine,grass,,non,"Wikipédia, Championnat de France de football de quatrième / cinquième division 2026-2027"

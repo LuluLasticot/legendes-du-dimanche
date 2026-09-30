@@ -15,7 +15,7 @@ export const LEAGUES: readonly League[] = [
   },
 ];
 
-/** The seven districts of the league (Wikipédia, "Ligue de football des Hauts-de-France"). */
+/** The eight districts of the league (FFF `cdgs` list, 2026-09-30: cg_no 119, 88, 92, 89, 90, 91, 120, 121). */
 export const DISTRICTS: readonly District[] = [
   { id: 'aisne', leagueId: 'hauts-de-france', name: "District de l'Aisne", departments: ['02'] },
   { id: 'artois', leagueId: 'hauts-de-france', name: "District de l'Artois", departments: ['62'] },
@@ -25,11 +25,23 @@ export const DISTRICTS: readonly District[] = [
     name: "District de la Côte d'Opale",
     departments: ['62'],
   },
-  { id: 'escaut', leagueId: 'hauts-de-france', name: "District de l'Escaut", departments: ['59'] },
+  {
+    id: 'escaut',
+    leagueId: 'hauts-de-france',
+    name: "District de l'Escaut",
+    // Mostly the Nord; a few communes of the Cambrésis and the Douaisis lie in the Pas-de-Calais.
+    departments: ['59', '62'],
+  },
   {
     id: 'flandres',
     leagueId: 'hauts-de-france',
     name: 'District des Flandres',
+    departments: ['59'],
+  },
+  {
+    id: 'maritime-nord',
+    leagueId: 'hauts-de-france',
+    name: 'District Maritime Nord',
     departments: ['59'],
   },
   { id: 'oise', leagueId: 'hauts-de-france', name: "District de l'Oise", departments: ['60'] },

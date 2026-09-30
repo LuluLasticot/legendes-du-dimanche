@@ -4,31 +4,36 @@ What feeds `clubs-hdf.csv` and the reference tables, and what does not. Rules: `
 
 ## Used
 
-| Data                                                                                                                                                  | Source                                                                                                                                         | Licence / terms                    |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| Districts (7) and the depth of the Escaut district (D1 to D6)                                                                                         | Wikipédia, « Ligue de football des Hauts-de-France », read on 2026-09-29                                                                       | CC BY-SA 4.0                       |
-| Levels of the pyramid in 2026-27 (Ligue 3, National 1, National 2, R1 to R3) and the clubs of National 1 (3 groups) and National 2 (8 groups)         | Wikipédia, « Championnat de France de football de quatrième / cinquième division 2026-2027 », wikitext read by script (not summarised)         | CC BY-SA 4.0                       |
-| Territory of the district de l'Escaut: communes of the arrondissements of Avesnes-sur-Helpe, Cambrai, Douai and Valenciennes (`escaut-communes.json`) | Wikipédia (arrondissement pages) and INSEE codes from geo.api.gouv.fr                                                                          | CC BY-SA 4.0 · Licence Ouverte 2.0 |
-| Football clubs of the Escaut communes: name, commune, year of registration                                                                            | Annuaire des entreprises API (recherche-entreprises.api.gouv.fr): associations, activity 93.12Z, kept when the name looks like a football club | Licence Ouverte 2.0                |
-| Grounds and their surface (natural, synthetic, stabilised)                                                                                            | Recensement des équipements sportifs, « Terrain de football », API of equipements.sports.gouv.fr                                               | Licence Ouverte 2.0                |
+| Data                                                                                                                                        | Source                                                                                                                                                      | Terms                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| Clubs of the Escaut district (343 registered): name, commune, postal code, kit colours, grounds and their surface                           | FFF competition API, `/api/clubs?cdg.cg_no=89`, **saved by hand by Lucas from his own browser on 2026-09-30**                                               | Undocumented API, see below |
+| Division of each club's men's senior team (Régional 1, Escaut D1 to D6): 28 + 24 + 36 + 40 + 60 + 70 + 99 engagements                       | Same API, `/api/engagements?competition.cp_no=…` for the competitions 452054 (R1), 455272, 455280, 455298, 455300, 455301, 455302 (D1 to D6), saved by hand | idem                        |
+| District numbers (Aisne 119, Artois 88, Côte d'Opale 92, Escaut 89, Flandres 90, Maritime Nord 91, Oise 120, Somme 121) and the league (87) | Same API, `/api/cdgs`                                                                                                                                       | idem                        |
+| National 1 / National 2 clubs of the Hauts-de-France outside the district (`national-extras.csv`), and Saint Amand FC                       | Wikipédia, « Championnat de France de football de quatrième / cinquième division 2026-2027 »                                                                | CC BY-SA 4.0                |
+| Communes and INSEE codes (`hdf-communes.json`)                                                                                              | geo.api.gouv.fr                                                                                                                                             | Licence Ouverte 2.0         |
 
-`scripts/bootstrap-escaut.ts` chained these sources once to write `clubs-hdf.csv` (calls are cached in
-`.cache/`, not versioned; rerunning it overwrites hand edits). Requests carry a User-Agent naming the
-project, as Wikimedia and the APIs ask.
+**How the file was made.** `scripts/import-fff-export.ts` reads the JSON files saved in a local folder and
+writes `clubs-hdf.csv`. It never calls the network. A club goes in when it has a men's senior team in the
+listed divisions, its division is the highest of its teams, and its colours and ground come from its file.
+The raw files hold names and contacts of club officials (personal data): **they are never committed**,
+only the club-level facts reach the CSV.
 
-### What is NOT known, and how the file says so
+**The FFF API.** It is public in the sense that a browser can open it, but it has no documentation,
+no licence, and since June 2026 a bot-detection firewall that refuses programs (checked twice: HTTP 403).
+Here a person saved a few dozen files by hand. Club names, divisions, colours and grounds are facts about
+associations, not personal data, but the terms of use are unclear ⚖️: **ask the league and the district
+for an official access** (`docs/courriers/demande-acces-donnees.md`) before the public launch, and be
+ready to replace this file with a licensed source.
 
-- **A district club's division.** No open source gives it. The Escaut clubs get a **drawn** division
-  (seeded, stable) marked `division_known = non`. Only the National 1 / National 2 clubs come with a
-  division read from Wikipédia (`division_known = oui`).
-- **Whether every listed association is a football club that still plays**, and whether the list is
-  complete: the Annuaire only holds associations registered with a SIRET, so small clubs may be missing
-  and a few multi-sport or youth structures may have slipped in. Every line is `verified = non`.
-- **Kit colours and patterns**: a deterministic guess, marked `guess`.
-- **The territory of the district** is the union of four arrondissements per Wikipédia: to confirm at
-  its edges.
+### What is not known
 
-Kit colours, patterns and crests are **not** sourced from clubs' logos. Crests are generated by the game.
+- **Kit patterns** (stripes, hoops…): not in any file. Clubs with known colours get a plain kit; the others
+  a guess, marked `guess`.
+- **Clubs in Régional 2 / 3**: their files were not saved yet, so they are missing (the file
+  `eng-r2-p*.json`, `eng-r3-p*.json` of the league would add them).
+- **Clubs without a men's senior team** (youth, futsal, women only): left out.
+- **Year of foundation**: not in the files.
+- Every line is `verified = non` until a person has read it.
 
 ## Not used (and why)
 
@@ -38,4 +43,5 @@ Kit colours, patterns and crests are **not** sourced from clubs' logos. Crests a
 - Transfermarkt, Flashscore and similar: terms forbid automated extraction.
 - Any logo or photo found online.
 - Summaries of web pages produced by a language model: they mix up leagues and invent lines. A line
-  of the CSV comes from a page a person read, or from a data file parsed by a script.
+  of the CSV comes from a file a person saved, or from a data file parsed by a script.
+- Any program calling the FFF's servers: only files saved by hand from a browser are read.
