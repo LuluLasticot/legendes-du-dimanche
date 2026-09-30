@@ -80,3 +80,26 @@ test('the clubs lab searches the pilot and opens a club sheet', async ({ page })
   await expect(page.getByRole('searchbox')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('the cards lab shows every template and finds a player', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/lab/cards');
+
+  // Bronze, silver and gold (common and rare), and the two promos.
+  const cards = page.getByRole('img', { name: /^Carte de / });
+  await expect(cards).toHaveCount(8);
+  await expect(page.getByText('Onze du week-end ·')).toBeVisible();
+  await expect(page.getByText('Ancien pro ·')).toBeVisible();
+
+  await page.getByRole('searchbox').fill('escaudain');
+  await expect(page.getByRole('status')).toContainText('12 cartes');
+  await expect(cards).toHaveCount(20);
+
+  // Tuning redraws the cards; the reset button comes back to the defaults.
+  const reset = page.getByRole('button', { name: 'Valeurs par défaut' });
+  await expect(reset).toBeDisabled();
+  await page.getByLabel('Grain').fill('0');
+  await expect(reset).toBeEnabled();
+  expect(errors).toEqual([]);
+});

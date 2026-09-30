@@ -26,6 +26,14 @@
   text-transform: uppercase;
 }
 
+/* Fonts of the generated SVGs (cards, crests, kits): the page's loaded fonts, not the fallback. */
+.ld-font-display {
+  font-family: var(--ld-font-display);
+}
+.ld-font-sans {
+  font-family: var(--ld-font-sans);
+}
+
 /* Chalk markings of a pitch seen from above, drawn with gradients (no asset). */
 @utility pitch-lines {
   background-image:

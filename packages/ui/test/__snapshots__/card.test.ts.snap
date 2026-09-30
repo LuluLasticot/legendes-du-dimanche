@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`card templates > bronze-common: the drawing does not change by accident 1`] = `"fe6df777 (15044 chars)"`;
+
+exports[`card templates > bronze-rare: the drawing does not change by accident 1`] = `"552a3d0d (15953 chars)"`;
+
+exports[`card templates > former-pro: the drawing does not change by accident 1`] = `"742c6d55 (16916 chars)"`;
+
+exports[`card templates > gold-common: the drawing does not change by accident 1`] = `"5e954b3f (16673 chars)"`;
+
+exports[`card templates > gold-rare: the drawing does not change by accident 1`] = `"792802ba (16464 chars)"`;
+
+exports[`card templates > silver-common: the drawing does not change by accident 1`] = `"b6af7061 (14644 chars)"`;
+
+exports[`card templates > silver-rare: the drawing does not change by accident 1`] = `"68c92c4f (15941 chars)"`;
+
+exports[`card templates > weekend: the drawing does not change by accident 1`] = `"d320017a (16487 chars)"`;

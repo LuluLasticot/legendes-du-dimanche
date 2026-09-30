@@ -1,34 +1,23 @@
-import { playerCardSchema } from '@legendes/shared';
+import { cardOf, generateSquad, WORLD } from '@legendes/data';
 import { getTranslations } from 'next-intl/server';
-import { CardPreview } from '@/components/card-preview';
+import { PlayerCard } from '@/components/card/player-card';
 import { DeterminismBadge } from '@/components/determinism-badge';
 
-// Fictional player (GDD §5.1 example). Parsed with the shared schema like any external data.
-const previewCard = playerCardSchema.parse({
-  id: '4f0a2b1c-3d4e-4f60-8a7b-9c0d1e2f3a4b',
-  identityId: '5f0a2b1c-3d4e-4f60-8a7b-9c0d1e2f3a4b',
-  clubId: '6f0a2b1c-3d4e-4f60-8a7b-9c0d1e2f3a4b',
-  displayName: 'K. Benali',
-  rating: 74,
-  tier: 'silver',
-  rarity: 'rare',
-  kind: 'outfield',
-  position: 'LW',
-  secondaryPositions: ['LM'],
-  preferredFoot: 'right',
-  weakFoot: 3,
-  skillMoves: 4,
-  age: 27,
-  heightCm: 176,
-  traits: ['workhorse'],
-  attributes: { pace: 82, shooting: 64, passing: 69, dribbling: 71, defending: 38, physical: 61 },
-});
+/** The best player of the pilot, as a team-of-the-weekend card: generated, fictional, the same on every build. */
+function showcaseCard() {
+  const best = WORLD.clubs
+    .filter((club) => club.divisionId.startsWith('n1-'))
+    .flatMap((club) => generateSquad(club).players.map((player) => ({ player, club })))
+    .sort((a, b) => b.player.rating - a.player.rating || a.player.id.localeCompare(b.player.id))[0];
+  if (!best) throw new Error('The pilot has no National 1 club');
+  return { card: cardOf(best.player, 'weekend'), club: best.club };
+}
 
 const FEATURES = ['packs', 'collectives', 'moments'] as const;
 
 export default async function HomePage() {
   const t = await getTranslations();
-  if (previewCard.kind !== 'outfield') throw new Error('Preview card must be an outfield player');
+  const showcase = showcaseCard();
 
   return (
     <div className="relative isolate flex min-h-dvh flex-col overflow-hidden">
@@ -67,9 +56,15 @@ export default async function HomePage() {
 
         <section className="flex flex-col items-center gap-3 md:items-end">
           <div className="rotate-[-4deg] transition-transform duration-500 hover:rotate-0">
-            <CardPreview card={previewCard} clubColors={['#0f5132', '#f4f1e8']} />
+            <PlayerCard
+              card={showcase.card}
+              club={showcase.club}
+              className="w-[260px] drop-shadow-[0_24px_30px_rgb(0_0_0/0.6)]"
+            />
           </div>
-          <p className="text-xs text-chalk-faint">{t('home.cardPreview')}</p>
+          <p className="max-w-[260px] text-center text-xs text-chalk-faint">
+            {t('home.cardPreview')}
+          </p>
         </section>
       </main>
 
