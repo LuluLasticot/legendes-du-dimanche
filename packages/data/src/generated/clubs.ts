@@ -331,7 +331,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Beuvry-la-Forêt',
     insee: '59080',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#1b8a3a',
@@ -469,7 +469,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Hautmont',
     insee: '59291',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#1f5fbf',
@@ -1113,7 +1113,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Ligny-en-Cambrésis',
     insee: '59349',
     districtId: 'escaut',
-    divisionId: 'escaut-d4',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#f6c400',
@@ -1159,7 +1159,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Caudry',
     insee: '59139',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#1b8a3a',
@@ -1205,7 +1205,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Lambres-lez-Douai',
     insee: '59329',
     districtId: 'escaut',
-    divisionId: 'escaut-d1',
+    divisionId: 'hdf-r2',
     divisionKnown: true,
     colours: {
       primary: '#1b8a3a',
@@ -1389,7 +1389,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Villers-Outréaux',
     insee: '59624',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r2',
     divisionKnown: true,
     colours: {
       primary: '#1f5fbf',
@@ -1895,7 +1895,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Raismes',
     insee: '59491',
     districtId: 'escaut',
-    divisionId: 'escaut-d1',
+    divisionId: 'hdf-r2',
     divisionKnown: true,
     colours: {
       primary: '#1f5fbf',
@@ -2470,7 +2470,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Cambrai',
     insee: '59122',
     districtId: 'escaut',
-    divisionId: 'escaut-d3',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#111111',
@@ -2838,7 +2838,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Rousies',
     insee: '59514',
     districtId: 'escaut',
-    divisionId: 'escaut-d3',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#f6c400',
@@ -3068,7 +3068,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Aniche',
     insee: '59008',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#f6c400',
@@ -3114,7 +3114,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Guesnain',
     insee: '59276',
     districtId: 'escaut',
-    divisionId: 'escaut-d3',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#f6c400',
@@ -3275,7 +3275,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Valenciennes',
     insee: '59606',
     districtId: 'escaut',
-    divisionId: 'escaut-d3',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#1b8a3a',
@@ -3551,7 +3551,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Auby',
     insee: '59028',
     districtId: 'escaut',
-    divisionId: 'escaut-d4',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#1f5fbf',
@@ -3620,7 +3620,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Bavay',
     insee: '59053',
     districtId: 'escaut',
-    divisionId: 'escaut-d3',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#1f5fbf',
@@ -3666,7 +3666,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Berlaimont',
     insee: '59068',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r3',
     divisionKnown: true,
     colours: {
       primary: '#c8102e',
@@ -3942,7 +3942,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Escaudain',
     insee: '59205',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r2',
     divisionKnown: true,
     colours: {
       primary: '#c8102e',
@@ -4011,7 +4011,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Fourmies',
     insee: '59249',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r2',
     divisionKnown: true,
     colours: {
       primary: '#1f5fbf',
@@ -4126,7 +4126,7 @@ export const CLUBS: readonly Club[] = [
     city: 'Hordain',
     insee: '59313',
     districtId: 'escaut',
-    divisionId: 'escaut-d2',
+    divisionId: 'hdf-r2',
     divisionKnown: true,
     colours: {
       primary: '#111111',
