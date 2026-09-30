@@ -15,7 +15,7 @@ export const KIT_PATTERNS = [
   'plain', // uni
   'stripes', // rayé
   'hoops', // cerclé
-  'bands', // bandes
-  'checkered', // damier
+  'sash', // écharpe (bande en diagonale)
+  'checks', // damier
 ] as const;
 export type KitPattern = (typeof KIT_PATTERNS)[number];

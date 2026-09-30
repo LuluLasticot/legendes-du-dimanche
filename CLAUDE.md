@@ -13,7 +13,7 @@ Jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe, f
 
 ## Phase en cours
 
-**Phase 3 — Univers et cartes** (Phase 2 terminée le 29/09/2026). Découpage validé : univers (schéma, import, seed) → générateur d'effectifs → blasons, maillots, sponsors → cartes 2D → cartes 3D holographiques → personnages aux couleurs du club → pages publiques et images de partage → bilan. Étapes 1 (univers) et 2 (effectifs générés) faites. Univers (205 clubs : haut de la pyramide des Hauts-de-France et district de l'Escaut avec divisions, couleurs et stades réels, saison 2026-27 ; R1 à R3 lus, autres districts à ajouter plus tard).
+**Phase 3 — Univers et cartes** (Phase 2 terminée le 29/09/2026). Découpage validé : univers (schéma, import, seed) → générateur d'effectifs → blasons, maillots, sponsors → cartes 2D → cartes 3D holographiques → personnages aux couleurs du club → pages publiques et images de partage → bilan. Étapes 1 (univers), 2 (effectifs générés) et 3 (blasons, maillots, sponsors, `/lab/clubs`) faites. Univers (205 clubs : haut de la pyramide des Hauts-de-France et district de l'Escaut avec divisions, couleurs et stades réels, saison 2026-27 ; R1 à R3 lus, autres districts à ajouter plus tard).
 Mettre à jour cette ligne à chaque changement de phase.
 
 ## Stack

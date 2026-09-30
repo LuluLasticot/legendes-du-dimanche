@@ -297,6 +297,139 @@
     },
     "match": {
       "title": "Match"
+    },
+    "clubs": {
+      "title": "Clubs du pilote",
+      "intro": "Les clubs du monde de jeu avec leur blason généré, leurs maillots, leurs sponsors fictifs et leur effectif. Tout est recalculé à partir de l'identifiant du club : rien n'est stocké.",
+      "search": "Chercher un club ou une ville",
+      "allDivisions": "Toutes les divisions",
+      "count": "{count, plural, =0 {Aucun club} one {# club} other {# clubs}}",
+      "gallery": "Galerie",
+      "noResult": "Aucun club ne correspond.",
+      "back": "Retour à la galerie",
+      "foundation": "Fondation",
+      "foundedUnknown": "Inconnue",
+      "stadium": "Stade",
+      "division": "Division",
+      "colours": "Couleurs",
+      "coloursSource": {
+        "known": "couleurs relevées",
+        "guess": "couleurs supposées (à corriger)"
+      },
+      "unverified": "Fiche à vérifier",
+      "unverifiedHelp": "Compilée depuis des données ouvertes, pas encore relue par une personne du club.",
+      "divisionProvisional": "Division provisoire",
+      "kits": {
+        "title": "Maillots",
+        "home": "Domicile",
+        "away": "Extérieur",
+        "keeper": "Gardien"
+      },
+      "sponsors": {
+        "title": "Sponsors fictifs",
+        "shirt": "Maillot",
+        "shorts": "Short",
+        "board": "Panneaux"
+      },
+      "workshop": {
+        "title": "Atelier du blason",
+        "help": "Essaie une autre forme, partition ou meuble : le blason d'origine reste celui de la graine du club.",
+        "shape": "Forme",
+        "partition": "Partition",
+        "charge": "Meuble",
+        "style": "Style",
+        "reset": "Blason d'origine",
+        "shapes": {
+          "heater": "Écu",
+          "french": "Écu français",
+          "pointed": "Écu pointu",
+          "round": "Rond",
+          "banner": "Fanion",
+          "hex": "Hexagone"
+        },
+        "partitions": {
+          "plain": "Uni",
+          "pale": "Parti",
+          "fess": "Coupé",
+          "bend": "Tranché",
+          "stripes": "Pals",
+          "hoops": "Fasces",
+          "chevron": "Chevron",
+          "cross": "Croix",
+          "saltire": "Sautoir",
+          "quarterly": "Écartelé",
+          "chief": "Chef",
+          "pile": "Chape"
+        },
+        "charges": {
+          "ball": "Ballon",
+          "star": "Étoile",
+          "tower": "Tour",
+          "belfry": "Beffroi",
+          "sheaf": "Gerbe",
+          "headframe": "Chevalement",
+          "terril": "Terril",
+          "fleur": "Fleur de lys",
+          "crown": "Couronne",
+          "wave": "Vagues",
+          "sun": "Soleil",
+          "diamond": "Losange"
+        },
+        "styles": {
+          "charge": "Meuble seul",
+          "charge-ribbon": "Meuble et ville",
+          "monogram": "Monogramme"
+        }
+      },
+      "squad": {
+        "title": "Effectif",
+        "rating": "Note de l'équipe",
+        "formation": "Système",
+        "style": "Style de jeu",
+        "columns": {
+          "number": "N°",
+          "name": "Joueur",
+          "position": "Poste",
+          "age": "Âge",
+          "archetype": "Profil",
+          "traits": "Traits",
+          "rating": "Note"
+        },
+        "lines": {
+          "goalkeeper": "Gardiens",
+          "defence": "Défenseurs",
+          "midfield": "Milieux",
+          "attack": "Attaquants"
+        },
+        "starter": "Titulaire"
+      },
+      "archetypes": {
+        "wall": "Mur",
+        "sweeper-keeper": "Libéro",
+        "cat": "Chat",
+        "leader": "Patron",
+        "ball-player": "Relanceur",
+        "stopper": "Stoppeur",
+        "wing-back": "Latéral piston",
+        "full-back": "Latéral",
+        "anchor": "Sentinelle",
+        "box-to-box": "Box-to-box",
+        "playmaker": "Meneur",
+        "pitbull": "Pitbull",
+        "wide-midfielder": "Milieu de côté",
+        "winger": "Ailier percutant",
+        "poacher": "Renard des surfaces",
+        "target-man": "Pivot",
+        "false-nine": "Faux 9"
+      },
+      "playStyles": {
+        "balanced": "Équilibré",
+        "counter": "Contre-attaque",
+        "possession": "Possession",
+        "long-ball": "Jeu long",
+        "high-press": "Pressing haut",
+        "low-block": "Bloc bas"
+      }
     }
   },
   "commentary": {

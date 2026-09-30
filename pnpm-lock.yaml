@@ -220,6 +220,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@legendes/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@legendes/engine':
         specifier: workspace:*
         version: link:../../packages/engine
