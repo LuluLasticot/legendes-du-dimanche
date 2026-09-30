@@ -4,3 +4,4 @@ export * from './world.ts';
 export * from './universe.ts';
 export * from './sql.ts';
 export * from './csv.ts';
+export * from './squad/index.ts';
