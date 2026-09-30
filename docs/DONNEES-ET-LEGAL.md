@@ -28,7 +28,7 @@ Le monde est peuplé de joueurs fictifs ; les vrais joueurs **choisissent** d'y 
 | Résultats réels (Onze du week-end, buteurs, épopées) | **Déclarations des clubs** (Espace Club) ; idéalement **partenariat** avec une ligue ou la FFF | Cartes dynamiques | Lancement officiel |
 
 ### 2.2 Ce qu'on n'utilise pas
-- **L'API interne de la FFF (api-dofa)** : non publique, sans documentation officielle depuis 2024. Les feuilles de match (compositions, buteurs) sont fermées au public (erreur 401) depuis la cyberattaque de mars 2024. Les contournements par jeton récupéré ne doivent **pas** être utilisés (accès non autorisé, fragilité, risque juridique).
+- **L'API interne de la FFF (api-dofa)** *(point revu le 30/09/2026 : pour amorcer le pilote, Lucas a enregistré à la main, dans son navigateur, quelques dizaines de fichiers de cette API ; aucun programme ne l'appelle ; voir `packages/data/sources/SOURCES.md` et D-031 ; à remplacer par un accès officiel avant le lancement public)* : non publique, sans documentation officielle depuis 2024. Les feuilles de match (compositions, buteurs) sont fermées au public (erreur 401) depuis la cyberattaque de mars 2024. Les contournements par jeton récupéré ne doivent **pas** être utilisés (accès non autorisé, fragilité, risque juridique).
 - **Transfermarkt, Flashscore et sites équivalents** : leurs CGU interdisent l'extraction automatisée, et leurs données contiennent des données personnelles.
 - **Photos trouvées sur internet** (sites des clubs, réseaux sociaux, presse locale) : jamais.
 - **Logos réels** des clubs, districts, ligues et de la FFF : jamais sans accord écrit.

@@ -82,7 +82,7 @@ describe('club list', () => {
 
   it('builds a consistent world, and rejects an inconsistent one', () => {
     expect(buildUniverse(clubs).clubs).toHaveLength(2);
-    const stray = parseClubs(`${HEADER}\nx-62000,X,,Arras,62000,escaut,escaut-d3,non,,,,,,,,,`);
+    const stray = parseClubs(`${HEADER}\nx-80000,X,,Amiens,80000,escaut,escaut-d3,non,,,,,,,,,`);
     expect(() => buildUniverse(stray)).toThrow(/outside/);
     const unknown = parseClubs(`${HEADER}\nx-59000,X,,Ville,59000,escaut,escaut-d9,non,,,,,,,,,`);
     expect(() => buildUniverse(unknown)).toThrow(/unknown division/);
@@ -107,8 +107,8 @@ describe('club list', () => {
 });
 
 describe('reference tables', () => {
-  it('describe the pilot: seven districts, Escaut down to D6, R1 to R3, N2 and N3', () => {
-    expect(DISTRICTS).toHaveLength(7);
+  it('describe the pilot: eight districts, Escaut down to D6, R1 to R3, N1 and N2', () => {
+    expect(DISTRICTS).toHaveLength(8);
     expect(DIVISIONS.filter((d) => d.districtId === 'escaut').map(divisionLabel)).toEqual([
       'D1',
       'D2',
@@ -158,15 +158,15 @@ describe('the pilot list', () => {
     );
   });
 
-  it('holds the top of the pyramid known from a public source, and the Escaut district', () => {
+  it('holds the top of the pyramid and the Escaut district, every division from a real source', () => {
     const national = WORLD.clubs.filter((c) => getDivision(c.divisionId)?.level === 'national');
     expect(national.length).toBeGreaterThanOrEqual(9);
-    // A national club's division is never a draw.
-    expect(national.every((c) => c.divisionKnown)).toBe(true);
     expect(clubsOf({ districtId: 'escaut' }).length).toBeGreaterThanOrEqual(150);
-    // District divisions are provisional until a person has checked them.
-    const district = WORLD.clubs.filter((c) => getDivision(c.divisionId)?.level === 'district');
-    expect(district.every((c) => c.divisionKnown || !c.verified)).toBe(true);
+    // Every division comes from the federation's competition files or from Wikipédia.
+    expect(WORLD.clubs.every((c) => c.divisionKnown)).toBe(true);
+    // The district's seniors run D1 to D6: each division has clubs.
+    for (const rank of [1, 2, 3, 4, 5, 6])
+      expect(clubsOf({ divisionId: `escaut-d${rank}` }).length).toBeGreaterThan(10);
   });
 
   it.todo('every club of the pilot has been verified by a person');

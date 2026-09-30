@@ -1,0 +1,7675 @@
+{
+  "_source": "Communes of the Nord (59) and Pas-de-Calais (62): INSEE code, name and postal codes, from geo.api.gouv.fr (Licence Ouverte 2.0), 2026-09-30. The district de l'Escaut has a few clubs in the Pas-de-Calais.",
+  "communes": [
+    {
+      "code": "59001",
+      "name": "Abancourt",
+      "postalCodes": ["59268"]
+    },
+    {
+      "code": "59002",
+      "name": "Abscon",
+      "postalCodes": ["59215"]
+    },
+    {
+      "code": "59003",
+      "name": "Aibes",
+      "postalCodes": ["59149"]
+    },
+    {
+      "code": "59004",
+      "name": "Aix-en-Pévèle",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59005",
+      "name": "Allennes-les-Marais",
+      "postalCodes": ["59251"]
+    },
+    {
+      "code": "59006",
+      "name": "L'Orée de Mormal",
+      "postalCodes": ["59144", "59570"]
+    },
+    {
+      "code": "59007",
+      "name": "Anhiers",
+      "postalCodes": ["59194"]
+    },
+    {
+      "code": "59008",
+      "name": "Aniche",
+      "postalCodes": ["59580"]
+    },
+    {
+      "code": "59009",
+      "name": "Villeneuve-d'Ascq",
+      "postalCodes": ["59491", "59493", "59650"]
+    },
+    {
+      "code": "59010",
+      "name": "Anneux",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59011",
+      "name": "Annœullin",
+      "postalCodes": ["59112"]
+    },
+    {
+      "code": "59012",
+      "name": "Anor",
+      "postalCodes": ["59186"]
+    },
+    {
+      "code": "59013",
+      "name": "Anstaing",
+      "postalCodes": ["59152"]
+    },
+    {
+      "code": "59014",
+      "name": "Anzin",
+      "postalCodes": ["59410"]
+    },
+    {
+      "code": "59015",
+      "name": "Arleux",
+      "postalCodes": ["59151"]
+    },
+    {
+      "code": "59016",
+      "name": "Armbouts-Cappel",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59017",
+      "name": "Armentières",
+      "postalCodes": ["59280"]
+    },
+    {
+      "code": "59018",
+      "name": "Arnèke",
+      "postalCodes": ["59285"]
+    },
+    {
+      "code": "59019",
+      "name": "Artres",
+      "postalCodes": ["59269"]
+    },
+    {
+      "code": "59021",
+      "name": "Assevent",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59022",
+      "name": "Attiches",
+      "postalCodes": ["59551"]
+    },
+    {
+      "code": "59023",
+      "name": "Aubencheul-au-Bac",
+      "postalCodes": ["59265"]
+    },
+    {
+      "code": "59024",
+      "name": "Auberchicourt",
+      "postalCodes": ["59165"]
+    },
+    {
+      "code": "59025",
+      "name": "Aubers",
+      "postalCodes": ["59249"]
+    },
+    {
+      "code": "59026",
+      "name": "Aubigny-au-Bac",
+      "postalCodes": ["59265"]
+    },
+    {
+      "code": "59027",
+      "name": "Aubry-du-Hainaut",
+      "postalCodes": ["59494"]
+    },
+    {
+      "code": "59028",
+      "name": "Auby",
+      "postalCodes": ["59950"]
+    },
+    {
+      "code": "59029",
+      "name": "Auchy-lez-Orchies",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59031",
+      "name": "Audignies",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59032",
+      "name": "Aulnoy-lez-Valenciennes",
+      "postalCodes": ["59300"]
+    },
+    {
+      "code": "59033",
+      "name": "Aulnoye-Aymeries",
+      "postalCodes": ["59620"]
+    },
+    {
+      "code": "59034",
+      "name": "Avelin",
+      "postalCodes": ["59710"]
+    },
+    {
+      "code": "59035",
+      "name": "Avesnelles",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59036",
+      "name": "Avesnes-sur-Helpe",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59037",
+      "name": "Avesnes-les-Aubert",
+      "postalCodes": ["59129"]
+    },
+    {
+      "code": "59038",
+      "name": "Avesnes-le-Sec",
+      "postalCodes": ["59296"]
+    },
+    {
+      "code": "59039",
+      "name": "Awoingt",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59041",
+      "name": "Bachant",
+      "postalCodes": ["59138"]
+    },
+    {
+      "code": "59042",
+      "name": "Bachy",
+      "postalCodes": ["59830"]
+    },
+    {
+      "code": "59043",
+      "name": "Bailleul",
+      "postalCodes": ["59270"]
+    },
+    {
+      "code": "59044",
+      "name": "Baisieux",
+      "postalCodes": ["59780"]
+    },
+    {
+      "code": "59045",
+      "name": "Baives",
+      "postalCodes": ["59132"]
+    },
+    {
+      "code": "59046",
+      "name": "Bambecque",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59047",
+      "name": "Banteux",
+      "postalCodes": ["59266"]
+    },
+    {
+      "code": "59048",
+      "name": "Bantigny",
+      "postalCodes": ["59554"]
+    },
+    {
+      "code": "59049",
+      "name": "Bantouzelle",
+      "postalCodes": ["59266"]
+    },
+    {
+      "code": "59050",
+      "name": "Bas-Lieu",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59051",
+      "name": "La Bassée",
+      "postalCodes": ["59480"]
+    },
+    {
+      "code": "59052",
+      "name": "Bauvin",
+      "postalCodes": ["59221"]
+    },
+    {
+      "code": "59053",
+      "name": "Bavay",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59054",
+      "name": "Bavinchove",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59055",
+      "name": "Bazuel",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59056",
+      "name": "Beaucamps-Ligny",
+      "postalCodes": ["59134"]
+    },
+    {
+      "code": "59057",
+      "name": "Beaudignies",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59058",
+      "name": "Beaufort",
+      "postalCodes": ["59330"]
+    },
+    {
+      "code": "59059",
+      "name": "Beaumont-en-Cambrésis",
+      "postalCodes": ["59540"]
+    },
+    {
+      "code": "59060",
+      "name": "Beaurain",
+      "postalCodes": ["59730"]
+    },
+    {
+      "code": "59061",
+      "name": "Beaurepaire-sur-Sambre",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59062",
+      "name": "Beaurieux",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59063",
+      "name": "Beauvois-en-Cambrésis",
+      "postalCodes": ["59157"]
+    },
+    {
+      "code": "59064",
+      "name": "Bellaing",
+      "postalCodes": ["59135"]
+    },
+    {
+      "code": "59065",
+      "name": "Bellignies",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59066",
+      "name": "Bérelles",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59067",
+      "name": "Bergues",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59068",
+      "name": "Berlaimont",
+      "postalCodes": ["59145"]
+    },
+    {
+      "code": "59069",
+      "name": "Bermerain",
+      "postalCodes": ["59213"]
+    },
+    {
+      "code": "59071",
+      "name": "Bersée",
+      "postalCodes": ["59235"]
+    },
+    {
+      "code": "59072",
+      "name": "Bersillies",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59073",
+      "name": "Berthen",
+      "postalCodes": ["59270"]
+    },
+    {
+      "code": "59074",
+      "name": "Bertry",
+      "postalCodes": ["59980"]
+    },
+    {
+      "code": "59075",
+      "name": "Béthencourt",
+      "postalCodes": ["59540"]
+    },
+    {
+      "code": "59076",
+      "name": "Bettignies",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59077",
+      "name": "Bettrechies",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59078",
+      "name": "Beugnies",
+      "postalCodes": ["59216"]
+    },
+    {
+      "code": "59079",
+      "name": "Beuvrages",
+      "postalCodes": ["59192"]
+    },
+    {
+      "code": "59080",
+      "name": "Beuvry-la-Forêt",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59081",
+      "name": "Bévillers",
+      "postalCodes": ["59217"]
+    },
+    {
+      "code": "59082",
+      "name": "Bierne",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59083",
+      "name": "Bissezeele",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59084",
+      "name": "Blaringhem",
+      "postalCodes": ["59173"]
+    },
+    {
+      "code": "59085",
+      "name": "Blécourt",
+      "postalCodes": ["59268"]
+    },
+    {
+      "code": "59086",
+      "name": "Boeschepe",
+      "postalCodes": ["59299"]
+    },
+    {
+      "code": "59087",
+      "name": "Boëseghem",
+      "postalCodes": ["59189"]
+    },
+    {
+      "code": "59088",
+      "name": "Bois-Grenier",
+      "postalCodes": ["59280"]
+    },
+    {
+      "code": "59089",
+      "name": "Bollezeele",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59090",
+      "name": "Bondues",
+      "postalCodes": ["59910"]
+    },
+    {
+      "code": "59091",
+      "name": "Borre",
+      "postalCodes": ["59190"]
+    },
+    {
+      "code": "59092",
+      "name": "Bouchain",
+      "postalCodes": ["59111"]
+    },
+    {
+      "code": "59093",
+      "name": "Boulogne-sur-Helpe",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59094",
+      "name": "Bourbourg",
+      "postalCodes": ["59630"]
+    },
+    {
+      "code": "59096",
+      "name": "Bourghelles",
+      "postalCodes": ["59830"]
+    },
+    {
+      "code": "59097",
+      "name": "Boursies",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59098",
+      "name": "Bousbecque",
+      "postalCodes": ["59166"]
+    },
+    {
+      "code": "59099",
+      "name": "Bousies",
+      "postalCodes": ["59222"]
+    },
+    {
+      "code": "59100",
+      "name": "Bousignies",
+      "postalCodes": ["59178"]
+    },
+    {
+      "code": "59101",
+      "name": "Bousignies-sur-Roc",
+      "postalCodes": ["59149"]
+    },
+    {
+      "code": "59102",
+      "name": "Boussières-en-Cambrésis",
+      "postalCodes": ["59217"]
+    },
+    {
+      "code": "59103",
+      "name": "Boussières-sur-Sambre",
+      "postalCodes": ["59330"]
+    },
+    {
+      "code": "59104",
+      "name": "Boussois",
+      "postalCodes": ["59168"]
+    },
+    {
+      "code": "59105",
+      "name": "Bouvignies",
+      "postalCodes": ["59870"]
+    },
+    {
+      "code": "59106",
+      "name": "Bouvines",
+      "postalCodes": ["59830"]
+    },
+    {
+      "code": "59107",
+      "name": "Bray-Dunes",
+      "postalCodes": ["59123"]
+    },
+    {
+      "code": "59108",
+      "name": "Briastre",
+      "postalCodes": ["59730"]
+    },
+    {
+      "code": "59109",
+      "name": "Brillon",
+      "postalCodes": ["59178"]
+    },
+    {
+      "code": "59110",
+      "name": "Brouckerque",
+      "postalCodes": ["59630"]
+    },
+    {
+      "code": "59111",
+      "name": "Broxeele",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59112",
+      "name": "Bruay-sur-l'Escaut",
+      "postalCodes": ["59860"]
+    },
+    {
+      "code": "59113",
+      "name": "Bruille-lez-Marchiennes",
+      "postalCodes": ["59490"]
+    },
+    {
+      "code": "59114",
+      "name": "Bruille-Saint-Amand",
+      "postalCodes": ["59199"]
+    },
+    {
+      "code": "59115",
+      "name": "Brunémont",
+      "postalCodes": ["59151"]
+    },
+    {
+      "code": "59116",
+      "name": "Bry",
+      "postalCodes": ["59144"]
+    },
+    {
+      "code": "59117",
+      "name": "Bugnicourt",
+      "postalCodes": ["59151"]
+    },
+    {
+      "code": "59118",
+      "name": "Busigny",
+      "postalCodes": ["59137"]
+    },
+    {
+      "code": "59119",
+      "name": "Buysscheure",
+      "postalCodes": ["59285"]
+    },
+    {
+      "code": "59120",
+      "name": "Caëstre",
+      "postalCodes": ["59190"]
+    },
+    {
+      "code": "59121",
+      "name": "Cagnoncles",
+      "postalCodes": ["59161"]
+    },
+    {
+      "code": "59122",
+      "name": "Cambrai",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59123",
+      "name": "Camphin-en-Carembault",
+      "postalCodes": ["59133"]
+    },
+    {
+      "code": "59124",
+      "name": "Camphin-en-Pévèle",
+      "postalCodes": ["59780"]
+    },
+    {
+      "code": "59125",
+      "name": "Cantaing-sur-Escaut",
+      "postalCodes": ["59267"]
+    },
+    {
+      "code": "59126",
+      "name": "Cantin",
+      "postalCodes": ["59169"]
+    },
+    {
+      "code": "59127",
+      "name": "Capelle",
+      "postalCodes": ["59213"]
+    },
+    {
+      "code": "59128",
+      "name": "Capinghem",
+      "postalCodes": ["59160"]
+    },
+    {
+      "code": "59129",
+      "name": "Cappelle-en-Pévèle",
+      "postalCodes": ["59242"]
+    },
+    {
+      "code": "59130",
+      "name": "Cappelle-Brouck",
+      "postalCodes": ["59630"]
+    },
+    {
+      "code": "59131",
+      "name": "Cappelle-la-Grande",
+      "postalCodes": ["59180"]
+    },
+    {
+      "code": "59132",
+      "name": "Carnières",
+      "postalCodes": ["59217"]
+    },
+    {
+      "code": "59133",
+      "name": "Carnin",
+      "postalCodes": ["59112"]
+    },
+    {
+      "code": "59134",
+      "name": "Cartignies",
+      "postalCodes": ["59244"]
+    },
+    {
+      "code": "59135",
+      "name": "Cassel",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59136",
+      "name": "Le Cateau-Cambrésis",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59137",
+      "name": "Catillon-sur-Sambre",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59138",
+      "name": "Cattenières",
+      "postalCodes": ["59217"]
+    },
+    {
+      "code": "59139",
+      "name": "Caudry",
+      "postalCodes": ["59540"]
+    },
+    {
+      "code": "59140",
+      "name": "Caullery",
+      "postalCodes": ["59191"]
+    },
+    {
+      "code": "59141",
+      "name": "Cauroir",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59142",
+      "name": "Cerfontaine",
+      "postalCodes": ["59680"]
+    },
+    {
+      "code": "59143",
+      "name": "La Chapelle-d'Armentières",
+      "postalCodes": ["59930"]
+    },
+    {
+      "code": "59144",
+      "name": "Château-l'Abbaye",
+      "postalCodes": ["59230"]
+    },
+    {
+      "code": "59145",
+      "name": "Chemy",
+      "postalCodes": ["59147"]
+    },
+    {
+      "code": "59146",
+      "name": "Chéreng",
+      "postalCodes": ["59152"]
+    },
+    {
+      "code": "59147",
+      "name": "Choisies",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59148",
+      "name": "Clairfayts",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59149",
+      "name": "Clary",
+      "postalCodes": ["59225"]
+    },
+    {
+      "code": "59150",
+      "name": "Cobrieux",
+      "postalCodes": ["59830"]
+    },
+    {
+      "code": "59151",
+      "name": "Colleret",
+      "postalCodes": ["59680"]
+    },
+    {
+      "code": "59152",
+      "name": "Comines",
+      "postalCodes": ["59560"]
+    },
+    {
+      "code": "59153",
+      "name": "Condé-sur-l'Escaut",
+      "postalCodes": ["59163"]
+    },
+    {
+      "code": "59155",
+      "name": "Coudekerque-Branche",
+      "postalCodes": ["59210"]
+    },
+    {
+      "code": "59156",
+      "name": "Courchelettes",
+      "postalCodes": ["59552"]
+    },
+    {
+      "code": "59157",
+      "name": "Cousolre",
+      "postalCodes": ["59149"]
+    },
+    {
+      "code": "59158",
+      "name": "Coutiches",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59159",
+      "name": "Craywick",
+      "postalCodes": ["59279"]
+    },
+    {
+      "code": "59160",
+      "name": "Crespin",
+      "postalCodes": ["59154"]
+    },
+    {
+      "code": "59161",
+      "name": "Crèvecœur-sur-l'Escaut",
+      "postalCodes": ["59258"]
+    },
+    {
+      "code": "59162",
+      "name": "Crochte",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59163",
+      "name": "Croix",
+      "postalCodes": ["59170"]
+    },
+    {
+      "code": "59164",
+      "name": "Croix-Caluyau",
+      "postalCodes": ["59222"]
+    },
+    {
+      "code": "59165",
+      "name": "Cuincy",
+      "postalCodes": ["59553"]
+    },
+    {
+      "code": "59166",
+      "name": "Curgies",
+      "postalCodes": ["59990"]
+    },
+    {
+      "code": "59167",
+      "name": "Cuvillers",
+      "postalCodes": ["59268"]
+    },
+    {
+      "code": "59168",
+      "name": "Cysoing",
+      "postalCodes": ["59830"]
+    },
+    {
+      "code": "59169",
+      "name": "Damousies",
+      "postalCodes": ["59680"]
+    },
+    {
+      "code": "59170",
+      "name": "Dechy",
+      "postalCodes": ["59187"]
+    },
+    {
+      "code": "59171",
+      "name": "Dehéries",
+      "postalCodes": ["59127"]
+    },
+    {
+      "code": "59172",
+      "name": "Denain",
+      "postalCodes": ["59220"]
+    },
+    {
+      "code": "59173",
+      "name": "Deûlémont",
+      "postalCodes": ["59890"]
+    },
+    {
+      "code": "59174",
+      "name": "Dimechaux",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59175",
+      "name": "Dimont",
+      "postalCodes": ["59216"]
+    },
+    {
+      "code": "59176",
+      "name": "Doignies",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59177",
+      "name": "Dompierre-sur-Helpe",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59178",
+      "name": "Douai",
+      "postalCodes": ["59500"]
+    },
+    {
+      "code": "59179",
+      "name": "Douchy-les-Mines",
+      "postalCodes": ["59282"]
+    },
+    {
+      "code": "59180",
+      "name": "Le Doulieu",
+      "postalCodes": ["59940"]
+    },
+    {
+      "code": "59181",
+      "name": "Dourlers",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59182",
+      "name": "Drincham",
+      "postalCodes": ["59630"]
+    },
+    {
+      "code": "59183",
+      "name": "Dunkerque",
+      "postalCodes": ["59140", "59240", "59279", "59430", "59640"]
+    },
+    {
+      "code": "59184",
+      "name": "Ebblinghem",
+      "postalCodes": ["59173"]
+    },
+    {
+      "code": "59185",
+      "name": "Écaillon",
+      "postalCodes": ["59176"]
+    },
+    {
+      "code": "59186",
+      "name": "Eccles",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59187",
+      "name": "Éclaibes",
+      "postalCodes": ["59330"]
+    },
+    {
+      "code": "59188",
+      "name": "Écuélin",
+      "postalCodes": ["59620"]
+    },
+    {
+      "code": "59189",
+      "name": "Eecke",
+      "postalCodes": ["59114"]
+    },
+    {
+      "code": "59190",
+      "name": "Élesmes",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59191",
+      "name": "Élincourt",
+      "postalCodes": ["59127"]
+    },
+    {
+      "code": "59192",
+      "name": "Émerchicourt",
+      "postalCodes": ["59580"]
+    },
+    {
+      "code": "59193",
+      "name": "Emmerin",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59194",
+      "name": "Englefontaine",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59195",
+      "name": "Englos",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59196",
+      "name": "Ennetières-en-Weppes",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59197",
+      "name": "Ennevelin",
+      "postalCodes": ["59710"]
+    },
+    {
+      "code": "59198",
+      "name": "Eppe-Sauvage",
+      "postalCodes": ["59132"]
+    },
+    {
+      "code": "59199",
+      "name": "Erchin",
+      "postalCodes": ["59169"]
+    },
+    {
+      "code": "59200",
+      "name": "Eringhem",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59201",
+      "name": "Erquinghem-le-Sec",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59202",
+      "name": "Erquinghem-Lys",
+      "postalCodes": ["59193"]
+    },
+    {
+      "code": "59203",
+      "name": "Erre",
+      "postalCodes": ["59171"]
+    },
+    {
+      "code": "59204",
+      "name": "Escarmain",
+      "postalCodes": ["59213"]
+    },
+    {
+      "code": "59205",
+      "name": "Escaudain",
+      "postalCodes": ["59124"]
+    },
+    {
+      "code": "59206",
+      "name": "Escaudœuvres",
+      "postalCodes": ["59161"]
+    },
+    {
+      "code": "59207",
+      "name": "Escautpont",
+      "postalCodes": ["59278"]
+    },
+    {
+      "code": "59208",
+      "name": "Escobecques",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59209",
+      "name": "Esnes",
+      "postalCodes": ["59127"]
+    },
+    {
+      "code": "59210",
+      "name": "Esquelbecq",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59211",
+      "name": "Esquerchin",
+      "postalCodes": ["59553"]
+    },
+    {
+      "code": "59212",
+      "name": "Estaires",
+      "postalCodes": ["59940"]
+    },
+    {
+      "code": "59213",
+      "name": "Estourmel",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59214",
+      "name": "Estrées",
+      "postalCodes": ["59151"]
+    },
+    {
+      "code": "59215",
+      "name": "Estreux",
+      "postalCodes": ["59990"]
+    },
+    {
+      "code": "59216",
+      "name": "Eswars",
+      "postalCodes": ["59161"]
+    },
+    {
+      "code": "59217",
+      "name": "Eth",
+      "postalCodes": ["59144"]
+    },
+    {
+      "code": "59218",
+      "name": "Étrœungt",
+      "postalCodes": ["59219"]
+    },
+    {
+      "code": "59219",
+      "name": "Estrun",
+      "postalCodes": ["59295"]
+    },
+    {
+      "code": "59220",
+      "name": "Faches-Thumesnil",
+      "postalCodes": ["59155"]
+    },
+    {
+      "code": "59221",
+      "name": "Famars",
+      "postalCodes": ["59300"]
+    },
+    {
+      "code": "59222",
+      "name": "Faumont",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59223",
+      "name": "Le Favril",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59224",
+      "name": "Féchain",
+      "postalCodes": ["59247"]
+    },
+    {
+      "code": "59225",
+      "name": "Feignies",
+      "postalCodes": ["59750"]
+    },
+    {
+      "code": "59226",
+      "name": "Felleries",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59227",
+      "name": "Fenain",
+      "postalCodes": ["59179"]
+    },
+    {
+      "code": "59228",
+      "name": "Férin",
+      "postalCodes": ["59169"]
+    },
+    {
+      "code": "59229",
+      "name": "Féron",
+      "postalCodes": ["59610"]
+    },
+    {
+      "code": "59230",
+      "name": "Ferrière-la-Grande",
+      "postalCodes": ["59680"]
+    },
+    {
+      "code": "59231",
+      "name": "Ferrière-la-Petite",
+      "postalCodes": ["59680"]
+    },
+    {
+      "code": "59232",
+      "name": "La Flamengrie",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59233",
+      "name": "Flaumont-Waudrechies",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59234",
+      "name": "Flers-en-Escrebieux",
+      "postalCodes": ["59128"]
+    },
+    {
+      "code": "59236",
+      "name": "Flesquières",
+      "postalCodes": ["59267"]
+    },
+    {
+      "code": "59237",
+      "name": "Flêtre",
+      "postalCodes": ["59270"]
+    },
+    {
+      "code": "59238",
+      "name": "Flines-lès-Mortagne",
+      "postalCodes": ["59158"]
+    },
+    {
+      "code": "59239",
+      "name": "Flines-lez-Raches",
+      "postalCodes": ["59148"]
+    },
+    {
+      "code": "59240",
+      "name": "Floursies",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59241",
+      "name": "Floyon",
+      "postalCodes": ["59219"]
+    },
+    {
+      "code": "59242",
+      "name": "Fontaine-au-Bois",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59243",
+      "name": "Fontaine-au-Pire",
+      "postalCodes": ["59157"]
+    },
+    {
+      "code": "59244",
+      "name": "Fontaine-Notre-Dame",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59246",
+      "name": "Forest-en-Cambrésis",
+      "postalCodes": ["59222"]
+    },
+    {
+      "code": "59247",
+      "name": "Forest-sur-Marque",
+      "postalCodes": ["59510"]
+    },
+    {
+      "code": "59249",
+      "name": "Fourmies",
+      "postalCodes": ["59610"]
+    },
+    {
+      "code": "59250",
+      "name": "Fournes-en-Weppes",
+      "postalCodes": ["59134"]
+    },
+    {
+      "code": "59251",
+      "name": "Frasnoy",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59252",
+      "name": "Frelinghien",
+      "postalCodes": ["59236"]
+    },
+    {
+      "code": "59253",
+      "name": "Fresnes-sur-Escaut",
+      "postalCodes": ["59970"]
+    },
+    {
+      "code": "59254",
+      "name": "Fressain",
+      "postalCodes": ["59234"]
+    },
+    {
+      "code": "59255",
+      "name": "Fressies",
+      "postalCodes": ["59268"]
+    },
+    {
+      "code": "59256",
+      "name": "Fretin",
+      "postalCodes": ["59273"]
+    },
+    {
+      "code": "59257",
+      "name": "Fromelles",
+      "postalCodes": ["59249"]
+    },
+    {
+      "code": "59258",
+      "name": "Genech",
+      "postalCodes": ["59242"]
+    },
+    {
+      "code": "59259",
+      "name": "Ghissignies",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59260",
+      "name": "Ghyvelde",
+      "postalCodes": ["59122", "59254"]
+    },
+    {
+      "code": "59261",
+      "name": "Glageon",
+      "postalCodes": ["59132"]
+    },
+    {
+      "code": "59262",
+      "name": "Godewaersvelde",
+      "postalCodes": ["59270"]
+    },
+    {
+      "code": "59263",
+      "name": "Gœulzin",
+      "postalCodes": ["59169"]
+    },
+    {
+      "code": "59264",
+      "name": "Gognies-Chaussée",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59265",
+      "name": "Gommegnies",
+      "postalCodes": ["59144"]
+    },
+    {
+      "code": "59266",
+      "name": "Gondecourt",
+      "postalCodes": ["59147"]
+    },
+    {
+      "code": "59267",
+      "name": "Gonnelieu",
+      "postalCodes": ["59231"]
+    },
+    {
+      "code": "59268",
+      "name": "La Gorgue",
+      "postalCodes": ["59253"]
+    },
+    {
+      "code": "59269",
+      "name": "Gouzeaucourt",
+      "postalCodes": ["59231"]
+    },
+    {
+      "code": "59270",
+      "name": "Grand-Fayt",
+      "postalCodes": ["59244"]
+    },
+    {
+      "code": "59271",
+      "name": "Grande-Synthe",
+      "postalCodes": ["59760"]
+    },
+    {
+      "code": "59272",
+      "name": "Grand-Fort-Philippe",
+      "postalCodes": ["59153"]
+    },
+    {
+      "code": "59273",
+      "name": "Gravelines",
+      "postalCodes": ["59820"]
+    },
+    {
+      "code": "59274",
+      "name": "La Groise",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59275",
+      "name": "Gruson",
+      "postalCodes": ["59152"]
+    },
+    {
+      "code": "59276",
+      "name": "Guesnain",
+      "postalCodes": ["59287"]
+    },
+    {
+      "code": "59277",
+      "name": "Gussignies",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59278",
+      "name": "Hallennes-lez-Haubourdin",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59279",
+      "name": "Halluin",
+      "postalCodes": ["59250"]
+    },
+    {
+      "code": "59280",
+      "name": "Hamel",
+      "postalCodes": ["59151"]
+    },
+    {
+      "code": "59281",
+      "name": "Hantay",
+      "postalCodes": ["59496"]
+    },
+    {
+      "code": "59282",
+      "name": "Hardifort",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59283",
+      "name": "Hargnies",
+      "postalCodes": ["59138"]
+    },
+    {
+      "code": "59284",
+      "name": "Hasnon",
+      "postalCodes": ["59178"]
+    },
+    {
+      "code": "59285",
+      "name": "Haspres",
+      "postalCodes": ["59198"]
+    },
+    {
+      "code": "59286",
+      "name": "Haubourdin",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59287",
+      "name": "Haucourt-en-Cambrésis",
+      "postalCodes": ["59191"]
+    },
+    {
+      "code": "59288",
+      "name": "Haulchin",
+      "postalCodes": ["59121"]
+    },
+    {
+      "code": "59289",
+      "name": "Haussy",
+      "postalCodes": ["59294"]
+    },
+    {
+      "code": "59290",
+      "name": "Haut-Lieu",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59291",
+      "name": "Hautmont",
+      "postalCodes": ["59330"]
+    },
+    {
+      "code": "59292",
+      "name": "Haveluy",
+      "postalCodes": ["59255"]
+    },
+    {
+      "code": "59293",
+      "name": "Haverskerque",
+      "postalCodes": ["59660"]
+    },
+    {
+      "code": "59294",
+      "name": "Haynecourt",
+      "postalCodes": ["59268"]
+    },
+    {
+      "code": "59295",
+      "name": "Hazebrouck",
+      "postalCodes": ["59190"]
+    },
+    {
+      "code": "59296",
+      "name": "Hecq",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59297",
+      "name": "Hélesmes",
+      "postalCodes": ["59171"]
+    },
+    {
+      "code": "59299",
+      "name": "Hem",
+      "postalCodes": ["59510"]
+    },
+    {
+      "code": "59300",
+      "name": "Hem-Lenglet",
+      "postalCodes": ["59247"]
+    },
+    {
+      "code": "59301",
+      "name": "Hergnies",
+      "postalCodes": ["59199"]
+    },
+    {
+      "code": "59302",
+      "name": "Hérin",
+      "postalCodes": ["59195"]
+    },
+    {
+      "code": "59303",
+      "name": "Herlies",
+      "postalCodes": ["59134"]
+    },
+    {
+      "code": "59304",
+      "name": "Herrin",
+      "postalCodes": ["59147"]
+    },
+    {
+      "code": "59305",
+      "name": "Herzeele",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59306",
+      "name": "Hestrud",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59307",
+      "name": "Holque",
+      "postalCodes": ["59143"]
+    },
+    {
+      "code": "59308",
+      "name": "Hondeghem",
+      "postalCodes": ["59190"]
+    },
+    {
+      "code": "59309",
+      "name": "Hondschoote",
+      "postalCodes": ["59122"]
+    },
+    {
+      "code": "59310",
+      "name": "Hon-Hergies",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59311",
+      "name": "Honnechy",
+      "postalCodes": ["59980"]
+    },
+    {
+      "code": "59312",
+      "name": "Honnecourt-sur-Escaut",
+      "postalCodes": ["59266"]
+    },
+    {
+      "code": "59313",
+      "name": "Hordain",
+      "postalCodes": ["59111"]
+    },
+    {
+      "code": "59314",
+      "name": "Hornaing",
+      "postalCodes": ["59171"]
+    },
+    {
+      "code": "59315",
+      "name": "Houdain-lez-Bavay",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59316",
+      "name": "Houplin-Ancoisne",
+      "postalCodes": ["59263"]
+    },
+    {
+      "code": "59317",
+      "name": "Houplines",
+      "postalCodes": ["59116"]
+    },
+    {
+      "code": "59318",
+      "name": "Houtkerque",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59319",
+      "name": "Hoymille",
+      "postalCodes": ["59492"]
+    },
+    {
+      "code": "59320",
+      "name": "Illies",
+      "postalCodes": ["59480"]
+    },
+    {
+      "code": "59321",
+      "name": "Inchy",
+      "postalCodes": ["59540"]
+    },
+    {
+      "code": "59322",
+      "name": "Iwuy",
+      "postalCodes": ["59141"]
+    },
+    {
+      "code": "59323",
+      "name": "Jenlain",
+      "postalCodes": ["59144"]
+    },
+    {
+      "code": "59324",
+      "name": "Jeumont",
+      "postalCodes": ["59460"]
+    },
+    {
+      "code": "59325",
+      "name": "Jolimetz",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59326",
+      "name": "Killem",
+      "postalCodes": ["59122"]
+    },
+    {
+      "code": "59327",
+      "name": "Lallaing",
+      "postalCodes": ["59167"]
+    },
+    {
+      "code": "59328",
+      "name": "Lambersart",
+      "postalCodes": ["59130"]
+    },
+    {
+      "code": "59329",
+      "name": "Lambres-lez-Douai",
+      "postalCodes": ["59552"]
+    },
+    {
+      "code": "59330",
+      "name": "Landas",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59331",
+      "name": "Landrecies",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59332",
+      "name": "Lannoy",
+      "postalCodes": ["59390"]
+    },
+    {
+      "code": "59333",
+      "name": "Larouillies",
+      "postalCodes": ["59219"]
+    },
+    {
+      "code": "59334",
+      "name": "Lauwin-Planque",
+      "postalCodes": ["59553"]
+    },
+    {
+      "code": "59335",
+      "name": "Lecelles",
+      "postalCodes": ["59226"]
+    },
+    {
+      "code": "59336",
+      "name": "Lécluse",
+      "postalCodes": ["59259"]
+    },
+    {
+      "code": "59337",
+      "name": "Lederzeele",
+      "postalCodes": ["59143"]
+    },
+    {
+      "code": "59338",
+      "name": "Ledringhem",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59339",
+      "name": "Leers",
+      "postalCodes": ["59115"]
+    },
+    {
+      "code": "59340",
+      "name": "Leffrinckoucke",
+      "postalCodes": ["59495"]
+    },
+    {
+      "code": "59341",
+      "name": "Lesdain",
+      "postalCodes": ["59258"]
+    },
+    {
+      "code": "59342",
+      "name": "Lez-Fontaine",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59343",
+      "name": "Lesquin",
+      "postalCodes": ["59810"]
+    },
+    {
+      "code": "59344",
+      "name": "Leval",
+      "postalCodes": ["59620"]
+    },
+    {
+      "code": "59345",
+      "name": "Lewarde",
+      "postalCodes": ["59287"]
+    },
+    {
+      "code": "59346",
+      "name": "Lezennes",
+      "postalCodes": ["59260"]
+    },
+    {
+      "code": "59347",
+      "name": "Liessies",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59348",
+      "name": "Lieu-Saint-Amand",
+      "postalCodes": ["59111"]
+    },
+    {
+      "code": "59349",
+      "name": "Ligny-en-Cambrésis",
+      "postalCodes": ["59191"]
+    },
+    {
+      "code": "59350",
+      "name": "Lille",
+      "postalCodes": ["59000", "59160", "59260", "59777", "59800"]
+    },
+    {
+      "code": "59351",
+      "name": "Limont-Fontaine",
+      "postalCodes": ["59330"]
+    },
+    {
+      "code": "59352",
+      "name": "Linselles",
+      "postalCodes": ["59126"]
+    },
+    {
+      "code": "59353",
+      "name": "Locquignol",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59354",
+      "name": "Loffre",
+      "postalCodes": ["59182"]
+    },
+    {
+      "code": "59356",
+      "name": "Lompret",
+      "postalCodes": ["59840"]
+    },
+    {
+      "code": "59357",
+      "name": "La Longueville",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59358",
+      "name": "Looberghe",
+      "postalCodes": ["59630"]
+    },
+    {
+      "code": "59359",
+      "name": "Loon-Plage",
+      "postalCodes": ["59279"]
+    },
+    {
+      "code": "59360",
+      "name": "Loos",
+      "postalCodes": ["59120"]
+    },
+    {
+      "code": "59361",
+      "name": "Lourches",
+      "postalCodes": ["59156"]
+    },
+    {
+      "code": "59363",
+      "name": "Louvignies-Quesnoy",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59364",
+      "name": "Louvil",
+      "postalCodes": ["59830"]
+    },
+    {
+      "code": "59365",
+      "name": "Louvroil",
+      "postalCodes": ["59720"]
+    },
+    {
+      "code": "59366",
+      "name": "Lynde",
+      "postalCodes": ["59173"]
+    },
+    {
+      "code": "59367",
+      "name": "Lys-lez-Lannoy",
+      "postalCodes": ["59390"]
+    },
+    {
+      "code": "59368",
+      "name": "La Madeleine",
+      "postalCodes": ["59110"]
+    },
+    {
+      "code": "59369",
+      "name": "Maing",
+      "postalCodes": ["59233"]
+    },
+    {
+      "code": "59370",
+      "name": "Mairieux",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59371",
+      "name": "Le Maisnil",
+      "postalCodes": ["59134"]
+    },
+    {
+      "code": "59372",
+      "name": "Malincourt",
+      "postalCodes": ["59127"]
+    },
+    {
+      "code": "59374",
+      "name": "Marbaix",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59375",
+      "name": "Marchiennes",
+      "postalCodes": ["59870"]
+    },
+    {
+      "code": "59377",
+      "name": "Marcoing",
+      "postalCodes": ["59159"]
+    },
+    {
+      "code": "59378",
+      "name": "Marcq-en-Barœul",
+      "postalCodes": ["59700"]
+    },
+    {
+      "code": "59379",
+      "name": "Marcq-en-Ostrevent",
+      "postalCodes": ["59252"]
+    },
+    {
+      "code": "59381",
+      "name": "Maresches",
+      "postalCodes": ["59990"]
+    },
+    {
+      "code": "59382",
+      "name": "Maretz",
+      "postalCodes": ["59238"]
+    },
+    {
+      "code": "59383",
+      "name": "Marly",
+      "postalCodes": ["59770"]
+    },
+    {
+      "code": "59384",
+      "name": "Maroilles",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59385",
+      "name": "Marpent",
+      "postalCodes": ["59164"]
+    },
+    {
+      "code": "59386",
+      "name": "Marquette-lez-Lille",
+      "postalCodes": ["59520"]
+    },
+    {
+      "code": "59387",
+      "name": "Marquette-en-Ostrevant",
+      "postalCodes": ["59252"]
+    },
+    {
+      "code": "59388",
+      "name": "Marquillies",
+      "postalCodes": ["59274"]
+    },
+    {
+      "code": "59389",
+      "name": "Masnières",
+      "postalCodes": ["59241"]
+    },
+    {
+      "code": "59390",
+      "name": "Masny",
+      "postalCodes": ["59176"]
+    },
+    {
+      "code": "59391",
+      "name": "Mastaing",
+      "postalCodes": ["59172"]
+    },
+    {
+      "code": "59392",
+      "name": "Maubeuge",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59393",
+      "name": "Maulde",
+      "postalCodes": ["59158"]
+    },
+    {
+      "code": "59394",
+      "name": "Maurois",
+      "postalCodes": ["59980"]
+    },
+    {
+      "code": "59395",
+      "name": "Mazinghien",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59396",
+      "name": "Mecquignies",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59397",
+      "name": "Merckeghem",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59398",
+      "name": "Mérignies",
+      "postalCodes": ["59710"]
+    },
+    {
+      "code": "59399",
+      "name": "Merris",
+      "postalCodes": ["59270"]
+    },
+    {
+      "code": "59400",
+      "name": "Merville",
+      "postalCodes": ["59660"]
+    },
+    {
+      "code": "59401",
+      "name": "Méteren",
+      "postalCodes": ["59270"]
+    },
+    {
+      "code": "59402",
+      "name": "Millam",
+      "postalCodes": ["59143"]
+    },
+    {
+      "code": "59403",
+      "name": "Millonfosse",
+      "postalCodes": ["59178"]
+    },
+    {
+      "code": "59405",
+      "name": "Mœuvres",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59406",
+      "name": "Monceau-Saint-Waast",
+      "postalCodes": ["59620"]
+    },
+    {
+      "code": "59407",
+      "name": "Monchaux-sur-Écaillon",
+      "postalCodes": ["59224"]
+    },
+    {
+      "code": "59408",
+      "name": "Moncheaux",
+      "postalCodes": ["59283"]
+    },
+    {
+      "code": "59409",
+      "name": "Monchecourt",
+      "postalCodes": ["59234"]
+    },
+    {
+      "code": "59410",
+      "name": "Mons-en-Barœul",
+      "postalCodes": ["59370"]
+    },
+    {
+      "code": "59411",
+      "name": "Mons-en-Pévèle",
+      "postalCodes": ["59246"]
+    },
+    {
+      "code": "59412",
+      "name": "Montay",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59413",
+      "name": "Montigny-en-Cambrésis",
+      "postalCodes": ["59225"]
+    },
+    {
+      "code": "59414",
+      "name": "Montigny-en-Ostrevent",
+      "postalCodes": ["59182"]
+    },
+    {
+      "code": "59415",
+      "name": "Montrécourt",
+      "postalCodes": ["59227"]
+    },
+    {
+      "code": "59416",
+      "name": "Morbecque",
+      "postalCodes": ["59190"]
+    },
+    {
+      "code": "59418",
+      "name": "Mortagne-du-Nord",
+      "postalCodes": ["59158"]
+    },
+    {
+      "code": "59419",
+      "name": "Mouchin",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59420",
+      "name": "Moustier-en-Fagne",
+      "postalCodes": ["59132"]
+    },
+    {
+      "code": "59421",
+      "name": "Mouvaux",
+      "postalCodes": ["59420"]
+    },
+    {
+      "code": "59422",
+      "name": "Naves",
+      "postalCodes": ["59161"]
+    },
+    {
+      "code": "59423",
+      "name": "Neuf-Berquin",
+      "postalCodes": ["59940"]
+    },
+    {
+      "code": "59424",
+      "name": "Neuf-Mesnil",
+      "postalCodes": ["59330"]
+    },
+    {
+      "code": "59425",
+      "name": "Neuville-en-Avesnois",
+      "postalCodes": ["59218"]
+    },
+    {
+      "code": "59426",
+      "name": "Neuville-en-Ferrain",
+      "postalCodes": ["59960"]
+    },
+    {
+      "code": "59427",
+      "name": "La Neuville",
+      "postalCodes": ["59239"]
+    },
+    {
+      "code": "59428",
+      "name": "Neuville-Saint-Rémy",
+      "postalCodes": ["59554"]
+    },
+    {
+      "code": "59429",
+      "name": "Neuville-sur-Escaut",
+      "postalCodes": ["59293"]
+    },
+    {
+      "code": "59430",
+      "name": "Neuvilly",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59431",
+      "name": "Nieppe",
+      "postalCodes": ["59850"]
+    },
+    {
+      "code": "59432",
+      "name": "Niergnies",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59433",
+      "name": "Nieurlet",
+      "postalCodes": ["59143"]
+    },
+    {
+      "code": "59434",
+      "name": "Nivelle",
+      "postalCodes": ["59230"]
+    },
+    {
+      "code": "59435",
+      "name": "Nomain",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59436",
+      "name": "Noordpeene",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59437",
+      "name": "Noyelles-lès-Seclin",
+      "postalCodes": ["59139"]
+    },
+    {
+      "code": "59438",
+      "name": "Noyelles-sur-Escaut",
+      "postalCodes": ["59159"]
+    },
+    {
+      "code": "59439",
+      "name": "Noyelles-sur-Sambre",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59440",
+      "name": "Noyelles-sur-Selle",
+      "postalCodes": ["59282"]
+    },
+    {
+      "code": "59441",
+      "name": "Obies",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59442",
+      "name": "Obrechies",
+      "postalCodes": ["59680"]
+    },
+    {
+      "code": "59443",
+      "name": "Ochtezeele",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59444",
+      "name": "Odomez",
+      "postalCodes": ["59970"]
+    },
+    {
+      "code": "59445",
+      "name": "Ohain",
+      "postalCodes": ["59132"]
+    },
+    {
+      "code": "59446",
+      "name": "Oisy",
+      "postalCodes": ["59195"]
+    },
+    {
+      "code": "59447",
+      "name": "Onnaing",
+      "postalCodes": ["59264"]
+    },
+    {
+      "code": "59448",
+      "name": "Oost-Cappel",
+      "postalCodes": ["59122"]
+    },
+    {
+      "code": "59449",
+      "name": "Orchies",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59450",
+      "name": "Ors",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59451",
+      "name": "Orsinval",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59452",
+      "name": "Ostricourt",
+      "postalCodes": ["59162"]
+    },
+    {
+      "code": "59453",
+      "name": "Oudezeele",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59454",
+      "name": "Oxelaëre",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59455",
+      "name": "Paillencourt",
+      "postalCodes": ["59295"]
+    },
+    {
+      "code": "59456",
+      "name": "Pecquencourt",
+      "postalCodes": ["59146"]
+    },
+    {
+      "code": "59457",
+      "name": "Pérenchies",
+      "postalCodes": ["59840"]
+    },
+    {
+      "code": "59458",
+      "name": "Péronne-en-Mélantois",
+      "postalCodes": ["59273"]
+    },
+    {
+      "code": "59459",
+      "name": "Petite-Forêt",
+      "postalCodes": ["59494"]
+    },
+    {
+      "code": "59461",
+      "name": "Petit-Fayt",
+      "postalCodes": ["59244"]
+    },
+    {
+      "code": "59462",
+      "name": "Phalempin",
+      "postalCodes": ["59133"]
+    },
+    {
+      "code": "59463",
+      "name": "Pitgam",
+      "postalCodes": ["59284"]
+    },
+    {
+      "code": "59464",
+      "name": "Poix-du-Nord",
+      "postalCodes": ["59218"]
+    },
+    {
+      "code": "59465",
+      "name": "Pommereuil",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59466",
+      "name": "Pont-à-Marcq",
+      "postalCodes": ["59710"]
+    },
+    {
+      "code": "59467",
+      "name": "Pont-sur-Sambre",
+      "postalCodes": ["59138"]
+    },
+    {
+      "code": "59468",
+      "name": "Potelle",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59469",
+      "name": "Pradelles",
+      "postalCodes": ["59190"]
+    },
+    {
+      "code": "59470",
+      "name": "Prémesques",
+      "postalCodes": ["59840"]
+    },
+    {
+      "code": "59471",
+      "name": "Préseau",
+      "postalCodes": ["59990"]
+    },
+    {
+      "code": "59472",
+      "name": "Preux-au-Bois",
+      "postalCodes": ["59288"]
+    },
+    {
+      "code": "59473",
+      "name": "Preux-au-Sart",
+      "postalCodes": ["59144"]
+    },
+    {
+      "code": "59474",
+      "name": "Prisches",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59475",
+      "name": "Prouvy",
+      "postalCodes": ["59121"]
+    },
+    {
+      "code": "59476",
+      "name": "Proville",
+      "postalCodes": ["59267"]
+    },
+    {
+      "code": "59477",
+      "name": "Provin",
+      "postalCodes": ["59185"]
+    },
+    {
+      "code": "59478",
+      "name": "Quaëdypre",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59479",
+      "name": "Quarouble",
+      "postalCodes": ["59243"]
+    },
+    {
+      "code": "59480",
+      "name": "Quérénaing",
+      "postalCodes": ["59269"]
+    },
+    {
+      "code": "59481",
+      "name": "Le Quesnoy",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59482",
+      "name": "Quesnoy-sur-Deûle",
+      "postalCodes": ["59890"]
+    },
+    {
+      "code": "59483",
+      "name": "Quiévelon",
+      "postalCodes": ["59680"]
+    },
+    {
+      "code": "59484",
+      "name": "Quiévrechain",
+      "postalCodes": ["59920"]
+    },
+    {
+      "code": "59485",
+      "name": "Quiévy",
+      "postalCodes": ["59214"]
+    },
+    {
+      "code": "59486",
+      "name": "Râches",
+      "postalCodes": ["59194"]
+    },
+    {
+      "code": "59487",
+      "name": "Radinghem-en-Weppes",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59488",
+      "name": "Raillencourt-Sainte-Olle",
+      "postalCodes": ["59554"]
+    },
+    {
+      "code": "59489",
+      "name": "Raimbeaucourt",
+      "postalCodes": ["59283"]
+    },
+    {
+      "code": "59490",
+      "name": "Rainsars",
+      "postalCodes": ["59177"]
+    },
+    {
+      "code": "59491",
+      "name": "Raismes",
+      "postalCodes": ["59590"]
+    },
+    {
+      "code": "59492",
+      "name": "Ramillies",
+      "postalCodes": ["59161"]
+    },
+    {
+      "code": "59493",
+      "name": "Ramousies",
+      "postalCodes": ["59177"]
+    },
+    {
+      "code": "59494",
+      "name": "Raucourt-au-Bois",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59495",
+      "name": "Recquignies",
+      "postalCodes": ["59245"]
+    },
+    {
+      "code": "59496",
+      "name": "Rejet-de-Beaulieu",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59497",
+      "name": "Renescure",
+      "postalCodes": ["59173"]
+    },
+    {
+      "code": "59498",
+      "name": "Reumont",
+      "postalCodes": ["59980"]
+    },
+    {
+      "code": "59499",
+      "name": "Rexpoëde",
+      "postalCodes": ["59122"]
+    },
+    {
+      "code": "59500",
+      "name": "Ribécourt-la-Tour",
+      "postalCodes": ["59159"]
+    },
+    {
+      "code": "59501",
+      "name": "Rieulay",
+      "postalCodes": ["59870"]
+    },
+    {
+      "code": "59502",
+      "name": "Rieux-en-Cambrésis",
+      "postalCodes": ["59277"]
+    },
+    {
+      "code": "59503",
+      "name": "Robersart",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59504",
+      "name": "Rœulx",
+      "postalCodes": ["59172"]
+    },
+    {
+      "code": "59505",
+      "name": "Rombies-et-Marchipont",
+      "postalCodes": ["59990"]
+    },
+    {
+      "code": "59506",
+      "name": "Romeries",
+      "postalCodes": ["59730"]
+    },
+    {
+      "code": "59507",
+      "name": "Ronchin",
+      "postalCodes": ["59790"]
+    },
+    {
+      "code": "59508",
+      "name": "Roncq",
+      "postalCodes": ["59223"]
+    },
+    {
+      "code": "59509",
+      "name": "Roost-Warendin",
+      "postalCodes": ["59286"]
+    },
+    {
+      "code": "59511",
+      "name": "Rosult",
+      "postalCodes": ["59230"]
+    },
+    {
+      "code": "59512",
+      "name": "Roubaix",
+      "postalCodes": ["59100"]
+    },
+    {
+      "code": "59513",
+      "name": "Roucourt",
+      "postalCodes": ["59169"]
+    },
+    {
+      "code": "59514",
+      "name": "Rousies",
+      "postalCodes": ["59131"]
+    },
+    {
+      "code": "59515",
+      "name": "Rouvignies",
+      "postalCodes": ["59220"]
+    },
+    {
+      "code": "59516",
+      "name": "Rubrouck",
+      "postalCodes": ["59285"]
+    },
+    {
+      "code": "59517",
+      "name": "Les Rues-des-Vignes",
+      "postalCodes": ["59258"]
+    },
+    {
+      "code": "59518",
+      "name": "Ruesnes",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59519",
+      "name": "Rumegies",
+      "postalCodes": ["59226"]
+    },
+    {
+      "code": "59520",
+      "name": "Rumilly-en-Cambrésis",
+      "postalCodes": ["59281"]
+    },
+    {
+      "code": "59521",
+      "name": "Sailly-lez-Cambrai",
+      "postalCodes": ["59554"]
+    },
+    {
+      "code": "59522",
+      "name": "Sailly-lez-Lannoy",
+      "postalCodes": ["59390"]
+    },
+    {
+      "code": "59523",
+      "name": "Sainghin-en-Mélantois",
+      "postalCodes": ["59262"]
+    },
+    {
+      "code": "59524",
+      "name": "Sainghin-en-Weppes",
+      "postalCodes": ["59184"]
+    },
+    {
+      "code": "59525",
+      "name": "Sains-du-Nord",
+      "postalCodes": ["59177"]
+    },
+    {
+      "code": "59526",
+      "name": "Saint-Amand-les-Eaux",
+      "postalCodes": ["59230"]
+    },
+    {
+      "code": "59527",
+      "name": "Saint-André-lez-Lille",
+      "postalCodes": ["59350"]
+    },
+    {
+      "code": "59528",
+      "name": "Saint-Aubert",
+      "postalCodes": ["59188"]
+    },
+    {
+      "code": "59529",
+      "name": "Saint-Aubin",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59530",
+      "name": "Saint-Aybert",
+      "postalCodes": ["59163"]
+    },
+    {
+      "code": "59531",
+      "name": "Saint-Benin",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59532",
+      "name": "Saint-Georges-sur-l'Aa",
+      "postalCodes": ["59820"]
+    },
+    {
+      "code": "59533",
+      "name": "Saint-Hilaire-lez-Cambrai",
+      "postalCodes": ["59292"]
+    },
+    {
+      "code": "59534",
+      "name": "Saint-Hilaire-sur-Helpe",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59535",
+      "name": "Saint-Jans-Cappel",
+      "postalCodes": ["59270"]
+    },
+    {
+      "code": "59536",
+      "name": "Sainte-Marie-Cappel",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59537",
+      "name": "Saint-Martin-sur-Écaillon",
+      "postalCodes": ["59213"]
+    },
+    {
+      "code": "59538",
+      "name": "Saint-Momelin",
+      "postalCodes": ["59143"]
+    },
+    {
+      "code": "59539",
+      "name": "Saint-Pierre-Brouck",
+      "postalCodes": ["59630"]
+    },
+    {
+      "code": "59541",
+      "name": "Saint-Python",
+      "postalCodes": ["59730"]
+    },
+    {
+      "code": "59542",
+      "name": "Saint-Remy-Chaussée",
+      "postalCodes": ["59620"]
+    },
+    {
+      "code": "59543",
+      "name": "Saint-Remy-du-Nord",
+      "postalCodes": ["59330"]
+    },
+    {
+      "code": "59544",
+      "name": "Saint-Saulve",
+      "postalCodes": ["59880"]
+    },
+    {
+      "code": "59545",
+      "name": "Saint-Souplet",
+      "postalCodes": ["59360"]
+    },
+    {
+      "code": "59546",
+      "name": "Saint-Sylvestre-Cappel",
+      "postalCodes": ["59114"]
+    },
+    {
+      "code": "59547",
+      "name": "Saint-Vaast-en-Cambrésis",
+      "postalCodes": ["59188"]
+    },
+    {
+      "code": "59548",
+      "name": "Saint-Waast",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59549",
+      "name": "Salesches",
+      "postalCodes": ["59218"]
+    },
+    {
+      "code": "59550",
+      "name": "Salomé",
+      "postalCodes": ["59496"]
+    },
+    {
+      "code": "59551",
+      "name": "Saméon",
+      "postalCodes": ["59310"]
+    },
+    {
+      "code": "59552",
+      "name": "Sancourt",
+      "postalCodes": ["59268"]
+    },
+    {
+      "code": "59553",
+      "name": "Santes",
+      "postalCodes": ["59211"]
+    },
+    {
+      "code": "59554",
+      "name": "Sars-et-Rosières",
+      "postalCodes": ["59230"]
+    },
+    {
+      "code": "59555",
+      "name": "Sars-Poteries",
+      "postalCodes": ["59216"]
+    },
+    {
+      "code": "59556",
+      "name": "Sassegnies",
+      "postalCodes": ["59145"]
+    },
+    {
+      "code": "59557",
+      "name": "Saultain",
+      "postalCodes": ["59990"]
+    },
+    {
+      "code": "59558",
+      "name": "Saulzoir",
+      "postalCodes": ["59227"]
+    },
+    {
+      "code": "59559",
+      "name": "Sebourg",
+      "postalCodes": ["59990"]
+    },
+    {
+      "code": "59560",
+      "name": "Seclin",
+      "postalCodes": ["59113"]
+    },
+    {
+      "code": "59562",
+      "name": "Sémeries",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59563",
+      "name": "Semousies",
+      "postalCodes": ["59440"]
+    },
+    {
+      "code": "59564",
+      "name": "La Sentinelle",
+      "postalCodes": ["59174"]
+    },
+    {
+      "code": "59565",
+      "name": "Sepmeries",
+      "postalCodes": ["59269"]
+    },
+    {
+      "code": "59566",
+      "name": "Sequedin",
+      "postalCodes": ["59320"]
+    },
+    {
+      "code": "59567",
+      "name": "Séranvillers-Forenville",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59568",
+      "name": "Sercus",
+      "postalCodes": ["59173"]
+    },
+    {
+      "code": "59569",
+      "name": "Sin-le-Noble",
+      "postalCodes": ["59450"]
+    },
+    {
+      "code": "59570",
+      "name": "Socx",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59571",
+      "name": "Solesmes",
+      "postalCodes": ["59730"]
+    },
+    {
+      "code": "59572",
+      "name": "Solre-le-Château",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59573",
+      "name": "Solrinnes",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59574",
+      "name": "Somain",
+      "postalCodes": ["59490"]
+    },
+    {
+      "code": "59575",
+      "name": "Sommaing",
+      "postalCodes": ["59213"]
+    },
+    {
+      "code": "59576",
+      "name": "Spycker",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59577",
+      "name": "Staple",
+      "postalCodes": ["59190"]
+    },
+    {
+      "code": "59578",
+      "name": "Steenbecque",
+      "postalCodes": ["59189"]
+    },
+    {
+      "code": "59579",
+      "name": "Steene",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59580",
+      "name": "Steenvoorde",
+      "postalCodes": ["59114"]
+    },
+    {
+      "code": "59581",
+      "name": "Steenwerck",
+      "postalCodes": ["59181"]
+    },
+    {
+      "code": "59582",
+      "name": "Strazeele",
+      "postalCodes": ["59270"]
+    },
+    {
+      "code": "59583",
+      "name": "Taisnières-en-Thiérache",
+      "postalCodes": ["59550"]
+    },
+    {
+      "code": "59584",
+      "name": "Taisnières-sur-Hon",
+      "postalCodes": ["59570"]
+    },
+    {
+      "code": "59585",
+      "name": "Templemars",
+      "postalCodes": ["59175"]
+    },
+    {
+      "code": "59586",
+      "name": "Templeuve-en-Pévèle",
+      "postalCodes": ["59242"]
+    },
+    {
+      "code": "59587",
+      "name": "Terdeghem",
+      "postalCodes": ["59114"]
+    },
+    {
+      "code": "59588",
+      "name": "Téteghem-Coudekerque-Village",
+      "postalCodes": ["59229", "59380"]
+    },
+    {
+      "code": "59589",
+      "name": "Thiant",
+      "postalCodes": ["59224"]
+    },
+    {
+      "code": "59590",
+      "name": "Thiennes",
+      "postalCodes": ["59189"]
+    },
+    {
+      "code": "59591",
+      "name": "Thivencelle",
+      "postalCodes": ["59163"]
+    },
+    {
+      "code": "59592",
+      "name": "Thumeries",
+      "postalCodes": ["59239"]
+    },
+    {
+      "code": "59593",
+      "name": "Thun-l'Évêque",
+      "postalCodes": ["59141"]
+    },
+    {
+      "code": "59594",
+      "name": "Thun-Saint-Amand",
+      "postalCodes": ["59158"]
+    },
+    {
+      "code": "59595",
+      "name": "Thun-Saint-Martin",
+      "postalCodes": ["59141"]
+    },
+    {
+      "code": "59596",
+      "name": "Tilloy-lez-Marchiennes",
+      "postalCodes": ["59870"]
+    },
+    {
+      "code": "59597",
+      "name": "Tilloy-lez-Cambrai",
+      "postalCodes": ["59554"]
+    },
+    {
+      "code": "59598",
+      "name": "Toufflers",
+      "postalCodes": ["59390"]
+    },
+    {
+      "code": "59599",
+      "name": "Tourcoing",
+      "postalCodes": ["59200"]
+    },
+    {
+      "code": "59600",
+      "name": "Tourmignies",
+      "postalCodes": ["59551"]
+    },
+    {
+      "code": "59601",
+      "name": "Trélon",
+      "postalCodes": ["59132"]
+    },
+    {
+      "code": "59602",
+      "name": "Tressin",
+      "postalCodes": ["59152"]
+    },
+    {
+      "code": "59603",
+      "name": "Trith-Saint-Léger",
+      "postalCodes": ["59125"]
+    },
+    {
+      "code": "59604",
+      "name": "Troisvilles",
+      "postalCodes": ["59980"]
+    },
+    {
+      "code": "59605",
+      "name": "Uxem",
+      "postalCodes": ["59229"]
+    },
+    {
+      "code": "59606",
+      "name": "Valenciennes",
+      "postalCodes": ["59300"]
+    },
+    {
+      "code": "59607",
+      "name": "Vendegies-au-Bois",
+      "postalCodes": ["59218"]
+    },
+    {
+      "code": "59608",
+      "name": "Vendegies-sur-Écaillon",
+      "postalCodes": ["59213"]
+    },
+    {
+      "code": "59609",
+      "name": "Vendeville",
+      "postalCodes": ["59175"]
+    },
+    {
+      "code": "59610",
+      "name": "Verchain-Maugré",
+      "postalCodes": ["59227"]
+    },
+    {
+      "code": "59611",
+      "name": "Verlinghem",
+      "postalCodes": ["59237"]
+    },
+    {
+      "code": "59612",
+      "name": "Vertain",
+      "postalCodes": ["59730"]
+    },
+    {
+      "code": "59613",
+      "name": "Vicq",
+      "postalCodes": ["59970"]
+    },
+    {
+      "code": "59614",
+      "name": "Viesly",
+      "postalCodes": ["59271"]
+    },
+    {
+      "code": "59615",
+      "name": "Vieux-Berquin",
+      "postalCodes": ["59232"]
+    },
+    {
+      "code": "59616",
+      "name": "Vieux-Condé",
+      "postalCodes": ["59690"]
+    },
+    {
+      "code": "59617",
+      "name": "Vieux-Mesnil",
+      "postalCodes": ["59138"]
+    },
+    {
+      "code": "59618",
+      "name": "Vieux-Reng",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59619",
+      "name": "Villereau",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59620",
+      "name": "Villers-au-Tertre",
+      "postalCodes": ["59234"]
+    },
+    {
+      "code": "59622",
+      "name": "Villers-en-Cauchies",
+      "postalCodes": ["59188"]
+    },
+    {
+      "code": "59623",
+      "name": "Villers-Guislain",
+      "postalCodes": ["59297"]
+    },
+    {
+      "code": "59624",
+      "name": "Villers-Outréaux",
+      "postalCodes": ["59142"]
+    },
+    {
+      "code": "59625",
+      "name": "Villers-Plouich",
+      "postalCodes": ["59231"]
+    },
+    {
+      "code": "59626",
+      "name": "Villers-Pol",
+      "postalCodes": ["59530"]
+    },
+    {
+      "code": "59627",
+      "name": "Villers-Sire-Nicole",
+      "postalCodes": ["59600"]
+    },
+    {
+      "code": "59628",
+      "name": "Volckerinckhove",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59629",
+      "name": "Vred",
+      "postalCodes": ["59870"]
+    },
+    {
+      "code": "59630",
+      "name": "Wahagnies",
+      "postalCodes": ["59261"]
+    },
+    {
+      "code": "59631",
+      "name": "Walincourt-Selvigny",
+      "postalCodes": ["59127"]
+    },
+    {
+      "code": "59632",
+      "name": "Wallers",
+      "postalCodes": ["59135"]
+    },
+    {
+      "code": "59633",
+      "name": "Wallers-en-Fagne",
+      "postalCodes": ["59132"]
+    },
+    {
+      "code": "59634",
+      "name": "Wallon-Cappel",
+      "postalCodes": ["59190"]
+    },
+    {
+      "code": "59635",
+      "name": "Wambaix",
+      "postalCodes": ["59400"]
+    },
+    {
+      "code": "59636",
+      "name": "Wambrechies",
+      "postalCodes": ["59118"]
+    },
+    {
+      "code": "59637",
+      "name": "Wandignies-Hamage",
+      "postalCodes": ["59870"]
+    },
+    {
+      "code": "59638",
+      "name": "Wannehain",
+      "postalCodes": ["59830"]
+    },
+    {
+      "code": "59639",
+      "name": "Wargnies-le-Grand",
+      "postalCodes": ["59144"]
+    },
+    {
+      "code": "59640",
+      "name": "Wargnies-le-Petit",
+      "postalCodes": ["59144"]
+    },
+    {
+      "code": "59641",
+      "name": "Warhem",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59642",
+      "name": "Warlaing",
+      "postalCodes": ["59870"]
+    },
+    {
+      "code": "59643",
+      "name": "Warneton",
+      "postalCodes": ["59560"]
+    },
+    {
+      "code": "59645",
+      "name": "Wasnes-au-Bac",
+      "postalCodes": ["59252"]
+    },
+    {
+      "code": "59646",
+      "name": "Wasquehal",
+      "postalCodes": ["59290"]
+    },
+    {
+      "code": "59647",
+      "name": "Watten",
+      "postalCodes": ["59143"]
+    },
+    {
+      "code": "59648",
+      "name": "Wattignies",
+      "postalCodes": ["59139"]
+    },
+    {
+      "code": "59649",
+      "name": "Wattignies-la-Victoire",
+      "postalCodes": ["59680"]
+    },
+    {
+      "code": "59650",
+      "name": "Wattrelos",
+      "postalCodes": ["59150"]
+    },
+    {
+      "code": "59651",
+      "name": "Wavrechain-sous-Denain",
+      "postalCodes": ["59220"]
+    },
+    {
+      "code": "59652",
+      "name": "Wavrechain-sous-Faulx",
+      "postalCodes": ["59111"]
+    },
+    {
+      "code": "59653",
+      "name": "Wavrin",
+      "postalCodes": ["59136"]
+    },
+    {
+      "code": "59654",
+      "name": "Waziers",
+      "postalCodes": ["59119"]
+    },
+    {
+      "code": "59655",
+      "name": "Wemaers-Cappel",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59656",
+      "name": "Wervicq-Sud",
+      "postalCodes": ["59117"]
+    },
+    {
+      "code": "59657",
+      "name": "West-Cappel",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59658",
+      "name": "Wicres",
+      "postalCodes": ["59134"]
+    },
+    {
+      "code": "59659",
+      "name": "Wignehies",
+      "postalCodes": ["59212"]
+    },
+    {
+      "code": "59660",
+      "name": "Willems",
+      "postalCodes": ["59780"]
+    },
+    {
+      "code": "59661",
+      "name": "Willies",
+      "postalCodes": ["59740"]
+    },
+    {
+      "code": "59662",
+      "name": "Winnezeele",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59663",
+      "name": "Wormhout",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59664",
+      "name": "Wulverdinghe",
+      "postalCodes": ["59143"]
+    },
+    {
+      "code": "59665",
+      "name": "Wylder",
+      "postalCodes": ["59380"]
+    },
+    {
+      "code": "59666",
+      "name": "Zegerscappel",
+      "postalCodes": ["59470"]
+    },
+    {
+      "code": "59667",
+      "name": "Zermezeele",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59668",
+      "name": "Zuydcoote",
+      "postalCodes": ["59123"]
+    },
+    {
+      "code": "59669",
+      "name": "Zuytpeene",
+      "postalCodes": ["59670"]
+    },
+    {
+      "code": "59670",
+      "name": "Don",
+      "postalCodes": ["59272"]
+    },
+    {
+      "code": "62001",
+      "name": "Ablain-Saint-Nazaire",
+      "postalCodes": ["62153"]
+    },
+    {
+      "code": "62002",
+      "name": "Ablainzevelle",
+      "postalCodes": ["62116"]
+    },
+    {
+      "code": "62003",
+      "name": "Acheville",
+      "postalCodes": ["62320"]
+    },
+    {
+      "code": "62004",
+      "name": "Achicourt",
+      "postalCodes": ["62217"]
+    },
+    {
+      "code": "62005",
+      "name": "Achiet-le-Grand",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62006",
+      "name": "Achiet-le-Petit",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62007",
+      "name": "Acq",
+      "postalCodes": ["62144"]
+    },
+    {
+      "code": "62008",
+      "name": "Acquin-Westbécourt",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62009",
+      "name": "Adinfer",
+      "postalCodes": ["62116"]
+    },
+    {
+      "code": "62010",
+      "name": "Affringues",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62011",
+      "name": "Agnez-lès-Duisans",
+      "postalCodes": ["62161"]
+    },
+    {
+      "code": "62012",
+      "name": "Agnières",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62013",
+      "name": "Agny",
+      "postalCodes": ["62217"]
+    },
+    {
+      "code": "62014",
+      "name": "Aire-sur-la-Lys",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62015",
+      "name": "Airon-Notre-Dame",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62016",
+      "name": "Airon-Saint-Vaast",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62017",
+      "name": "Aix-en-Ergny",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62018",
+      "name": "Aix-en-Issart",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62019",
+      "name": "Aix-Noulette",
+      "postalCodes": ["62160"]
+    },
+    {
+      "code": "62020",
+      "name": "Alembon",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62021",
+      "name": "Alette",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62022",
+      "name": "Alincthun",
+      "postalCodes": ["62142"]
+    },
+    {
+      "code": "62023",
+      "name": "Allouagne",
+      "postalCodes": ["62157"]
+    },
+    {
+      "code": "62024",
+      "name": "Alquines",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62025",
+      "name": "Ambleteuse",
+      "postalCodes": ["62164"]
+    },
+    {
+      "code": "62026",
+      "name": "Ambricourt",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62027",
+      "name": "Ambrines",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62028",
+      "name": "Ames",
+      "postalCodes": ["62190"]
+    },
+    {
+      "code": "62029",
+      "name": "Amettes",
+      "postalCodes": ["62260"]
+    },
+    {
+      "code": "62030",
+      "name": "Amplier",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62031",
+      "name": "Andres",
+      "postalCodes": ["62340"]
+    },
+    {
+      "code": "62032",
+      "name": "Angres",
+      "postalCodes": ["62143"]
+    },
+    {
+      "code": "62033",
+      "name": "Annay",
+      "postalCodes": ["62880"]
+    },
+    {
+      "code": "62034",
+      "name": "Annequin",
+      "postalCodes": ["62149"]
+    },
+    {
+      "code": "62035",
+      "name": "Annezin",
+      "postalCodes": ["62232"]
+    },
+    {
+      "code": "62036",
+      "name": "Anvin",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62037",
+      "name": "Anzin-Saint-Aubin",
+      "postalCodes": ["62223"]
+    },
+    {
+      "code": "62038",
+      "name": "Ardres",
+      "postalCodes": ["62610"]
+    },
+    {
+      "code": "62039",
+      "name": "Arleux-en-Gohelle",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62040",
+      "name": "Arques",
+      "postalCodes": ["62510"]
+    },
+    {
+      "code": "62041",
+      "name": "Arras",
+      "postalCodes": ["62000"]
+    },
+    {
+      "code": "62042",
+      "name": "Athies",
+      "postalCodes": ["62223"]
+    },
+    {
+      "code": "62043",
+      "name": "Les Attaques",
+      "postalCodes": ["62730"]
+    },
+    {
+      "code": "62044",
+      "name": "Attin",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62045",
+      "name": "Aubigny-en-Artois",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62046",
+      "name": "Aubin-Saint-Vaast",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62047",
+      "name": "Aubrometz",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62048",
+      "name": "Auchel",
+      "postalCodes": ["62260"]
+    },
+    {
+      "code": "62049",
+      "name": "Auchy-au-Bois",
+      "postalCodes": ["62190"]
+    },
+    {
+      "code": "62050",
+      "name": "Auchy-lès-Hesdin",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62051",
+      "name": "Auchy-les-Mines",
+      "postalCodes": ["62138"]
+    },
+    {
+      "code": "62052",
+      "name": "Audembert",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62053",
+      "name": "Audincthun",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62054",
+      "name": "Audinghen",
+      "postalCodes": ["62179"]
+    },
+    {
+      "code": "62055",
+      "name": "Audrehem",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62056",
+      "name": "Audresselles",
+      "postalCodes": ["62164"]
+    },
+    {
+      "code": "62057",
+      "name": "Audruicq",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62058",
+      "name": "Aumerval",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62059",
+      "name": "Autingues",
+      "postalCodes": ["62610"]
+    },
+    {
+      "code": "62060",
+      "name": "Auxi-le-Château",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62061",
+      "name": "Averdoingt",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62062",
+      "name": "Avesnes",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62063",
+      "name": "Avesnes-le-Comte",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62064",
+      "name": "Avesnes-lès-Bapaume",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62065",
+      "name": "Avion",
+      "postalCodes": ["62210"]
+    },
+    {
+      "code": "62066",
+      "name": "Avondance",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62067",
+      "name": "Avroult",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62068",
+      "name": "Ayette",
+      "postalCodes": ["62116"]
+    },
+    {
+      "code": "62069",
+      "name": "Azincourt",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62070",
+      "name": "Bailleul-aux-Cornailles",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62071",
+      "name": "Bailleul-lès-Pernes",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62072",
+      "name": "Bailleulmont",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62073",
+      "name": "Bailleul-Sir-Berthoult",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62074",
+      "name": "Bailleulval",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62075",
+      "name": "Baincthun",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62076",
+      "name": "Bainghen",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62077",
+      "name": "Bajus",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62078",
+      "name": "Balinghem",
+      "postalCodes": ["62610"]
+    },
+    {
+      "code": "62079",
+      "name": "Bancourt",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62080",
+      "name": "Bapaume",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62081",
+      "name": "Baralle",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62082",
+      "name": "Barastre",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62083",
+      "name": "Barlin",
+      "postalCodes": ["62620"]
+    },
+    {
+      "code": "62084",
+      "name": "Barly",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62085",
+      "name": "Basseux",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62086",
+      "name": "Bavincourt",
+      "postalCodes": ["62158"]
+    },
+    {
+      "code": "62087",
+      "name": "Bayenghem-lès-Éperlecques",
+      "postalCodes": ["62910"]
+    },
+    {
+      "code": "62088",
+      "name": "Bayenghem-lès-Seninghem",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62089",
+      "name": "Bazinghen",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62090",
+      "name": "Béalencourt",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62091",
+      "name": "Beaudricourt",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62092",
+      "name": "Beaufort-Blavincourt",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62093",
+      "name": "Beaulencourt",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62094",
+      "name": "Beaumerie-Saint-Martin",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62095",
+      "name": "Beaumetz-lès-Aire",
+      "postalCodes": ["62960"]
+    },
+    {
+      "code": "62096",
+      "name": "Beaumetz-lès-Cambrai",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62097",
+      "name": "Beaumetz-lès-Loges",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62099",
+      "name": "Beaurains",
+      "postalCodes": ["62217"]
+    },
+    {
+      "code": "62100",
+      "name": "Beaurainville",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62101",
+      "name": "Beauvois",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62102",
+      "name": "Bécourt",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62103",
+      "name": "Béhagnies",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62104",
+      "name": "Bellebrune",
+      "postalCodes": ["62142"]
+    },
+    {
+      "code": "62105",
+      "name": "Belle-et-Houllefort",
+      "postalCodes": ["62142"]
+    },
+    {
+      "code": "62106",
+      "name": "Bellonne",
+      "postalCodes": ["62490"]
+    },
+    {
+      "code": "62107",
+      "name": "Bénifontaine",
+      "postalCodes": ["62410"]
+    },
+    {
+      "code": "62108",
+      "name": "Berck",
+      "postalCodes": ["62600"]
+    },
+    {
+      "code": "62109",
+      "name": "Bergueneuse",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62111",
+      "name": "Berlencourt-le-Cauroy",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62112",
+      "name": "Berles-au-Bois",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62113",
+      "name": "Berles-Monchel",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62114",
+      "name": "Bermicourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62115",
+      "name": "Berneville",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62116",
+      "name": "Bernieulles",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62117",
+      "name": "Bertincourt",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62118",
+      "name": "Béthonsart",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62119",
+      "name": "Béthune",
+      "postalCodes": ["62400"]
+    },
+    {
+      "code": "62120",
+      "name": "Beugin",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62121",
+      "name": "Beugnâtre",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62122",
+      "name": "Beugny",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62123",
+      "name": "Beussent",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62124",
+      "name": "Beutin",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62125",
+      "name": "Beuvrequen",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62126",
+      "name": "Beuvry",
+      "postalCodes": ["62660"]
+    },
+    {
+      "code": "62127",
+      "name": "Bezinghem",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62128",
+      "name": "Biache-Saint-Vaast",
+      "postalCodes": ["62118"]
+    },
+    {
+      "code": "62129",
+      "name": "Biefvillers-lès-Bapaume",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62130",
+      "name": "Bienvillers-au-Bois",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62131",
+      "name": "Bihucourt",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62132",
+      "name": "Billy-Berclau",
+      "postalCodes": ["62138"]
+    },
+    {
+      "code": "62133",
+      "name": "Billy-Montigny",
+      "postalCodes": ["62420"]
+    },
+    {
+      "code": "62134",
+      "name": "Bimont",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62135",
+      "name": "Blairville",
+      "postalCodes": ["62173"]
+    },
+    {
+      "code": "62137",
+      "name": "Blangerval-Blangermont",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62138",
+      "name": "Blangy-sur-Ternoise",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62139",
+      "name": "Blendecques",
+      "postalCodes": ["62575"]
+    },
+    {
+      "code": "62140",
+      "name": "Bléquin",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62141",
+      "name": "Blessy",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62142",
+      "name": "Blingel",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62143",
+      "name": "Boffles",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62144",
+      "name": "Boiry-Becquerelle",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62145",
+      "name": "Boiry-Notre-Dame",
+      "postalCodes": ["62156"]
+    },
+    {
+      "code": "62146",
+      "name": "Boiry-Saint-Martin",
+      "postalCodes": ["62175"]
+    },
+    {
+      "code": "62147",
+      "name": "Boiry-Sainte-Rictrude",
+      "postalCodes": ["62175"]
+    },
+    {
+      "code": "62148",
+      "name": "Bois-Bernard",
+      "postalCodes": ["62320"]
+    },
+    {
+      "code": "62149",
+      "name": "Boisdinghem",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62150",
+      "name": "Boisjean",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62151",
+      "name": "Boisleux-au-Mont",
+      "postalCodes": ["62175"]
+    },
+    {
+      "code": "62152",
+      "name": "Boisleux-Saint-Marc",
+      "postalCodes": ["62175"]
+    },
+    {
+      "code": "62153",
+      "name": "Bomy",
+      "postalCodes": ["62960"]
+    },
+    {
+      "code": "62154",
+      "name": "Bonnières",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62155",
+      "name": "Bonningues-lès-Ardres",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62156",
+      "name": "Bonningues-lès-Calais",
+      "postalCodes": ["62340"]
+    },
+    {
+      "code": "62157",
+      "name": "Boubers-lès-Hesmond",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62158",
+      "name": "Boubers-sur-Canche",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62160",
+      "name": "Boulogne-sur-Mer",
+      "postalCodes": ["62200"]
+    },
+    {
+      "code": "62161",
+      "name": "Bouquehault",
+      "postalCodes": ["62340"]
+    },
+    {
+      "code": "62162",
+      "name": "Bourecq",
+      "postalCodes": ["62190"]
+    },
+    {
+      "code": "62163",
+      "name": "Bouret-sur-Canche",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62164",
+      "name": "Bourlon",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62165",
+      "name": "Bournonville",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62166",
+      "name": "Bours",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62167",
+      "name": "Boursin",
+      "postalCodes": ["62132"]
+    },
+    {
+      "code": "62168",
+      "name": "Bourthes",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62169",
+      "name": "Bouvelinghem",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62170",
+      "name": "Bouvigny-Boyeffles",
+      "postalCodes": ["62172"]
+    },
+    {
+      "code": "62171",
+      "name": "Boyaval",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62172",
+      "name": "Boyelles",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62173",
+      "name": "Brebières",
+      "postalCodes": ["62117"]
+    },
+    {
+      "code": "62174",
+      "name": "Brêmes",
+      "postalCodes": ["62610"]
+    },
+    {
+      "code": "62175",
+      "name": "Brévillers",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62176",
+      "name": "Bréxent-Énocq",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62177",
+      "name": "Brimeux",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62178",
+      "name": "Bruay-la-Buissière",
+      "postalCodes": ["62700"]
+    },
+    {
+      "code": "62179",
+      "name": "Brunembert",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62180",
+      "name": "Brias",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62181",
+      "name": "Bucquoy",
+      "postalCodes": ["62116"]
+    },
+    {
+      "code": "62182",
+      "name": "Buire-au-Bois",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62183",
+      "name": "Buire-le-Sec",
+      "postalCodes": ["62870"]
+    },
+    {
+      "code": "62184",
+      "name": "Buissy",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62185",
+      "name": "Bullecourt",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62186",
+      "name": "Bully-les-Mines",
+      "postalCodes": ["62160"]
+    },
+    {
+      "code": "62187",
+      "name": "Buneville",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62188",
+      "name": "Burbure",
+      "postalCodes": ["62151"]
+    },
+    {
+      "code": "62189",
+      "name": "Bus",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62190",
+      "name": "Busnes",
+      "postalCodes": ["62350"]
+    },
+    {
+      "code": "62191",
+      "name": "Caffiers",
+      "postalCodes": ["62132"]
+    },
+    {
+      "code": "62192",
+      "name": "Cagnicourt",
+      "postalCodes": ["62182"]
+    },
+    {
+      "code": "62193",
+      "name": "Calais",
+      "postalCodes": ["62100"]
+    },
+    {
+      "code": "62194",
+      "name": "Calonne-Ricouart",
+      "postalCodes": ["62470"]
+    },
+    {
+      "code": "62195",
+      "name": "Calonne-sur-la-Lys",
+      "postalCodes": ["62350"]
+    },
+    {
+      "code": "62196",
+      "name": "La Calotterie",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62197",
+      "name": "Camblain-Châtelain",
+      "postalCodes": ["62470"]
+    },
+    {
+      "code": "62198",
+      "name": "Cambligneul",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62199",
+      "name": "Camblain-l'Abbé",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62200",
+      "name": "Cambrin",
+      "postalCodes": ["62149"]
+    },
+    {
+      "code": "62201",
+      "name": "Camiers",
+      "postalCodes": ["62176"]
+    },
+    {
+      "code": "62202",
+      "name": "Campagne-lès-Boulonnais",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62203",
+      "name": "Campagne-lès-Guines",
+      "postalCodes": ["62340"]
+    },
+    {
+      "code": "62204",
+      "name": "Campagne-lès-Hesdin",
+      "postalCodes": ["62870"]
+    },
+    {
+      "code": "62205",
+      "name": "Campagne-lès-Wardrecques",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62206",
+      "name": "Campigneulles-les-Grandes",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62207",
+      "name": "Campigneulles-les-Petites",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62208",
+      "name": "Canettemont",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62209",
+      "name": "Canlers",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62211",
+      "name": "Capelle-Fermont",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62212",
+      "name": "Capelle-lès-Hesdin",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62213",
+      "name": "Carency",
+      "postalCodes": ["62144"]
+    },
+    {
+      "code": "62214",
+      "name": "Carly",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62215",
+      "name": "Carvin",
+      "postalCodes": ["62220"]
+    },
+    {
+      "code": "62216",
+      "name": "La Cauchie",
+      "postalCodes": ["62158"]
+    },
+    {
+      "code": "62217",
+      "name": "Cauchy-à-la-Tour",
+      "postalCodes": ["62260"]
+    },
+    {
+      "code": "62218",
+      "name": "Caucourt",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62219",
+      "name": "Caumont",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62220",
+      "name": "Cavron-Saint-Martin",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62221",
+      "name": "Chelers",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62222",
+      "name": "Chériennes",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62223",
+      "name": "Chérisy",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62224",
+      "name": "Chocques",
+      "postalCodes": ["62920"]
+    },
+    {
+      "code": "62225",
+      "name": "Clairmarais",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62227",
+      "name": "Clenleu",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62228",
+      "name": "Clerques",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62229",
+      "name": "Cléty",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62230",
+      "name": "Colembert",
+      "postalCodes": ["62142"]
+    },
+    {
+      "code": "62231",
+      "name": "Colline-Beaumont",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62232",
+      "name": "La Comté",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62233",
+      "name": "Conchil-le-Temple",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62234",
+      "name": "Conchy-sur-Canche",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62235",
+      "name": "Condette",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62236",
+      "name": "Contes",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62237",
+      "name": "Conteville-lès-Boulogne",
+      "postalCodes": ["62126"]
+    },
+    {
+      "code": "62238",
+      "name": "Conteville-en-Ternois",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62239",
+      "name": "Coquelles",
+      "postalCodes": ["62231"]
+    },
+    {
+      "code": "62240",
+      "name": "Corbehem",
+      "postalCodes": ["62112"]
+    },
+    {
+      "code": "62241",
+      "name": "Cormont",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62242",
+      "name": "Couin",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62243",
+      "name": "Coullemont",
+      "postalCodes": ["62158"]
+    },
+    {
+      "code": "62244",
+      "name": "Coulogne",
+      "postalCodes": ["62137"]
+    },
+    {
+      "code": "62245",
+      "name": "Coulomby",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62246",
+      "name": "Coupelle-Neuve",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62247",
+      "name": "Coupelle-Vieille",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62248",
+      "name": "Courcelles-le-Comte",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62249",
+      "name": "Courcelles-lès-Lens",
+      "postalCodes": ["62970"]
+    },
+    {
+      "code": "62250",
+      "name": "Courrières",
+      "postalCodes": ["62710"]
+    },
+    {
+      "code": "62251",
+      "name": "Courset",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62252",
+      "name": "La Couture",
+      "postalCodes": ["62136"]
+    },
+    {
+      "code": "62253",
+      "name": "Couturelle",
+      "postalCodes": ["62158"]
+    },
+    {
+      "code": "62254",
+      "name": "Coyecques",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62255",
+      "name": "Crémarest",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62256",
+      "name": "Crépy",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62257",
+      "name": "Créquy",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62258",
+      "name": "Croisette",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62259",
+      "name": "Croisilles",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62260",
+      "name": "Croix-en-Ternois",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62261",
+      "name": "Cucq",
+      "postalCodes": ["62780"]
+    },
+    {
+      "code": "62262",
+      "name": "Cuinchy",
+      "postalCodes": ["62149"]
+    },
+    {
+      "code": "62263",
+      "name": "Dainville",
+      "postalCodes": ["62000"]
+    },
+    {
+      "code": "62264",
+      "name": "Dannes",
+      "postalCodes": ["62187"]
+    },
+    {
+      "code": "62265",
+      "name": "Delettes",
+      "postalCodes": ["62129"]
+    },
+    {
+      "code": "62266",
+      "name": "Denier",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62267",
+      "name": "Dennebrœucq",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62268",
+      "name": "Desvres",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62269",
+      "name": "Diéval",
+      "postalCodes": ["62460"]
+    },
+    {
+      "code": "62270",
+      "name": "Divion",
+      "postalCodes": ["62460"]
+    },
+    {
+      "code": "62271",
+      "name": "Dohem",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62272",
+      "name": "Douchy-lès-Ayette",
+      "postalCodes": ["62116"]
+    },
+    {
+      "code": "62273",
+      "name": "Doudeauville",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62274",
+      "name": "Dourges",
+      "postalCodes": ["62119"]
+    },
+    {
+      "code": "62275",
+      "name": "Douriez",
+      "postalCodes": ["62870"]
+    },
+    {
+      "code": "62276",
+      "name": "Douvrin",
+      "postalCodes": ["62138"]
+    },
+    {
+      "code": "62277",
+      "name": "Drocourt",
+      "postalCodes": ["62320"]
+    },
+    {
+      "code": "62278",
+      "name": "Drouvin-le-Marais",
+      "postalCodes": ["62131"]
+    },
+    {
+      "code": "62279",
+      "name": "Duisans",
+      "postalCodes": ["62161"]
+    },
+    {
+      "code": "62280",
+      "name": "Dury",
+      "postalCodes": ["62156"]
+    },
+    {
+      "code": "62281",
+      "name": "Echinghen",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62282",
+      "name": "Éclimeux",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62283",
+      "name": "Écoivres",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62284",
+      "name": "Écourt-Saint-Quentin",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62285",
+      "name": "Écoust-Saint-Mein",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62286",
+      "name": "Ecquedecques",
+      "postalCodes": ["62190"]
+    },
+    {
+      "code": "62288",
+      "name": "Ecques",
+      "postalCodes": ["62129"]
+    },
+    {
+      "code": "62289",
+      "name": "Écuires",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62290",
+      "name": "Écurie",
+      "postalCodes": ["62223"]
+    },
+    {
+      "code": "62291",
+      "name": "Éleu-dit-Leauwette",
+      "postalCodes": ["62300"]
+    },
+    {
+      "code": "62292",
+      "name": "Elnes",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62293",
+      "name": "Embry",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62295",
+      "name": "Enquin-lez-Guinegatte",
+      "postalCodes": ["62145"]
+    },
+    {
+      "code": "62296",
+      "name": "Enquin-sur-Baillons",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62297",
+      "name": "Éperlecques",
+      "postalCodes": ["62910"]
+    },
+    {
+      "code": "62298",
+      "name": "Épinoy",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62299",
+      "name": "Eps",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62300",
+      "name": "Équihen-Plage",
+      "postalCodes": ["62224"]
+    },
+    {
+      "code": "62301",
+      "name": "Équirre",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62302",
+      "name": "Ergny",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62303",
+      "name": "Érin",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62304",
+      "name": "Erny-Saint-Julien",
+      "postalCodes": ["62960"]
+    },
+    {
+      "code": "62306",
+      "name": "Ervillers",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62307",
+      "name": "Escalles",
+      "postalCodes": ["62179"]
+    },
+    {
+      "code": "62308",
+      "name": "Escœuilles",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62309",
+      "name": "Esquerdes",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62310",
+      "name": "Essars",
+      "postalCodes": ["62400"]
+    },
+    {
+      "code": "62311",
+      "name": "Estevelles",
+      "postalCodes": ["62880"]
+    },
+    {
+      "code": "62312",
+      "name": "Estrée",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62313",
+      "name": "Estrée-Blanche",
+      "postalCodes": ["62145"]
+    },
+    {
+      "code": "62314",
+      "name": "Estrée-Cauchy",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62315",
+      "name": "Estréelles",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62316",
+      "name": "Estrée-Wamin",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62317",
+      "name": "Étaing",
+      "postalCodes": ["62156"]
+    },
+    {
+      "code": "62318",
+      "name": "Étaples",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62319",
+      "name": "Éterpigny",
+      "postalCodes": ["62156"]
+    },
+    {
+      "code": "62320",
+      "name": "Étrun",
+      "postalCodes": ["62161"]
+    },
+    {
+      "code": "62321",
+      "name": "Évin-Malmaison",
+      "postalCodes": ["62141"]
+    },
+    {
+      "code": "62322",
+      "name": "Famechon",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62323",
+      "name": "Fampoux",
+      "postalCodes": ["62118"]
+    },
+    {
+      "code": "62324",
+      "name": "Farbus",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62325",
+      "name": "Fauquembergues",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62326",
+      "name": "Favreuil",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62327",
+      "name": "Febvin-Palfart",
+      "postalCodes": ["62960"]
+    },
+    {
+      "code": "62328",
+      "name": "Ferfay",
+      "postalCodes": ["62260"]
+    },
+    {
+      "code": "62329",
+      "name": "Ferques",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62330",
+      "name": "Festubert",
+      "postalCodes": ["62149"]
+    },
+    {
+      "code": "62331",
+      "name": "Feuchy",
+      "postalCodes": ["62223"]
+    },
+    {
+      "code": "62332",
+      "name": "Ficheux",
+      "postalCodes": ["62173"]
+    },
+    {
+      "code": "62333",
+      "name": "Fiefs",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62334",
+      "name": "Fiennes",
+      "postalCodes": ["62132"]
+    },
+    {
+      "code": "62335",
+      "name": "Fillièvres",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62336",
+      "name": "Fléchin",
+      "postalCodes": ["62960"]
+    },
+    {
+      "code": "62337",
+      "name": "Flers",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62338",
+      "name": "Fleurbaix",
+      "postalCodes": ["62840"]
+    },
+    {
+      "code": "62339",
+      "name": "Fleury",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62340",
+      "name": "Floringhem",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62341",
+      "name": "Foncquevillers",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62342",
+      "name": "Fontaine-lès-Boulans",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62343",
+      "name": "Fontaine-lès-Croisilles",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62344",
+      "name": "Fontaine-lès-Hermans",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62345",
+      "name": "Fontaine-l'Étalon",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62346",
+      "name": "Fortel-en-Artois",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62347",
+      "name": "Fosseux",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62348",
+      "name": "Foufflin-Ricametz",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62349",
+      "name": "Fouquereuil",
+      "postalCodes": ["62232"]
+    },
+    {
+      "code": "62350",
+      "name": "Fouquières-lès-Béthune",
+      "postalCodes": ["62232"]
+    },
+    {
+      "code": "62351",
+      "name": "Fouquières-lès-Lens",
+      "postalCodes": ["62740"]
+    },
+    {
+      "code": "62352",
+      "name": "Framecourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62353",
+      "name": "Frémicourt",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62354",
+      "name": "Frencq",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62355",
+      "name": "Fresnes-lès-Montauban",
+      "postalCodes": ["62490"]
+    },
+    {
+      "code": "62356",
+      "name": "Fresnicourt-le-Dolmen",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62357",
+      "name": "Fresnoy",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62358",
+      "name": "Fresnoy-en-Gohelle",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62359",
+      "name": "Fressin",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62360",
+      "name": "Fréthun",
+      "postalCodes": ["62185"]
+    },
+    {
+      "code": "62361",
+      "name": "Frévent",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62362",
+      "name": "Frévillers",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62363",
+      "name": "Frévin-Capelle",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62364",
+      "name": "Fruges",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62365",
+      "name": "Galametz",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62366",
+      "name": "Gauchin-Légal",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62367",
+      "name": "Gauchin-Verloingt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62368",
+      "name": "Gaudiempré",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62369",
+      "name": "Gavrelle",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62370",
+      "name": "Gennes-Ivergny",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62371",
+      "name": "Givenchy-en-Gohelle",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62372",
+      "name": "Givenchy-le-Noble",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62373",
+      "name": "Givenchy-lès-la-Bassée",
+      "postalCodes": ["62149"]
+    },
+    {
+      "code": "62374",
+      "name": "Gomiécourt",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62375",
+      "name": "Gommecourt",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62376",
+      "name": "Gonnehem",
+      "postalCodes": ["62920"]
+    },
+    {
+      "code": "62377",
+      "name": "Gosnay",
+      "postalCodes": ["62199"]
+    },
+    {
+      "code": "62378",
+      "name": "Gouves",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62379",
+      "name": "Gouy-en-Artois",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62380",
+      "name": "Gouy-Servins",
+      "postalCodes": ["62530"]
+    },
+    {
+      "code": "62381",
+      "name": "Gouy-en-Ternois",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62382",
+      "name": "Gouy-Saint-André",
+      "postalCodes": ["62870"]
+    },
+    {
+      "code": "62383",
+      "name": "Gouy-sous-Bellonne",
+      "postalCodes": ["62112"]
+    },
+    {
+      "code": "62384",
+      "name": "Graincourt-lès-Havrincourt",
+      "postalCodes": ["62147"]
+    },
+    {
+      "code": "62385",
+      "name": "Grand-Rullecourt",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62386",
+      "name": "Grenay",
+      "postalCodes": ["62160"]
+    },
+    {
+      "code": "62387",
+      "name": "Grévillers",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62388",
+      "name": "Grigny",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62389",
+      "name": "Grincourt-lès-Pas",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62390",
+      "name": "Groffliers",
+      "postalCodes": ["62600"]
+    },
+    {
+      "code": "62391",
+      "name": "Guarbecque",
+      "postalCodes": ["62330"]
+    },
+    {
+      "code": "62392",
+      "name": "Guémappe",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62393",
+      "name": "Guemps",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62395",
+      "name": "Guigny",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62396",
+      "name": "Guinecourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62397",
+      "name": "Guînes",
+      "postalCodes": ["62340"]
+    },
+    {
+      "code": "62398",
+      "name": "Guisy",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62399",
+      "name": "Habarcq",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62400",
+      "name": "Haillicourt",
+      "postalCodes": ["62940"]
+    },
+    {
+      "code": "62401",
+      "name": "Haisnes",
+      "postalCodes": ["62138"]
+    },
+    {
+      "code": "62402",
+      "name": "Halinghen",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62403",
+      "name": "Hallines",
+      "postalCodes": ["62570"]
+    },
+    {
+      "code": "62404",
+      "name": "Halloy",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62405",
+      "name": "Hamblain-les-Prés",
+      "postalCodes": ["62118"]
+    },
+    {
+      "code": "62406",
+      "name": "Hamelincourt",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62407",
+      "name": "Ham-en-Artois",
+      "postalCodes": ["62190"]
+    },
+    {
+      "code": "62408",
+      "name": "Hames-Boucres",
+      "postalCodes": ["62340"]
+    },
+    {
+      "code": "62409",
+      "name": "Hannescamps",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62410",
+      "name": "Haplincourt",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62411",
+      "name": "Haravesnes",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62412",
+      "name": "Hardinghen",
+      "postalCodes": ["62132"]
+    },
+    {
+      "code": "62413",
+      "name": "Harnes",
+      "postalCodes": ["62440"]
+    },
+    {
+      "code": "62414",
+      "name": "Haucourt",
+      "postalCodes": ["62156"]
+    },
+    {
+      "code": "62415",
+      "name": "Haute-Avesnes",
+      "postalCodes": ["62144"]
+    },
+    {
+      "code": "62416",
+      "name": "Hautecloque",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62418",
+      "name": "Hauteville",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62419",
+      "name": "Haut-Loquin",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62421",
+      "name": "Havrincourt",
+      "postalCodes": ["62147"]
+    },
+    {
+      "code": "62422",
+      "name": "Hébuterne",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62423",
+      "name": "Helfaut",
+      "postalCodes": ["62570"]
+    },
+    {
+      "code": "62424",
+      "name": "Hendecourt-lès-Cagnicourt",
+      "postalCodes": ["62182"]
+    },
+    {
+      "code": "62425",
+      "name": "Hendecourt-lès-Ransart",
+      "postalCodes": ["62175"]
+    },
+    {
+      "code": "62426",
+      "name": "Héninel",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62427",
+      "name": "Hénin-Beaumont",
+      "postalCodes": ["62110"]
+    },
+    {
+      "code": "62428",
+      "name": "Hénin-sur-Cojeul",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62429",
+      "name": "Henneveux",
+      "postalCodes": ["62142"]
+    },
+    {
+      "code": "62430",
+      "name": "Hénu",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62432",
+      "name": "Herbinghen",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62433",
+      "name": "Héricourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62434",
+      "name": "La Herlière",
+      "postalCodes": ["62158"]
+    },
+    {
+      "code": "62435",
+      "name": "Herlincourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62436",
+      "name": "Herlin-le-Sec",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62437",
+      "name": "Herly",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62438",
+      "name": "Hermaville",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62439",
+      "name": "Hermelinghen",
+      "postalCodes": ["62132"]
+    },
+    {
+      "code": "62440",
+      "name": "Hermies",
+      "postalCodes": ["62147"]
+    },
+    {
+      "code": "62441",
+      "name": "Hermin",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62442",
+      "name": "Hernicourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62443",
+      "name": "Hersin-Coupigny",
+      "postalCodes": ["62530"]
+    },
+    {
+      "code": "62444",
+      "name": "Hervelinghen",
+      "postalCodes": ["62179"]
+    },
+    {
+      "code": "62445",
+      "name": "Hesdigneul-lès-Béthune",
+      "postalCodes": ["62196"]
+    },
+    {
+      "code": "62446",
+      "name": "Hesdigneul-lès-Boulogne",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62447",
+      "name": "Hesdin-la-Forêt",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62448",
+      "name": "Hesdin-l'Abbé",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62449",
+      "name": "Hesmond",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62450",
+      "name": "Hestrus",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62451",
+      "name": "Heuchin",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62452",
+      "name": "Heuringhem",
+      "postalCodes": ["62575"]
+    },
+    {
+      "code": "62453",
+      "name": "Hézecques",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62454",
+      "name": "Hinges",
+      "postalCodes": ["62232"]
+    },
+    {
+      "code": "62455",
+      "name": "Hocquinghen",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62456",
+      "name": "Houchin",
+      "postalCodes": ["62620"]
+    },
+    {
+      "code": "62457",
+      "name": "Houdain",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62458",
+      "name": "Houlle",
+      "postalCodes": ["62910"]
+    },
+    {
+      "code": "62459",
+      "name": "Houvin-Houvigneul",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62460",
+      "name": "Hubersent",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62462",
+      "name": "Huclier",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62463",
+      "name": "Hucqueliers",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62464",
+      "name": "Hulluch",
+      "postalCodes": ["62410"]
+    },
+    {
+      "code": "62465",
+      "name": "Humbercamps",
+      "postalCodes": ["62158"]
+    },
+    {
+      "code": "62466",
+      "name": "Humbert",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62467",
+      "name": "Humerœuille",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62468",
+      "name": "Humières",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62469",
+      "name": "Inchy-en-Artois",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62470",
+      "name": "Incourt",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62471",
+      "name": "Bellinghem",
+      "postalCodes": ["62129"]
+    },
+    {
+      "code": "62472",
+      "name": "Inxent",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62473",
+      "name": "Isbergues",
+      "postalCodes": ["62330"]
+    },
+    {
+      "code": "62474",
+      "name": "Isques",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62475",
+      "name": "Ivergny",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62476",
+      "name": "Izel-lès-Équerchin",
+      "postalCodes": ["62490"]
+    },
+    {
+      "code": "62477",
+      "name": "Izel-lès-Hameau",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62478",
+      "name": "Journy",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62479",
+      "name": "Labeuvrière",
+      "postalCodes": ["62122"]
+    },
+    {
+      "code": "62480",
+      "name": "Labourse",
+      "postalCodes": ["62113"]
+    },
+    {
+      "code": "62481",
+      "name": "Labroye",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62483",
+      "name": "Lacres",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62484",
+      "name": "Lagnicourt-Marcel",
+      "postalCodes": ["62159"]
+    },
+    {
+      "code": "62485",
+      "name": "Laires",
+      "postalCodes": ["62960"]
+    },
+    {
+      "code": "62486",
+      "name": "Lambres-lez-Aire",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62487",
+      "name": "Landrethun-le-Nord",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62488",
+      "name": "Landrethun-lès-Ardres",
+      "postalCodes": ["62610"]
+    },
+    {
+      "code": "62489",
+      "name": "Lapugnoy",
+      "postalCodes": ["62122"]
+    },
+    {
+      "code": "62490",
+      "name": "Lattre-Saint-Quentin",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62491",
+      "name": "Laventie",
+      "postalCodes": ["62840"]
+    },
+    {
+      "code": "62492",
+      "name": "Lebiez",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62493",
+      "name": "Lebucquière",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62494",
+      "name": "Léchelle",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62495",
+      "name": "Ledinghem",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62496",
+      "name": "Lefaux",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62497",
+      "name": "Leforest",
+      "postalCodes": ["62790"]
+    },
+    {
+      "code": "62498",
+      "name": "Lens",
+      "postalCodes": ["62300"]
+    },
+    {
+      "code": "62499",
+      "name": "Lépine",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62500",
+      "name": "Lespesses",
+      "postalCodes": ["62190"]
+    },
+    {
+      "code": "62501",
+      "name": "Lespinoy",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62502",
+      "name": "Lestrem",
+      "postalCodes": ["62136"]
+    },
+    {
+      "code": "62503",
+      "name": "Leubringhen",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62504",
+      "name": "Leulinghem",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62505",
+      "name": "Leulinghen-Bernes",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62506",
+      "name": "Licques",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62507",
+      "name": "Liencourt",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62508",
+      "name": "Lières",
+      "postalCodes": ["62190"]
+    },
+    {
+      "code": "62509",
+      "name": "Liettres",
+      "postalCodes": ["62145"]
+    },
+    {
+      "code": "62510",
+      "name": "Liévin",
+      "postalCodes": ["62800"]
+    },
+    {
+      "code": "62511",
+      "name": "Lignereuil",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62512",
+      "name": "Ligny-lès-Aire",
+      "postalCodes": ["62960"]
+    },
+    {
+      "code": "62513",
+      "name": "Ligny-sur-Canche",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62514",
+      "name": "Ligny-Saint-Flochel",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62515",
+      "name": "Ligny-Thilloy",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62516",
+      "name": "Lillers",
+      "postalCodes": ["62190"]
+    },
+    {
+      "code": "62517",
+      "name": "Linghem",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62518",
+      "name": "Linzeux",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62519",
+      "name": "Lisbourg",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62520",
+      "name": "Locon",
+      "postalCodes": ["62400"]
+    },
+    {
+      "code": "62521",
+      "name": "La Loge",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62522",
+      "name": "Loison-sur-Créquoise",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62523",
+      "name": "Loison-sous-Lens",
+      "postalCodes": ["62218"]
+    },
+    {
+      "code": "62524",
+      "name": "Longfossé",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62525",
+      "name": "Longuenesse",
+      "postalCodes": ["62219"]
+    },
+    {
+      "code": "62526",
+      "name": "Longueville",
+      "postalCodes": ["62142"]
+    },
+    {
+      "code": "62527",
+      "name": "Longvilliers",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62528",
+      "name": "Loos-en-Gohelle",
+      "postalCodes": ["62750"]
+    },
+    {
+      "code": "62529",
+      "name": "Lorgies",
+      "postalCodes": ["62840"]
+    },
+    {
+      "code": "62530",
+      "name": "Lottinghen",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62531",
+      "name": "Louches",
+      "postalCodes": ["62610"]
+    },
+    {
+      "code": "62532",
+      "name": "Lozinghem",
+      "postalCodes": ["62540"]
+    },
+    {
+      "code": "62533",
+      "name": "Lugy",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62534",
+      "name": "Lumbres",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62535",
+      "name": "La Madelaine-sous-Montreuil",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62536",
+      "name": "Magnicourt-en-Comte",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62537",
+      "name": "Magnicourt-sur-Canche",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62538",
+      "name": "Maintenay",
+      "postalCodes": ["62870"]
+    },
+    {
+      "code": "62539",
+      "name": "Maisnil",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62540",
+      "name": "Maisnil-lès-Ruitz",
+      "postalCodes": ["62620"]
+    },
+    {
+      "code": "62541",
+      "name": "Maisoncelle",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62542",
+      "name": "Maizières",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62543",
+      "name": "Mametz",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62544",
+      "name": "Manin",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62545",
+      "name": "Maninghem",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62546",
+      "name": "Maninghen-Henne",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62547",
+      "name": "Marant",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62548",
+      "name": "Marck",
+      "postalCodes": ["62730"]
+    },
+    {
+      "code": "62550",
+      "name": "Marconnelle",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62551",
+      "name": "Marenla",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62552",
+      "name": "Maresquel-Ecquemicourt",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62553",
+      "name": "Marest",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62554",
+      "name": "Maresville",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62555",
+      "name": "Marles-les-Mines",
+      "postalCodes": ["62540"]
+    },
+    {
+      "code": "62556",
+      "name": "Marles-sur-Canche",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62557",
+      "name": "Marœuil",
+      "postalCodes": ["62161"]
+    },
+    {
+      "code": "62558",
+      "name": "Marquay",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62559",
+      "name": "Marquion",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62560",
+      "name": "Marquise",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62561",
+      "name": "Martinpuich",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62562",
+      "name": "Matringhem",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62563",
+      "name": "Mazingarbe",
+      "postalCodes": ["62670"]
+    },
+    {
+      "code": "62564",
+      "name": "Mazinghem",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62565",
+      "name": "Mencas",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62566",
+      "name": "Menneville",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62567",
+      "name": "Mentque-Nortbécourt",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62568",
+      "name": "Mercatel",
+      "postalCodes": ["62217"]
+    },
+    {
+      "code": "62569",
+      "name": "Merck-Saint-Liévin",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62570",
+      "name": "Méricourt",
+      "postalCodes": ["62680"]
+    },
+    {
+      "code": "62571",
+      "name": "Merlimont",
+      "postalCodes": ["62155"]
+    },
+    {
+      "code": "62572",
+      "name": "Metz-en-Couture",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62573",
+      "name": "Meurchin",
+      "postalCodes": ["62410"]
+    },
+    {
+      "code": "62574",
+      "name": "Mingoval",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62576",
+      "name": "Moncheaux-lès-Frévent",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62577",
+      "name": "Monchel-sur-Canche",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62578",
+      "name": "Monchiet",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62579",
+      "name": "Monchy-au-Bois",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62580",
+      "name": "Monchy-Breton",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62581",
+      "name": "Monchy-Cayeux",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62582",
+      "name": "Monchy-le-Preux",
+      "postalCodes": ["62118"]
+    },
+    {
+      "code": "62583",
+      "name": "Mondicourt",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62584",
+      "name": "Mont-Bernanchon",
+      "postalCodes": ["62350"]
+    },
+    {
+      "code": "62585",
+      "name": "Montcavrel",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62586",
+      "name": "Montenescourt",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62587",
+      "name": "Montigny-en-Gohelle",
+      "postalCodes": ["62640"]
+    },
+    {
+      "code": "62588",
+      "name": "Montreuil-sur-Mer",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62589",
+      "name": "Mont-Saint-Éloi",
+      "postalCodes": ["62144"]
+    },
+    {
+      "code": "62590",
+      "name": "Monts-en-Ternois",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62591",
+      "name": "Morchies",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62592",
+      "name": "Moringhem",
+      "postalCodes": ["62910"]
+    },
+    {
+      "code": "62593",
+      "name": "Morval",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62594",
+      "name": "Mory",
+      "postalCodes": ["62159"]
+    },
+    {
+      "code": "62595",
+      "name": "Moulle",
+      "postalCodes": ["62910"]
+    },
+    {
+      "code": "62596",
+      "name": "Mouriez",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62597",
+      "name": "Moyenneville",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62598",
+      "name": "Muncq-Nieurlet",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62599",
+      "name": "Nabringhen",
+      "postalCodes": ["62142"]
+    },
+    {
+      "code": "62600",
+      "name": "Nédon",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62601",
+      "name": "Nédonchel",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62602",
+      "name": "Nempont-Saint-Firmin",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62603",
+      "name": "Nesles",
+      "postalCodes": ["62152"]
+    },
+    {
+      "code": "62604",
+      "name": "Neufchâtel-Hardelot",
+      "postalCodes": ["62152"]
+    },
+    {
+      "code": "62605",
+      "name": "Neulette",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62606",
+      "name": "Neuve-Chapelle",
+      "postalCodes": ["62840"]
+    },
+    {
+      "code": "62607",
+      "name": "Neuville-au-Cornet",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62608",
+      "name": "Neuville-Bourjonval",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62609",
+      "name": "Neuville-Saint-Vaast",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62610",
+      "name": "Neuville-sous-Montreuil",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62611",
+      "name": "Neuville-Vitasse",
+      "postalCodes": ["62217"]
+    },
+    {
+      "code": "62612",
+      "name": "Neuvireuil",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62613",
+      "name": "Nielles-lès-Bléquin",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62614",
+      "name": "Nielles-lès-Ardres",
+      "postalCodes": ["62610"]
+    },
+    {
+      "code": "62615",
+      "name": "Nielles-lès-Calais",
+      "postalCodes": ["62185"]
+    },
+    {
+      "code": "62616",
+      "name": "Nœux-lès-Auxi",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62617",
+      "name": "Nœux-les-Mines",
+      "postalCodes": ["62290"]
+    },
+    {
+      "code": "62618",
+      "name": "Nordausques",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62619",
+      "name": "Noreuil",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62620",
+      "name": "Norrent-Fontes",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62621",
+      "name": "Nortkerque",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62622",
+      "name": "Nort-Leulinghem",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62623",
+      "name": "Nouvelle-Église",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62624",
+      "name": "Noyelles-Godault",
+      "postalCodes": ["62950"]
+    },
+    {
+      "code": "62625",
+      "name": "Noyelles-lès-Humières",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62626",
+      "name": "Noyelles-lès-Vermelles",
+      "postalCodes": ["62980"]
+    },
+    {
+      "code": "62627",
+      "name": "Noyelles-sous-Bellonne",
+      "postalCodes": ["62490"]
+    },
+    {
+      "code": "62628",
+      "name": "Noyelles-sous-Lens",
+      "postalCodes": ["62221"]
+    },
+    {
+      "code": "62629",
+      "name": "Noyellette",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62630",
+      "name": "Noyelle-Vion",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62631",
+      "name": "Nuncq-Hautecôte",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62632",
+      "name": "Oblinghem",
+      "postalCodes": ["62920"]
+    },
+    {
+      "code": "62633",
+      "name": "Œuf-en-Ternois",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62634",
+      "name": "Offekerque",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62635",
+      "name": "Offin",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62636",
+      "name": "Offrethun",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62637",
+      "name": "Oignies",
+      "postalCodes": ["62590"]
+    },
+    {
+      "code": "62638",
+      "name": "Oisy-le-Verger",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62639",
+      "name": "Oppy",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62640",
+      "name": "Orville",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62641",
+      "name": "Ostreville",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62642",
+      "name": "Ourton",
+      "postalCodes": ["62460"]
+    },
+    {
+      "code": "62643",
+      "name": "Outreau",
+      "postalCodes": ["62230"]
+    },
+    {
+      "code": "62644",
+      "name": "Ouve-Wirquin",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62645",
+      "name": "Oye-Plage",
+      "postalCodes": ["62215"]
+    },
+    {
+      "code": "62646",
+      "name": "Palluel",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62647",
+      "name": "Le Parcq",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62648",
+      "name": "Parenty",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62649",
+      "name": "Pas-en-Artois",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62650",
+      "name": "Pelves",
+      "postalCodes": ["62118"]
+    },
+    {
+      "code": "62651",
+      "name": "Penin",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62652",
+      "name": "Pernes",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62653",
+      "name": "Pernes-lès-Boulogne",
+      "postalCodes": ["62126"]
+    },
+    {
+      "code": "62654",
+      "name": "Peuplingues",
+      "postalCodes": ["62231"]
+    },
+    {
+      "code": "62655",
+      "name": "Pierremont",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62656",
+      "name": "Pihem",
+      "postalCodes": ["62570"]
+    },
+    {
+      "code": "62657",
+      "name": "Pihen-lès-Guînes",
+      "postalCodes": ["62340"]
+    },
+    {
+      "code": "62658",
+      "name": "Pittefaux",
+      "postalCodes": ["62126"]
+    },
+    {
+      "code": "62659",
+      "name": "Planques",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62660",
+      "name": "Plouvain",
+      "postalCodes": ["62118"]
+    },
+    {
+      "code": "62661",
+      "name": "Bouin-Plumoison",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62662",
+      "name": "Polincove",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62663",
+      "name": "Pommera",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62664",
+      "name": "Pommier",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62665",
+      "name": "Le Ponchel",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62666",
+      "name": "Pont-à-Vendin",
+      "postalCodes": ["62880"]
+    },
+    {
+      "code": "62667",
+      "name": "Le Portel",
+      "postalCodes": ["62480"]
+    },
+    {
+      "code": "62668",
+      "name": "Prédefin",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62669",
+      "name": "Pressy",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62670",
+      "name": "Preures",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62671",
+      "name": "Pronville-en-Artois",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62672",
+      "name": "Puisieux",
+      "postalCodes": ["62116"]
+    },
+    {
+      "code": "62673",
+      "name": "Quéant",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62674",
+      "name": "Quelmes",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62675",
+      "name": "Quercamps",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62676",
+      "name": "Quernes",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62677",
+      "name": "Le Quesnoy-en-Artois",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62678",
+      "name": "Quesques",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62679",
+      "name": "Questrecques",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62680",
+      "name": "Quiéry-la-Motte",
+      "postalCodes": ["62490"]
+    },
+    {
+      "code": "62681",
+      "name": "Quiestède",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62682",
+      "name": "Quilen",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62683",
+      "name": "Quœux-Haut-Maînil",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62684",
+      "name": "Racquinghem",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62685",
+      "name": "Radinghem",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62686",
+      "name": "Ramecourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62688",
+      "name": "Rang-du-Fliers",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62689",
+      "name": "Ransart",
+      "postalCodes": ["62173"]
+    },
+    {
+      "code": "62690",
+      "name": "Raye-sur-Authie",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62691",
+      "name": "Saint-Augustin",
+      "postalCodes": ["62120", "62129"]
+    },
+    {
+      "code": "62692",
+      "name": "Rebergues",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62693",
+      "name": "Rebreuve-Ranchicourt",
+      "postalCodes": ["62150"]
+    },
+    {
+      "code": "62694",
+      "name": "Rebreuve-sur-Canche",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62695",
+      "name": "Rebreuviette",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62696",
+      "name": "Reclinghem",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62697",
+      "name": "Récourt",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62698",
+      "name": "Recques-sur-Course",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62699",
+      "name": "Recques-sur-Hem",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62700",
+      "name": "Regnauville",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62701",
+      "name": "Rely",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62702",
+      "name": "Remilly-Wirquin",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62703",
+      "name": "Rémy",
+      "postalCodes": ["62156"]
+    },
+    {
+      "code": "62704",
+      "name": "Renty",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62705",
+      "name": "Rety",
+      "postalCodes": ["62720"]
+    },
+    {
+      "code": "62706",
+      "name": "Richebourg",
+      "postalCodes": ["62136"]
+    },
+    {
+      "code": "62708",
+      "name": "Riencourt-lès-Bapaume",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62709",
+      "name": "Riencourt-lès-Cagnicourt",
+      "postalCodes": ["62182"]
+    },
+    {
+      "code": "62710",
+      "name": "Rimboval",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62711",
+      "name": "Rinxent",
+      "postalCodes": ["62720"]
+    },
+    {
+      "code": "62712",
+      "name": "Rivière",
+      "postalCodes": ["62173"]
+    },
+    {
+      "code": "62713",
+      "name": "Robecq",
+      "postalCodes": ["62350"]
+    },
+    {
+      "code": "62714",
+      "name": "Roclincourt",
+      "postalCodes": ["62223"]
+    },
+    {
+      "code": "62715",
+      "name": "Rocquigny",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62716",
+      "name": "Rodelinghem",
+      "postalCodes": ["62610"]
+    },
+    {
+      "code": "62717",
+      "name": "Roëllecourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62718",
+      "name": "Rœux",
+      "postalCodes": ["62118"]
+    },
+    {
+      "code": "62719",
+      "name": "Rollancourt",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62720",
+      "name": "Rombly",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62721",
+      "name": "Roquetoire",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62722",
+      "name": "Rougefay",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62723",
+      "name": "Roussent",
+      "postalCodes": ["62870"]
+    },
+    {
+      "code": "62724",
+      "name": "Rouvroy",
+      "postalCodes": ["62320"]
+    },
+    {
+      "code": "62725",
+      "name": "Royon",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62726",
+      "name": "Ruisseauville",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62727",
+      "name": "Ruitz",
+      "postalCodes": ["62620"]
+    },
+    {
+      "code": "62728",
+      "name": "Rumaucourt",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62729",
+      "name": "Rumilly",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62730",
+      "name": "Ruminghem",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62731",
+      "name": "Ruyaulcourt",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62732",
+      "name": "Sachin",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62733",
+      "name": "Sailly-au-Bois",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62734",
+      "name": "Sailly-en-Ostrevent",
+      "postalCodes": ["62490"]
+    },
+    {
+      "code": "62735",
+      "name": "Sailly-Labourse",
+      "postalCodes": ["62113"]
+    },
+    {
+      "code": "62736",
+      "name": "Sailly-sur-la-Lys",
+      "postalCodes": ["62840"]
+    },
+    {
+      "code": "62737",
+      "name": "Sains-en-Gohelle",
+      "postalCodes": ["62114"]
+    },
+    {
+      "code": "62738",
+      "name": "Sains-lès-Fressin",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62739",
+      "name": "Sains-lès-Marquion",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62740",
+      "name": "Sains-lès-Pernes",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62741",
+      "name": "Saint-Amand",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62742",
+      "name": "Saint-Aubin",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62744",
+      "name": "Sainte-Catherine",
+      "postalCodes": ["62223"]
+    },
+    {
+      "code": "62745",
+      "name": "Saint-Denœux",
+      "postalCodes": ["62990"]
+    },
+    {
+      "code": "62746",
+      "name": "Saint-Étienne-au-Mont",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62747",
+      "name": "Saint-Floris",
+      "postalCodes": ["62350"]
+    },
+    {
+      "code": "62748",
+      "name": "Saint-Folquin",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62749",
+      "name": "Saint-Georges",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62750",
+      "name": "Saint-Hilaire-Cottes",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62751",
+      "name": "Saint-Inglevert",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62752",
+      "name": "Saint-Josse",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62753",
+      "name": "Saint-Laurent-Blangy",
+      "postalCodes": ["62223"]
+    },
+    {
+      "code": "62754",
+      "name": "Saint-Léger",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62755",
+      "name": "Saint-Léonard",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62756",
+      "name": "Sainte-Marie-Kerque",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62757",
+      "name": "Saint-Martin-lez-Tatinghem",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62758",
+      "name": "Saint-Martin-Boulogne",
+      "postalCodes": ["62280"]
+    },
+    {
+      "code": "62759",
+      "name": "Saint-Martin-Choquel",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62760",
+      "name": "Saint-Martin-d'Hardinghem",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62761",
+      "name": "Saint-Martin-sur-Cojeul",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62762",
+      "name": "Saint-Michel-sous-Bois",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62763",
+      "name": "Saint-Michel-sur-Ternoise",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62764",
+      "name": "Saint-Nicolas",
+      "postalCodes": ["62223"]
+    },
+    {
+      "code": "62765",
+      "name": "Saint-Omer",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62766",
+      "name": "Saint-Omer-Capelle",
+      "postalCodes": ["62162"]
+    },
+    {
+      "code": "62767",
+      "name": "Saint-Pol-sur-Ternoise",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62768",
+      "name": "Saint-Rémy-au-Bois",
+      "postalCodes": ["62870"]
+    },
+    {
+      "code": "62769",
+      "name": "Saint-Tricat",
+      "postalCodes": ["62185"]
+    },
+    {
+      "code": "62770",
+      "name": "Saint-Venant",
+      "postalCodes": ["62350"]
+    },
+    {
+      "code": "62771",
+      "name": "Sallaumines",
+      "postalCodes": ["62430"]
+    },
+    {
+      "code": "62772",
+      "name": "Salperwick",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62773",
+      "name": "Samer",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62774",
+      "name": "Sangatte",
+      "postalCodes": ["62231"]
+    },
+    {
+      "code": "62775",
+      "name": "Sanghen",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62776",
+      "name": "Sapignies",
+      "postalCodes": ["62121"]
+    },
+    {
+      "code": "62777",
+      "name": "Le Sars",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62778",
+      "name": "Sars-le-Bois",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62779",
+      "name": "Sarton",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62780",
+      "name": "Sauchy-Cauchy",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62781",
+      "name": "Sauchy-Lestrée",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62782",
+      "name": "Saudemont",
+      "postalCodes": ["62860"]
+    },
+    {
+      "code": "62783",
+      "name": "Saulchoy",
+      "postalCodes": ["62870"]
+    },
+    {
+      "code": "62784",
+      "name": "Saulty",
+      "postalCodes": ["62158"]
+    },
+    {
+      "code": "62785",
+      "name": "Savy-Berlette",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62786",
+      "name": "Selles",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62787",
+      "name": "Sempy",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62788",
+      "name": "Seninghem",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62789",
+      "name": "Senlecques",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62790",
+      "name": "Senlis",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62791",
+      "name": "Séricourt",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62792",
+      "name": "Serques",
+      "postalCodes": ["62910"]
+    },
+    {
+      "code": "62793",
+      "name": "Servins",
+      "postalCodes": ["62530"]
+    },
+    {
+      "code": "62794",
+      "name": "Setques",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62795",
+      "name": "Sibiville",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62796",
+      "name": "Simencourt",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62797",
+      "name": "Siracourt",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62798",
+      "name": "Sombrin",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62799",
+      "name": "Sorrus",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62800",
+      "name": "Souastre",
+      "postalCodes": ["62111"]
+    },
+    {
+      "code": "62801",
+      "name": "Souchez",
+      "postalCodes": ["62153"]
+    },
+    {
+      "code": "62802",
+      "name": "Le Souich",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62803",
+      "name": "Surques",
+      "postalCodes": ["62850"]
+    },
+    {
+      "code": "62804",
+      "name": "Sus-Saint-Léger",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62805",
+      "name": "Tangry",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62806",
+      "name": "Tardinghen",
+      "postalCodes": ["62179"]
+    },
+    {
+      "code": "62808",
+      "name": "Teneur",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62809",
+      "name": "Ternas",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62810",
+      "name": "Thélus",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62811",
+      "name": "Thérouanne",
+      "postalCodes": ["62129"]
+    },
+    {
+      "code": "62812",
+      "name": "Thiembronne",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62813",
+      "name": "La Thieuloye",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62814",
+      "name": "Thièvres",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62815",
+      "name": "Tigny-Noyelle",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62816",
+      "name": "Tilloy-lès-Hermaville",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62817",
+      "name": "Tilloy-lès-Mofflaines",
+      "postalCodes": ["62217"]
+    },
+    {
+      "code": "62818",
+      "name": "Tilly-Capelle",
+      "postalCodes": ["62134"]
+    },
+    {
+      "code": "62819",
+      "name": "Tilques",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62820",
+      "name": "Tincques",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62821",
+      "name": "Tingry",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62822",
+      "name": "Tollent",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62823",
+      "name": "Torcy",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62824",
+      "name": "Tortefontaine",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62825",
+      "name": "Tortequesne",
+      "postalCodes": ["62490"]
+    },
+    {
+      "code": "62826",
+      "name": "Le Touquet-Paris-Plage",
+      "postalCodes": ["62520"]
+    },
+    {
+      "code": "62827",
+      "name": "Tournehem-sur-la-Hem",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62828",
+      "name": "Tramecourt",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62829",
+      "name": "Le Transloy",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62830",
+      "name": "Trescault",
+      "postalCodes": ["62147"]
+    },
+    {
+      "code": "62831",
+      "name": "Troisvaux",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62832",
+      "name": "Tubersent",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62833",
+      "name": "Vacquerie-le-Boucq",
+      "postalCodes": ["62270"]
+    },
+    {
+      "code": "62834",
+      "name": "Vacqueriette-Erquières",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62835",
+      "name": "Valhuon",
+      "postalCodes": ["62550"]
+    },
+    {
+      "code": "62836",
+      "name": "Vaudricourt",
+      "postalCodes": ["62131"]
+    },
+    {
+      "code": "62837",
+      "name": "Vaudringhem",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62838",
+      "name": "Vaulx",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62839",
+      "name": "Vaulx-Vraucourt",
+      "postalCodes": ["62159"]
+    },
+    {
+      "code": "62840",
+      "name": "Vélu",
+      "postalCodes": ["62124"]
+    },
+    {
+      "code": "62841",
+      "name": "Vendin-lès-Béthune",
+      "postalCodes": ["62232"]
+    },
+    {
+      "code": "62842",
+      "name": "Vendin-le-Vieil",
+      "postalCodes": ["62880"]
+    },
+    {
+      "code": "62843",
+      "name": "Verchin",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62844",
+      "name": "Verchocq",
+      "postalCodes": ["62560"]
+    },
+    {
+      "code": "62845",
+      "name": "Verlincthun",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62846",
+      "name": "Vermelles",
+      "postalCodes": ["62980"]
+    },
+    {
+      "code": "62847",
+      "name": "Verquigneul",
+      "postalCodes": ["62113"]
+    },
+    {
+      "code": "62848",
+      "name": "Verquin",
+      "postalCodes": ["62131"]
+    },
+    {
+      "code": "62849",
+      "name": "Verton",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62850",
+      "name": "Vieil-Hesdin",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62851",
+      "name": "Vieille-Chapelle",
+      "postalCodes": ["62136"]
+    },
+    {
+      "code": "62852",
+      "name": "Vieille-Église",
+      "postalCodes": ["62162"]
+    },
+    {
+      "code": "62853",
+      "name": "Vieil-Moutier",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62854",
+      "name": "Villers-au-Bois",
+      "postalCodes": ["62144"]
+    },
+    {
+      "code": "62855",
+      "name": "Villers-au-Flos",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62856",
+      "name": "Villers-Brûlin",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62857",
+      "name": "Villers-Châtel",
+      "postalCodes": ["62690"]
+    },
+    {
+      "code": "62858",
+      "name": "Villers-lès-Cagnicourt",
+      "postalCodes": ["62182"]
+    },
+    {
+      "code": "62859",
+      "name": "Villers-l'Hôpital",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62860",
+      "name": "Villers-Sir-Simon",
+      "postalCodes": ["62127"]
+    },
+    {
+      "code": "62861",
+      "name": "Vimy",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62862",
+      "name": "Vincly",
+      "postalCodes": ["62310"]
+    },
+    {
+      "code": "62863",
+      "name": "Violaines",
+      "postalCodes": ["62138"]
+    },
+    {
+      "code": "62864",
+      "name": "Vis-en-Artois",
+      "postalCodes": ["62156"]
+    },
+    {
+      "code": "62865",
+      "name": "Vitry-en-Artois",
+      "postalCodes": ["62490"]
+    },
+    {
+      "code": "62866",
+      "name": "Waben",
+      "postalCodes": ["62180"]
+    },
+    {
+      "code": "62867",
+      "name": "Wacquinghen",
+      "postalCodes": ["62250"]
+    },
+    {
+      "code": "62868",
+      "name": "Wail",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62869",
+      "name": "Wailly",
+      "postalCodes": ["62217"]
+    },
+    {
+      "code": "62870",
+      "name": "Wailly-Beaucamp",
+      "postalCodes": ["62170"]
+    },
+    {
+      "code": "62871",
+      "name": "Wambercourt",
+      "postalCodes": ["62140"]
+    },
+    {
+      "code": "62872",
+      "name": "Wamin",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62873",
+      "name": "Wancourt",
+      "postalCodes": ["62128"]
+    },
+    {
+      "code": "62874",
+      "name": "Wanquetin",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62875",
+      "name": "Wardrecques",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62876",
+      "name": "Warlencourt-Eaucourt",
+      "postalCodes": ["62450"]
+    },
+    {
+      "code": "62877",
+      "name": "Warlincourt-lès-Pas",
+      "postalCodes": ["62760"]
+    },
+    {
+      "code": "62878",
+      "name": "Warlus",
+      "postalCodes": ["62123"]
+    },
+    {
+      "code": "62879",
+      "name": "Warluzel",
+      "postalCodes": ["62810"]
+    },
+    {
+      "code": "62880",
+      "name": "Le Wast",
+      "postalCodes": ["62142"]
+    },
+    {
+      "code": "62881",
+      "name": "Beauvoir-Wavans",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62882",
+      "name": "Wavrans-sur-l'Aa",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62883",
+      "name": "Wavrans-sur-Ternoise",
+      "postalCodes": ["62130"]
+    },
+    {
+      "code": "62885",
+      "name": "Westrehem",
+      "postalCodes": ["62960"]
+    },
+    {
+      "code": "62886",
+      "name": "Wicquinghem",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62887",
+      "name": "Widehem",
+      "postalCodes": ["62630"]
+    },
+    {
+      "code": "62888",
+      "name": "Wierre-au-Bois",
+      "postalCodes": ["62830"]
+    },
+    {
+      "code": "62889",
+      "name": "Wierre-Effroy",
+      "postalCodes": ["62720"]
+    },
+    {
+      "code": "62890",
+      "name": "Willeman",
+      "postalCodes": ["62770"]
+    },
+    {
+      "code": "62891",
+      "name": "Willencourt",
+      "postalCodes": ["62390"]
+    },
+    {
+      "code": "62892",
+      "name": "Willerval",
+      "postalCodes": ["62580"]
+    },
+    {
+      "code": "62893",
+      "name": "Wimereux",
+      "postalCodes": ["62930"]
+    },
+    {
+      "code": "62894",
+      "name": "Wimille",
+      "postalCodes": ["62126"]
+    },
+    {
+      "code": "62895",
+      "name": "Wingles",
+      "postalCodes": ["62410"]
+    },
+    {
+      "code": "62896",
+      "name": "Wirwignes",
+      "postalCodes": ["62240"]
+    },
+    {
+      "code": "62897",
+      "name": "Wismes",
+      "postalCodes": ["62380"]
+    },
+    {
+      "code": "62898",
+      "name": "Wisques",
+      "postalCodes": ["62219"]
+    },
+    {
+      "code": "62899",
+      "name": "Wissant",
+      "postalCodes": ["62179"]
+    },
+    {
+      "code": "62900",
+      "name": "Witternesse",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62901",
+      "name": "Wittes",
+      "postalCodes": ["62120"]
+    },
+    {
+      "code": "62902",
+      "name": "Wizernes",
+      "postalCodes": ["62570"]
+    },
+    {
+      "code": "62903",
+      "name": "Zoteux",
+      "postalCodes": ["62650"]
+    },
+    {
+      "code": "62904",
+      "name": "Zouafques",
+      "postalCodes": ["62890"]
+    },
+    {
+      "code": "62905",
+      "name": "Zudausques",
+      "postalCodes": ["62500"]
+    },
+    {
+      "code": "62906",
+      "name": "Zutkerque",
+      "postalCodes": ["62370"]
+    },
+    {
+      "code": "62907",
+      "name": "Libercourt",
+      "postalCodes": ["62820"]
+    },
+    {
+      "code": "62908",
+      "name": "La Capelle-lès-Boulogne",
+      "postalCodes": ["62360"]
+    },
+    {
+      "code": "62909",
+      "name": "Ytres",
+      "postalCodes": ["62124"]
+    }
+  ]
+}
