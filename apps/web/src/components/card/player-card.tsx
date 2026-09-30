@@ -10,6 +10,7 @@ import {
 import { POSITION_LINE } from '@legendes/engine/sim/positions';
 import { cardNode, lookOf, type CardFace, type CardTuning } from '@legendes/ui/card';
 import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
 import { SvgTree } from '@/components/club/svg-tree';
 
 const OUTFIELD = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical'] as const;
@@ -22,6 +23,51 @@ function statsOf(player: Player, label: (key: StatKey) => string): CardFace['sta
   return keeper
     ? KEEPER.map((k) => ({ label: label(k), value: player.keeper[k] }))
     : OUTFIELD.map((k) => ({ label: label(k), value: player.attributes[k] }));
+}
+
+/** Everything printed on a card, translated: the input of every drawing of it (2D, 3D, share). */
+export function useCardFace(card: Card, club: Club): CardFace {
+  const t = useTranslations('cards');
+  const tPos = useTranslations('positions');
+  const tAttr = useTranslations('attributes');
+  const tTraits = useTranslations('traits');
+  return useMemo(() => {
+    const { player } = card;
+    const position = player.positions[0] ?? 'CM';
+    const division = getDivision(club.divisionId);
+    const kits = kitsOf(club);
+    return {
+      uid: card.id,
+      look: lookOf(card.tier, card.rarity, card.variant),
+      rating: player.rating,
+      position: tPos(`${position}.short`),
+      name: player.displayName,
+      division: division ? divisionLabel(division) : '',
+      crest: crestOf(club),
+      clubColours: club.colours,
+      stats: statsOf(player, (k) => tAttr(k)),
+      weakFoot: player.weakFoot,
+      skillMoves: player.skillMoves,
+      labels: { weakFoot: t('weakFoot'), skillMoves: t('skillMoves') },
+      trait: player.traits[0] === undefined ? null : tTraits(`${player.traits[0]}.name`),
+      promo: card.variant === 'base' ? null : t(`variants.${card.variant}`),
+      appearance: player.appearance,
+      kit: position === 'GK' ? kits.keeper : kits.home,
+    };
+  }, [card, club, t, tPos, tAttr, tTraits]);
+}
+
+/** Accessible name of a card. */
+export function useCardLabel(card: Card, club: Club): string {
+  const t = useTranslations('cards');
+  const tPos = useTranslations('positions');
+  const { player } = card;
+  return t('label', {
+    name: player.displayName,
+    rating: player.rating,
+    position: tPos(`${player.positions[0] ?? 'CM'}.long`),
+    club: club.name,
+  });
 }
 
 /**
@@ -39,44 +85,15 @@ export function PlayerCard({
   tuning?: CardTuning;
   className?: string;
 }) {
-  const t = useTranslations('cards');
-  const tPos = useTranslations('positions');
-  const tAttr = useTranslations('attributes');
-  const tTraits = useTranslations('traits');
-  const { player } = card;
-  const position = player.positions[0] ?? 'CM';
-  const division = getDivision(club.divisionId);
-  const kits = kitsOf(club);
-  const face: CardFace = {
-    uid: card.id,
-    look: lookOf(card.tier, card.rarity, card.variant),
-    rating: player.rating,
-    position: tPos(`${position}.short`),
-    name: player.displayName,
-    division: division ? divisionLabel(division) : '',
-    crest: crestOf(club),
-    clubColours: club.colours,
-    stats: statsOf(player, (k) => tAttr(k)),
-    weakFoot: player.weakFoot,
-    skillMoves: player.skillMoves,
-    labels: { weakFoot: t('weakFoot'), skillMoves: t('skillMoves') },
-    trait: player.traits[0] === undefined ? null : tTraits(`${player.traits[0]}.name`),
-    promo: card.variant === 'base' ? null : t(`variants.${card.variant}`),
-    appearance: player.appearance,
-    kit: position === 'GK' ? kits.keeper : kits.home,
-  };
+  const face = useCardFace(card, club);
+  const label = useCardLabel(card, club);
   const node = cardNode(face, tuning);
   return (
     <svg
       viewBox={String(node.attrs['viewBox'])}
       className={className}
       role="img"
-      aria-label={t('label', {
-        name: player.displayName,
-        rating: player.rating,
-        position: tPos(`${position}.long`),
-        club: club.name,
-      })}
+      aria-label={label}
     >
       {node.children.map((child, i) => (
         <SvgTree key={i} node={child} />

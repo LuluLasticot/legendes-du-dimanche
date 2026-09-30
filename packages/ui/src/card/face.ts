@@ -61,6 +61,10 @@ const display = (size: number, fill: string, extra: Record<string, string | numb
   ...extra,
 });
 
+/** The k-th diagonal holographic streak of a rare card. */
+const STREAK = (k: number): string =>
+  `M${-60 + k * 95} 350 L${40 + k * 95} 0 H${62 + k * 95} L${-38 + k * 95} 350 Z`;
+
 /** Fixed positions of the sparkles of a rare card (card units). */
 const SPARKLES: readonly (readonly [number, number, number])[] = [
   [206, 46, 5],
@@ -87,11 +91,22 @@ function stars(count: number, x: number, y: number, fill: string, empty: string)
   return el('g', {}, ...[0, 1, 2, 3, 4].map((i) => star(x + i * 9.4, i < count)));
 }
 
-/** The card's elements, in a 250 × 350 box. */
-export function cardContent(
-  face: CardFace,
-  tuning: CardTuning = DEFAULT_CARD_TUNING,
-): SvgElement[] {
+/** The card split in layers: the 2D card stacks them, the 3D card's mask reuses them. */
+interface CardLayers {
+  readonly defs: SvgElement;
+  readonly panel: SvgElement;
+  /** Holographic streaks of a rare card (part of the panel, listed for the mask). */
+  readonly streaks: readonly SvgElement[];
+  readonly avatar: SvgElement;
+  /** Everything printed over the art: rating, crest, name, stats, footer, promo title. */
+  readonly print: readonly SvgElement[];
+  readonly frame: readonly SvgElement[];
+  readonly shine: readonly SvgElement[];
+  readonly outer: string;
+  readonly inner: string;
+}
+
+function cardLayers(face: CardFace, tuning: CardTuning): CardLayers {
   const p = CARD_PALETTES[face.look];
   const id = (name: string): string => `${face.uid}-${name}`;
   const outer = silhouette(0);
@@ -198,6 +213,14 @@ export function cardContent(
 
   // Background of the panel: gradient, club colours, mesh, floodlight.
   const { primary, secondary } = face.clubColours;
+  const streaks = p.foil
+    ? [0, 1, 2, 3].map((k) =>
+        el('path', {
+          d: STREAK(k),
+          fill: `url(#${id('foil')})`,
+        }),
+      )
+    : [];
   const panel = el(
     'g',
     { 'clip-path': `url(#${id('panel-clip')})` },
@@ -228,14 +251,7 @@ export function cardContent(
       opacity: tuning.mesh,
     }),
     el('ellipse', { cx: 150, cy: 100, rx: 112, ry: 108, fill: `url(#${id('glow')})` }),
-    ...(p.foil
-      ? [0, 1, 2, 3].map((k) =>
-          el('path', {
-            d: `M${-60 + k * 95} 350 L${40 + k * 95} 0 H${62 + k * 95} L${-38 + k * 95} 350 Z`,
-            fill: `url(#${id('foil')})`,
-          }),
-        )
-      : []),
+    ...streaks,
     el('rect', { width: CARD_WIDTH, height: CARD_HEIGHT, fill: `url(#${id('vignette')})` }),
     ...(tuning.grain > 0
       ? [
@@ -470,27 +486,74 @@ export function cardContent(
     ...(p.foil ? SPARKLES.map(([x, y, r]) => sparkle(x, y, r, dark ? p.accent : '#ffffff')) : []),
   ];
 
-  return [
+  return {
     defs,
     panel,
+    streaks,
     avatar,
-    ...column,
-    name,
-    ...divider,
-    statsRule,
-    ...stats,
-    ...footer,
-    ...promo,
-    ...frame,
-    ...shine,
+    print: [...column, name, ...divider, statsRule, ...stats, ...footer, ...promo],
+    frame,
+    shine,
+    outer,
+    inner,
+  };
+}
+
+/** The card's elements, in a 250 × 350 box. */
+export function cardContent(
+  face: CardFace,
+  tuning: CardTuning = DEFAULT_CARD_TUNING,
+): SvgElement[] {
+  const l = cardLayers(face, tuning);
+  return [l.defs, l.panel, l.avatar, ...l.print, ...l.frame, ...l.shine];
+}
+
+/** Paints a layer in pure blue, keeping its coverage (alpha). */
+const TO_BLUE = '0 0 0 0 0  0 0 0 0 0  0 0 0 0 1  0 0 0 1 0';
+
+/**
+ * The mask of the 3D card (D-035), same box and shapes as the face: red = metal of the frame
+ * (reflects the lights), green = holographic areas of the background (strength), blue = the
+ * player and the print (kept clean of any holographic effect).
+ */
+export function cardMaskContent(
+  face: CardFace,
+  tuning: CardTuning = DEFAULT_CARD_TUNING,
+): SvgElement[] {
+  const l = cardLayers(face, tuning);
+  const protect = `${face.uid}-protect`;
+  return [
+    l.defs,
+    el(
+      'defs',
+      {},
+      el('filter', { id: protect }, el('feColorMatrix', { type: 'matrix', values: TO_BLUE })),
+    ),
+    el('rect', { width: CARD_WIDTH, height: CARD_HEIGHT, fill: '#000000' }),
+    el(
+      'g',
+      { 'clip-path': `url(#${face.uid}-panel-clip)` },
+      el('rect', { width: CARD_WIDTH, height: CARD_HEIGHT, fill: '#008c00' }),
+      ...[0, 1, 2, 3].map((k) => el('path', { d: STREAK(k), fill: '#00ff00' })),
+    ),
+    el('g', { filter: `url(#${protect})` }, l.avatar, ...l.print),
+    el('path', { d: `${l.outer} ${l.inner}`, fill: '#ff0000', 'fill-rule': 'evenodd' }),
   ];
 }
 
-/** A standalone card: an `<svg>` of viewBox 0 0 250 350. */
-export function cardNode(face: CardFace, tuning?: CardTuning): SvgElement {
-  return el(
+const svgRoot = (...children: SvgElement[]): SvgElement =>
+  el(
     'svg',
     { xmlns: 'http://www.w3.org/2000/svg', viewBox: `0 0 ${CARD_WIDTH} ${CARD_HEIGHT}` },
-    ...cardContent(face, tuning),
+    ...children,
   );
+
+/** A standalone card: an `<svg>` of viewBox 0 0 250 350. */
+export function cardNode(face: CardFace, tuning?: CardTuning): SvgElement {
+  return svgRoot(...cardContent(face, tuning));
+}
+
+/** The mask of the 3D card as a standalone `<svg>`. */
+export function cardMaskNode(face: CardFace, tuning?: CardTuning): SvgElement {
+  return svgRoot(...cardMaskContent(face, tuning));
 }

@@ -55,7 +55,7 @@ export const COMPOSITE_FS = /* glsl */ `
 uniform sampler2D tScene; uniform sampler2D tBloom;
 uniform vec2 uRes; uniform float uTime; uniform float uExposure; uniform float uBloomK; uniform float uVig; uniform float uGrain;
 uniform float uCA; uniform float uFlash; uniform vec3 uFlashCol; uniform float uBars; uniform float uZoomBlur; uniform float uSat;
-uniform vec4 uShock; uniform vec4 uLens;
+uniform vec4 uShock; uniform vec4 uLens; uniform float uFilmic;
 varying vec2 vUv;
 vec3 aces(vec3 x){ return clamp((x*(2.51*x + .03))/(x*(2.43*x + .59) + .14), 0., 1.); }
 vec3 toSRGB(vec3 c){ return mix(c*12.92, 1.055*pow(c, vec3(1./2.4)) - .055, step(.0031308, c)); }
@@ -94,7 +94,7 @@ void main(){
   }
   col += uFlashCol*uFlash;
   col *= uExposure;
-  col = aces(col);
+  col = mix(clamp(col, 0., 1.), aces(col), uFilmic);
   float l = dot(col, vec3(.2126, .7152, .0722));
   col = mix(vec3(l), col, uSat);
   vec2 vq = (vUv - .5)*vec2(asp, 1.);

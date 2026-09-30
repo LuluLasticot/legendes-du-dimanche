@@ -63,3 +63,16 @@ export {
 export { MatchAudio, DEFAULT_VOLUMES, type AudioVolumes } from './audio/match-audio.ts';
 export { BallTrail, trailColour } from './fx/trail.ts';
 export { ImpactParticles, surfaceParticles, type ParticleKind } from './fx/particles.ts';
+export {
+  Card3D,
+  CARD3D_HEIGHT,
+  CARD3D_WIDTH,
+  type Card3DFinish,
+  type Card3DSources,
+} from './cards/card3d.ts';
+export { cardFontCss, rasterizeSvg, type CardFont } from './cards/raster.ts';
+export {
+  mountCardViewer,
+  type CardViewerHandle,
+  type CardViewerOptions,
+} from './scenes/card-viewer.ts';
