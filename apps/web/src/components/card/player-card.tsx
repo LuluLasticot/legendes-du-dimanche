@@ -25,36 +25,54 @@ function statsOf(player: Player, label: (key: StatKey) => string): CardFace['sta
     : OUTFIELD.map((k) => ({ label: label(k), value: player.attributes[k] }));
 }
 
+/** The translation functions a card face needs. */
+export interface FaceTranslators {
+  readonly cards: ReturnType<typeof useTranslations<'cards'>>;
+  readonly positions: ReturnType<typeof useTranslations<'positions'>>;
+  readonly attributes: ReturnType<typeof useTranslations<'attributes'>>;
+  readonly traits: ReturnType<typeof useTranslations<'traits'>>;
+}
+
+export function useFaceTranslators(): FaceTranslators {
+  const cards = useTranslations('cards');
+  const positions = useTranslations('positions');
+  const attributes = useTranslations('attributes');
+  const traits = useTranslations('traits');
+  return useMemo(
+    () => ({ cards, positions, attributes, traits }),
+    [cards, positions, attributes, traits],
+  );
+}
+
 /** Everything printed on a card, translated: the input of every drawing of it (2D, 3D, share). */
+export function cardFaceOf(card: Card, club: Club, tr: FaceTranslators): CardFace {
+  const { player } = card;
+  const position = player.positions[0] ?? 'CM';
+  const division = getDivision(club.divisionId);
+  const kits = kitsOf(club);
+  return {
+    uid: card.id,
+    look: lookOf(card.tier, card.rarity, card.variant),
+    rating: player.rating,
+    position: tr.positions(`${position}.short`),
+    name: player.displayName,
+    division: division ? divisionLabel(division) : '',
+    crest: crestOf(club),
+    clubColours: club.colours,
+    stats: statsOf(player, (k) => tr.attributes(k)),
+    weakFoot: player.weakFoot,
+    skillMoves: player.skillMoves,
+    labels: { weakFoot: tr.cards('weakFoot'), skillMoves: tr.cards('skillMoves') },
+    trait: player.traits[0] === undefined ? null : tr.traits(`${player.traits[0]}.name`),
+    promo: card.variant === 'base' ? null : tr.cards(`variants.${card.variant}`),
+    appearance: player.appearance,
+    kit: position === 'GK' ? kits.keeper : kits.home,
+  };
+}
+
 export function useCardFace(card: Card, club: Club): CardFace {
-  const t = useTranslations('cards');
-  const tPos = useTranslations('positions');
-  const tAttr = useTranslations('attributes');
-  const tTraits = useTranslations('traits');
-  return useMemo(() => {
-    const { player } = card;
-    const position = player.positions[0] ?? 'CM';
-    const division = getDivision(club.divisionId);
-    const kits = kitsOf(club);
-    return {
-      uid: card.id,
-      look: lookOf(card.tier, card.rarity, card.variant),
-      rating: player.rating,
-      position: tPos(`${position}.short`),
-      name: player.displayName,
-      division: division ? divisionLabel(division) : '',
-      crest: crestOf(club),
-      clubColours: club.colours,
-      stats: statsOf(player, (k) => tAttr(k)),
-      weakFoot: player.weakFoot,
-      skillMoves: player.skillMoves,
-      labels: { weakFoot: t('weakFoot'), skillMoves: t('skillMoves') },
-      trait: player.traits[0] === undefined ? null : tTraits(`${player.traits[0]}.name`),
-      promo: card.variant === 'base' ? null : t(`variants.${card.variant}`),
-      appearance: player.appearance,
-      kit: position === 'GK' ? kits.keeper : kits.home,
-    };
-  }, [card, club, t, tPos, tAttr, tTraits]);
+  const tr = useFaceTranslators();
+  return useMemo(() => cardFaceOf(card, club, tr), [card, club, tr]);
 }
 
 /** Accessible name of a card. */

@@ -472,6 +472,50 @@
         "loading": "Préparation de la carte…",
         "failed": "La 3D n'est pas disponible sur cet appareil ou ce navigateur."
       }
+    },
+    "pack": {
+      "title": "Ouverture de pack",
+      "loading": "Préparation du pack…",
+      "failed": "La 3D n'est pas disponible sur cet appareil ou ce navigateur.",
+      "choose": "Type de pack",
+      "force": "Meilleure carte",
+      "forceAny": "Au hasard",
+      "hint": "Glisse le doigt le long du pointillé pour déchirer le pack",
+      "open": "Ouvrir le pack",
+      "skip": "Passer",
+      "mute": "Couper le son",
+      "unmute": "Remettre le son",
+      "showOdds": "Probabilités",
+      "tuningToggle": "Réglages",
+      "gag": {
+        "flicker": "Le projecteur fait des siennes…",
+        "dog": "Un chien traverse le terrain…"
+      },
+      "hero": {
+        "next": "Touche pour voir le reste du pack",
+        "new": "Nouvelle carte"
+      },
+      "grid": {
+        "hint": "Touche une carte pour la retourner",
+        "all": "Tout retourner"
+      },
+      "summary": {
+        "title": "Ton pack",
+        "again": "Nouveau pack",
+        "count": "{count, plural, one {# carte} other {# cartes}}"
+      },
+      "tuning": {
+        "walkoutRank": "Sortie des vestiaires dès le rang",
+        "lightsGap": "Écart entre projecteurs (s)",
+        "clueHold": "Durée d'un indice (s)",
+        "tension": "Tension (s)",
+        "flash": "Flash",
+        "shake": "Secousse",
+        "particles": "Particules",
+        "gagChance": "Chance d'un gag (bronze)",
+        "speed": "Vitesse",
+        "reset": "Valeurs par défaut"
+      }
     }
   },
   "commentary": {
@@ -809,5 +853,48 @@
       "former-pro": "Ancien pro"
     },
     "label": "Carte de {name} : {rating}, {position}, {club}"
+  },
+  "packs": {
+    "types": {
+      "bronze": {
+        "name": "Pack Bronze",
+        "contents": "12 cartes bronze · 1 rare garantie"
+      },
+      "silver": {
+        "name": "Pack Argent",
+        "contents": "12 cartes argent · 1 rare garantie"
+      },
+      "gold": {
+        "name": "Pack Or",
+        "contents": "12 cartes · 3 or minimum"
+      },
+      "gold-premium": {
+        "name": "Pack Or Premium",
+        "contents": "12 cartes or · 3 rares garanties"
+      }
+    },
+    "classes": {
+      "bronze-common": "Bronze",
+      "bronze-rare": "Bronze rare",
+      "silver-common": "Argent",
+      "silver-rare": "Argent rare",
+      "gold-common": "Or",
+      "gold-rare": "Or rare",
+      "former-pro": "Ancien pro",
+      "weekend": "Onze du week-end"
+    },
+    "print": {
+      "tearHere": "Déchirer ici",
+      "odds": "Probabilités affichées avant chaque ouverture",
+      "legal": "Jeu non officiel · aucun achat avec de l'argent réel"
+    },
+    "price": "{price} crédits",
+    "odds": {
+      "title": "Probabilités",
+      "class": "Carte",
+      "expected": "Par pack",
+      "atLeastOne": "Au moins une",
+      "note": "Tirage au hasard parmi les joueurs générés du pilote. Dans le jeu, le tirage se fera sur le serveur."
+    }
   }
 }

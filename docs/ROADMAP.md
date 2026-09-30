@@ -86,6 +86,7 @@ Si le ressenti n'y est pas : itérer sur la caméra, le timing et les animations
 - **Design des cartes** : gabarits bronze/argent/or (commune et rare) + 2 promos (Onze du week-end, Ancien pro) ; rendu 2D React (`packages/ui`) et rendu 3D holographique (port de Carte du Ciel)
 - Personnages 3D aux couleurs du club (maillot paramétrique : couleurs, motif, numéro, sponsor)
 - Images de partage générées pour chaque carte (OG)
+- **Ouverture de pack** avancée ici depuis la Phase 4 (D-036) : déchirure, sortie des vestiaires de la meilleure carte, grille, probabilités affichées, tirages simulés dans `/lab/pack`
 
 **Critère de fin :** chaque club du pilote a un effectif crédible et des maillots aux bonnes couleurs, les cartes sont belles en 2D et en 3D, et une URL de carte produit un bon aperçu sur les réseaux.
 
@@ -95,7 +96,7 @@ Si le ressenti n'y est pas : itérer sur la caméra, le timing et les animations
 
 - Authentification (e-mail magique + Google), profil, pseudo
 - **Onboarding** : choix du club de départ (District 5, Hauts-de-France), pack de bienvenue, premier match guidé avec une action clé scénarisée (**premier but en moins de 3 minutes**)
-- **Ouverture de pack** (port de Carte du Ciel + séquence de révélation « walkout amateur »), tirage côté serveur
+- **Ouverture de pack** branchée sur le tirage côté serveur, les crédits et la collection (la scène est faite en Phase 3, D-036)
 - **Collection** (filtres, tri, détails de carte), **création d'équipe** (glisser-déposer, formations, collectifs, note d'équipe, tactiques)
 - Parcours de match complet (avant-match, match, mi-temps, fin de match, notes, homme du match)
 - **Crédits** (grand livre), récompenses, boutique de packs (bronze, argent, or)

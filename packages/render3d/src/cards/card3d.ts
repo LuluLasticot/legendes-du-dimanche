@@ -28,6 +28,29 @@ export interface Card3DSources {
   readonly finish: Card3DFinish;
 }
 
+/**
+ * Textures shared by several cards (the backs of a pack's cards of the same tier): one upload per
+ * source. Owned and disposed by the scene; a card never disposes a cached texture.
+ */
+export class TextureCache {
+  private readonly textures = new Map<TexImageSource, THREE.Texture>();
+  constructor(private readonly anisotropy = 8) {}
+
+  get(source: TexImageSource, srgb: boolean): THREE.Texture {
+    let t = this.textures.get(source);
+    if (!t) {
+      t = texture(source, srgb, this.anisotropy);
+      this.textures.set(source, t);
+    }
+    return t;
+  }
+
+  dispose(): void {
+    for (const t of this.textures.values()) t.dispose();
+    this.textures.clear();
+  }
+}
+
 function texture(source: TexImageSource, srgb: boolean, anisotropy: number): THREE.Texture {
   const t = new THREE.Texture(source);
   t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
@@ -63,7 +86,10 @@ export class Card3D {
   private readonly backUniforms: Record<string, THREE.IUniform>;
   private readonly edgeUniforms: Record<string, THREE.IUniform>;
 
-  constructor(sources: Card3DSources, anisotropy = 8) {
+  /** The two faces, for picking a card under the pointer. */
+  readonly pickable: THREE.Object3D[];
+
+  constructor(sources: Card3DSources, anisotropy = 8, cache?: TextureCache) {
     const shape = shapeFromPath(sources.outline, 250, 350);
     const front = faceGeometry(shape, 250, 350);
     const edge = edgeGeometry(shape, THICKNESS);
@@ -73,9 +99,11 @@ export class Card3D {
     const glowColour = new THREE.Color(f.glow);
     const faceTex = texture(sources.face, true, anisotropy);
     const faceMask = texture(sources.faceMask, false, anisotropy);
-    const backTex = texture(sources.back, true, anisotropy);
-    const backMask = texture(sources.backMask, false, anisotropy);
-    this.textures = [faceTex, faceMask, backTex, backMask];
+    const backTex = cache ? cache.get(sources.back, true) : texture(sources.back, true, anisotropy);
+    const backMask = cache
+      ? cache.get(sources.backMask, false)
+      : texture(sources.backMask, false, anisotropy);
+    this.textures = cache ? [faceTex, faceMask] : [faceTex, faceMask, backTex, backMask];
 
     const surface = (
       layout: THREE.Texture,
@@ -126,6 +154,7 @@ export class Card3D {
     backMesh.rotation.y = Math.PI;
     backMesh.position.z = -THICKNESS / 2;
     this.group.add(frontMesh, backMesh, new THREE.Mesh(edge, edgeMat));
+    this.pickable = [frontMesh, backMesh];
   }
 
   /** Pushes the animation state to the shaders. */

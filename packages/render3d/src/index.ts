@@ -76,3 +76,15 @@ export {
   type CardViewerHandle,
   type CardViewerOptions,
 } from './scenes/card-viewer.ts';
+export { PackAudio } from './audio/pack-audio.ts';
+export { Pack3D, PACK3D_HEIGHT, PACK3D_WIDTH, type Pack3DSources } from './cards/pack3d.ts';
+export {
+  DEFAULT_PACK_TUNING,
+  mountPackOpening,
+  type PackCardAssets,
+  type PackOpeningAssets,
+  type PackOpeningHandle,
+  type PackOpeningOptions,
+  type PackStep,
+  type PackTuning,
+} from './scenes/pack-opening.ts';

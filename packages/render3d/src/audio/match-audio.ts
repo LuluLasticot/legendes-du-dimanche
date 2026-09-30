@@ -69,12 +69,12 @@ function unmuteIOS(): void {
 const clamp = (x: number, a: number, b: number): number => Math.min(b, Math.max(a, x));
 
 export class MatchAudio {
-  private ctx: AudioContext | null = null;
-  private master!: GainNode;
-  private effects!: GainNode;
-  private crowd!: GainNode;
-  private reverb!: ConvolverNode;
-  private noise!: AudioBuffer;
+  protected ctx: AudioContext | null = null;
+  protected master!: GainNode;
+  protected effects!: GainNode;
+  protected crowd!: GainNode;
+  protected reverb!: ConvolverNode;
+  protected noise!: AudioBuffer;
   private murmur: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
   private volumes: AudioVolumes = { ...DEFAULT_VOLUMES };
   private enabled = true;
@@ -153,7 +153,7 @@ export class MatchAudio {
     this.crowd.gain.setTargetAtTime(this.volumes.crowd, t, 0.05);
   }
 
-  private impulse(duration: number, decay: number): AudioBuffer {
+  protected impulse(duration: number, decay: number): AudioBuffer {
     const c = this.ctx as AudioContext;
     const length = Math.floor(c.sampleRate * duration);
     const buffer = c.createBuffer(2, length, c.sampleRate);
@@ -171,7 +171,7 @@ export class MatchAudio {
   }
 
   /** Routes a node to a bus, with optional pan (−1 left … 1 right) and reverb send. */
-  private out(node: AudioNode, bus: GainNode, pan = 0, wet = 0.15): void {
+  protected out(node: AudioNode, bus: GainNode, pan = 0, wet = 0.15): void {
     const c = this.ctx as AudioContext;
     let n: AudioNode = node;
     if (pan !== 0 && typeof c.createStereoPanner === 'function') {
@@ -189,13 +189,19 @@ export class MatchAudio {
     }
   }
 
-  private envelope(gain: GainNode, t0: number, attack: number, peak: number, decay: number): void {
+  protected envelope(
+    gain: GainNode,
+    t0: number,
+    attack: number,
+    peak: number,
+    decay: number,
+  ): void {
     gain.gain.setValueAtTime(0.0001, t0);
     gain.gain.exponentialRampToValueAtTime(Math.max(peak, 0.0002), t0 + attack);
     gain.gain.exponentialRampToValueAtTime(0.0001, t0 + attack + decay);
   }
 
-  private noiseSource(rate = 1): AudioBufferSourceNode {
+  protected noiseSource(rate = 1): AudioBufferSourceNode {
     const c = this.ctx as AudioContext;
     const s = c.createBufferSource();
     s.buffer = this.noise;
@@ -205,7 +211,7 @@ export class MatchAudio {
   }
 
   /** Noise burst through a filter. */
-  private burst(
+  protected burst(
     bus: GainNode,
     type: BiquadFilterType,
     frequency: number,
@@ -234,7 +240,7 @@ export class MatchAudio {
   }
 
   /** Short tone with a pitch drop (body of a kick, thud). */
-  private thump(
+  protected thump(
     bus: GainNode,
     from: number,
     to: number,
@@ -395,7 +401,7 @@ export class MatchAudio {
    * vowel formants. Much louder and more human than filtered noise (which the compressor was
    * burying under the strike sounds).
    */
-  private voices(options: {
+  protected voices(options: {
     count: number;
     /** Vowel formants (Hz). */
     formants: readonly [number, number, number];

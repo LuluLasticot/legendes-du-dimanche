@@ -1,28 +1,12 @@
 'use client';
 
-import { toSvgString, type Card, type Club } from '@legendes/data';
+import type { Card, Club } from '@legendes/data';
 import type { CardViewerHandle } from '@legendes/render3d';
-import {
-  CARD_FINISHES,
-  cardBackMaskNode,
-  cardBackNode,
-  cardMaskNode,
-  cardNode,
-  DEFAULT_CARD_TUNING,
-  silhouette,
-} from '@legendes/ui/card';
+import { CARD_FINISHES } from '@legendes/ui/card';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
+import { CARD_FONT_FILES, cardSources } from './card-assets';
 import { useCardFace, useCardLabel } from './player-card';
-
-/** The card's fonts, embedded in the 3D textures (an SVG drawn as an image cannot see the page's). */
-const FONTS = [
-  { family: 'Big Shoulders', weight: 700, url: '/fonts/big-shoulders-latin-700-normal.woff' },
-  { family: 'Big Shoulders', weight: 800, url: '/fonts/big-shoulders-latin-800-normal.woff' },
-  { family: 'Big Shoulders', weight: 900, url: '/fonts/big-shoulders-latin-900-normal.woff' },
-  { family: 'Manrope', weight: 700, url: '/fonts/manrope-latin-700-normal.woff' },
-  { family: 'Manrope', weight: 800, url: '/fonts/manrope-latin-800-normal.woff' },
-] as const;
 
 type OrientationPermission = typeof DeviceOrientationEvent & {
   requestPermission?: () => Promise<'granted' | 'denied'>;
@@ -69,32 +53,17 @@ export function CardViewer3D({
       512,
       Math.min(1024, Math.round(((canvas.clientHeight * 0.8 * dpr) / 350) * 250 * 1.25)),
     );
-    const height = Math.round((width * 350) / 250);
-    const svgs = [
-      // No painted sheen nor grain: the shader lights the card (and the grain's blending is lost
-      // when an SVG is drawn as an image).
-      toSvgString(cardNode(current, { ...DEFAULT_CARD_TUNING, sheen: 0, grain: 0 })),
-      toSvgString(cardMaskNode(current)),
-      toSvgString(cardBackNode(current.look, `${current.uid}-back`)),
-      toSvgString(cardBackMaskNode(current.look, `${current.uid}-back`)),
-    ] as const;
 
     import('@legendes/render3d')
       .then(async (render3d) => {
-        const css = await render3d.cardFontCss(FONTS);
-        const [faceTex, faceMask, back, backMask] = await Promise.all(
-          svgs.map((svg) => render3d.rasterizeSvg(svg, width, height, css)),
-        );
-        if (cancelled || !faceTex || !faceMask || !back || !backMask) return;
-        handleRef.current = render3d.mountCardViewer(
-          canvas,
-          { outline: silhouette(0), face: faceTex, faceMask, back, backMask, finish },
-          {
-            rank: finish.rank,
-            faceDown: revealOnOpen,
-            quality: render3d.qualityFromQuery(window.location.search) ?? 'auto',
-          },
-        );
+        const css = await render3d.cardFontCss(CARD_FONT_FILES);
+        const sources = await cardSources(render3d, current, width, css);
+        if (cancelled) return;
+        handleRef.current = render3d.mountCardViewer(canvas, sources, {
+          rank: finish.rank,
+          faceDown: revealOnOpen,
+          quality: render3d.qualityFromQuery(window.location.search) ?? 'auto',
+        });
         setState('ready');
       })
       .catch((error: unknown) => {
