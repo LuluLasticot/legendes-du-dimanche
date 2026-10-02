@@ -10,8 +10,13 @@ import {
   crestOf,
   crestSvg,
   identityOf,
+  colourDistance,
+  KIT_PRINT,
   kitNode,
+  kitPrintNode,
+  kitsClash,
   kitsOf,
+  matchKits,
   mentionsExcludedBrand,
   monogramOf,
   sponsorLines,
@@ -145,6 +150,55 @@ describe('kits of the pilot', () => {
         }
       }
     }
+  });
+});
+
+describe('3D kit prints', () => {
+  it('carry the crest, the sponsor and the ten digits, well formed', () => {
+    for (const club of clubs.slice(0, 40)) {
+      const identity = identityOf(club);
+      const svg = toSvgString(
+        kitPrintNode(identity.kits.home, {
+          uid: `${club.id}-print`,
+          crest: identity.crest,
+          sponsor: identity.sponsors[0]?.label,
+        }),
+      );
+      expect(svg).not.toMatch(/NaN|undefined|null/);
+      expect(wellFormed(svg), club.id).toBe(true);
+      expect(svg).toContain(`viewBox="0 0 ${KIT_PRINT.width} ${KIT_PRINT.height}"`);
+      for (let d = 0; d < 10; d++) expect(svg).toContain(`>${d}</text>`);
+    }
+  });
+});
+
+describe('match kits', () => {
+  it('never put two clubs in shirts that cannot be told apart, when the away kit avoids it', () => {
+    let swaps = 0;
+    for (const home of clubs.slice(0, 50)) {
+      for (const away of clubs.slice(50, 100)) {
+        const kits = matchKits(home, away);
+        expect(kits.home).toEqual(kitsOf(home).home);
+        if (kitsClash(kits.home, kitsOf(away).home)) swaps++;
+        else expect(kits.away).toEqual(kitsOf(away).home);
+        if (!kitsClash(kits.home, kitsOf(away).away))
+          expect(kitsClash(kits.home, kits.away)).toBe(false);
+      }
+    }
+    // Clashes happen (the region loves yellow, green and red) but stay the exception.
+    expect(swaps).toBeGreaterThan(0);
+    expect(swaps).toBeLessThan(50 * 50 * 0.5);
+  });
+
+  it('a club against itself plays in its away kit', () => {
+    const club = clubs[0]!;
+    expect(matchKits(club, club).away).toEqual(kitsOf(club).away);
+  });
+
+  it('colour distance is symmetric, zero for a colour and largest for black and white', () => {
+    expect(colourDistance('#c4302b', '#c4302b')).toBe(0);
+    expect(colourDistance('#c4302b', '#0f5132')).toBe(colourDistance('#0f5132', '#c4302b'));
+    expect(colourDistance('#000000', '#ffffff')).toBeGreaterThan(700);
   });
 });
 

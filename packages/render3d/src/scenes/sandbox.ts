@@ -20,6 +20,7 @@ import { ImpactParticles, surfaceParticles } from '../fx/particles.ts';
 import { BallTrail } from '../fx/trail.ts';
 import { Stadium } from '../stadium/stadium.ts';
 import { Character, type Kit } from '../players/character.ts';
+import type { CharacterLook } from '../players/kit-material.ts';
 import { loadCharacterAsset, type CharacterAsset } from '../players/character-asset.ts';
 import { DefenderController, KeeperController, ShooterController } from '../players/controllers.ts';
 import { PitchExtras } from '../players/extras.ts';
@@ -38,6 +39,20 @@ import {
 const { BALL, PITCH, kickedBall, restingBall, simulateFlight } = physics;
 
 export type SandboxOutcome = moments.MomentOutcome | 'intercepted' | 'lost' | 'offside';
+
+/** A club look, or two plain colours (the ball lab, which has no club). */
+export type MomentLook = CharacterLook | Kit;
+
+/**
+ * Who wears what in a key moment (Phase 3, step 6). Players are dressed in order: the shooter
+ * first, then the passer and the other teammates; defenders (wall, markers) in order; the
+ * players standing around take the following ones.
+ */
+export interface MomentLooks {
+  readonly attack: readonly MomentLook[];
+  readonly defend: readonly MomentLook[];
+  readonly keeper: MomentLook;
+}
 
 /** How a key moment played inside a match ended (fed back to the match simulation). */
 export interface MomentResult {
@@ -175,6 +190,8 @@ export function mountBallSandbox(
      * instead of resetting the ball (no automatic replay).
      */
     moment?: { onOutcome(result: MomentResult): void };
+    /** The two teams' kits; without them, plain colours (attackers in green). */
+    looks?: MomentLooks;
   } = {},
 ): SandboxHandle {
   const stage = Stage.mount(canvas, { fov: 50, ...options });
@@ -185,6 +202,18 @@ export function mountBallSandbox(
   });
   /** Simulated seconds since mount: drives the net animation (slow motion slows it too). */
   let simTime = 0;
+  /** The kits of this moment (the ball lab: the player's side in green, whatever he plays). */
+  const looks = (): MomentLooks => {
+    if (options.looks) return options.looks;
+    const keeperSituation = settings.situation === 'keeper';
+    return {
+      attack: [keeperSituation ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT],
+      defend: [keeperSituation ? HOME_CHARACTER_KIT : OPPONENT_CHARACTER_KIT],
+      keeper: KEEPER_CHARACTER_KIT,
+    };
+  };
+  const pick = (list: readonly MomentLook[], index: number): MomentLook =>
+    list[index % Math.max(1, list.length)] ?? HOME_CHARACTER_KIT;
 
   const ball = new THREE.Mesh(
     new THREE.SphereGeometry(BALL.radius, 24, 16),
@@ -326,7 +355,16 @@ export function mountBallSandbox(
   const defenderCtrls: DefenderController[] = [];
   let extras: PitchExtras | null = null;
   let disposed = false;
-  /** The rest of the 22 stand around the action: same kits as the players who take part. */
+  /** Shooter first, then the passer and the other receivers or runners; wall; keeper. */
+  const dressPlayers = (): void => {
+    const { attack, defend, keeper } = looks();
+    homeShooter?.character.setKit(pick(attack, 0));
+    passerCtrl?.character.setKit(pick(attack, 1));
+    teammateCtrls.forEach((c, i) => c.character.setKit(pick(attack, 2 + i)));
+    defenderCtrls.forEach((c, i) => c.character.setKit(pick(defend, i)));
+    keeperCtrl?.character.setKit(keeper);
+  };
+  /** The rest of the 22 stand around the action, in the kits of the players who take part. */
   const placeExtras = (): void => {
     if (!extras) return;
     const situation = settings.situation;
@@ -337,8 +375,6 @@ export function mountBallSandbox(
       busy.push(...l.receivers, ...l.markers);
     }
     busy.push(...moments.reboundRunners(situation, spot));
-    const attack = situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT;
-    const defend = situation === 'keeper' ? HOME_CHARACTER_KIT : OPPONENT_CHARACTER_KIT;
     const players = moments.backgroundPlayers(
       situation,
       spot,
@@ -346,16 +382,18 @@ export function mountBallSandbox(
       stage.profile.extras,
       situation === 'pass' ? { offsideLine: offsideX } : {},
     );
+    // After the shooter, passer and teammates (attack) and the wall or markers (defend).
+    const { attack, defend } = looks();
     extras.set(players, spot, {
-      attack,
-      defend,
+      attack: (i) => pick(attack, 2 + teammateCtrls.length + i),
+      defend: (i) => pick(defend, moment.defenders.length + i),
     });
   };
   const syncDefenderCharacters = (count: number): void => {
     if (!characterAsset) return;
     while (defenderCtrls.length > count) defenderCtrls.pop()?.character.dispose();
     while (defenderCtrls.length < count) {
-      const character = new Character(characterAsset, OPPONENT_CHARACTER_KIT);
+      const character = new Character(characterAsset, pick(looks().defend, defenderCtrls.length));
       scene.add(character.root);
       const controller = new DefenderController(character);
       controller.reset();
@@ -682,9 +720,7 @@ export function mountBallSandbox(
     pending = null;
     const situation = settings.situation;
     shooterCtrl = homeShooter;
-    shooterCtrl?.character.setKit(
-      situation === 'keeper' ? OPPONENT_CHARACTER_KIT : HOME_CHARACTER_KIT,
-    );
+    dressPlayers();
     passEnd = null;
     secondBall = false;
     followers = [];
@@ -1712,7 +1748,7 @@ export function mountBallSandbox(
     extras = new PitchExtras(scene, asset);
     const shooter = new Character(asset, HOME_CHARACTER_KIT);
     const passer = new Character(asset, HOME_CHARACTER_KIT);
-    const keeper = new Character(asset, KEEPER_CHARACTER_KIT);
+    const keeper = new Character(asset, looks().keeper);
     scene.add(shooter.root, passer.root, keeper.root);
     homeShooter = new ShooterController(shooter);
     shooterCtrl = homeShooter;
@@ -1725,6 +1761,7 @@ export function mountBallSandbox(
       teammateCtrls.push(new ShooterController(teammate));
     }
     keeperCtrl = new KeeperController(keeper);
+    dressPlayers();
     if (phase === 'aiming' && !reception) placeBall();
     else {
       passer.root.visible = settings.situation === 'pass';

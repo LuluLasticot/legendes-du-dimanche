@@ -2,11 +2,53 @@
 
 import { sim } from '@legendes/engine';
 import { useTranslations } from 'next-intl';
-import { useState, type ReactNode } from 'react';
-import { PLAY_STYLES, SIDE, type MatchConfig } from './match-config';
+import { useMemo, useState, type ReactNode } from 'react';
+import { DIVISIONS, WORLD, type Club } from '@legendes/data';
+import { buildSetup, clubOf, PLAY_STYLES, SIDE, type MatchConfig } from './match-config';
 import { teamCode } from './team-code';
 
 const SURFACES = ['grass', 'artificial', 'muddy', 'dirt'] as const;
+/** A club's pitch as the match plays it. */
+const SURFACE_OF = { grass: 'grass', artificial: 'artificial', stabilized: 'dirt' } as const;
+
+const divisionOrder = (id: string): number => DIVISIONS.findIndex((d) => d.id === id);
+const CLUBS: readonly Club[] = [...WORLD.clubs].sort(
+  (a, b) =>
+    divisionOrder(a.divisionId) - divisionOrder(b.divisionId) || a.name.localeCompare(b.name, 'fr'),
+);
+
+/** The pilot's clubs, by division from the top. */
+function ClubSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full truncate rounded-md border border-chalk/15 bg-pitch-900 px-2 py-1.5 text-sm font-semibold text-chalk"
+    >
+      {DIVISIONS.map((d) => {
+        const clubs = CLUBS.filter((c) => c.divisionId === d.id);
+        return clubs.length === 0 ? null : (
+          <optgroup key={d.id} label={d.name}>
+            {clubs.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </optgroup>
+        );
+      })}
+    </select>
+  );
+}
 
 const pct = (a: number, b: number): number => (a + b === 0 ? 50 : Math.round((100 * a) / (a + b)));
 
@@ -92,34 +134,36 @@ export function PreMatch({
   onStart: () => void;
 }) {
   const t = useTranslations('match');
-  const setup = sim.demoTeam(config.seed, {
-    id: 'fca',
-    name: '',
-    rating: 58,
-    formation: config.formation,
-  });
-  const away = sim.demoTeam(config.seed + 1, {
-    id: 'uss',
-    name: '',
-    rating: 56,
-    formation: '4-3-3',
-  });
+  const setup = useMemo(() => buildSetup(config), [config]);
+  const pickClub = (side: 'home' | 'away', id: string): void => {
+    if (side === 'away') return onChange({ ...config, away: id });
+    // The match is played on the home club's ground.
+    onChange({ ...config, home: id, surface: SURFACE_OF[clubOf(id).stadium.surface] });
+  };
   return (
     <Panel title={t('prematch.title')}>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
-        <div>
-          <p className="font-semibold">FC Avesnes-le-Sec</p>
-          <p className="font-mono text-xs text-chalk-muted">
-            {t('prematch.rating', { rating: sim.teamRating(setup) })} · {config.formation}
-          </p>
-        </div>
-        <span className="text-chalk-muted">–</span>
-        <div>
-          <p className="font-semibold">US Saint-Amand</p>
-          <p className="font-mono text-xs text-chalk-muted">
-            {t('prematch.rating', { rating: sim.teamRating(away) })} · 4-3-3
-          </p>
-        </div>
+        {(['home', 'away'] as const).map((side, i) => {
+          const team = setup[side];
+          return (
+            <div key={side} className={i === 1 ? 'order-3' : ''}>
+              <ClubSelect
+                label={t(`prematch.${side}`)}
+                value={config[side]}
+                onChange={(id) => pickClub(side, id)}
+              />
+              <p className="mt-1 flex items-center justify-center gap-1.5 font-mono text-xs text-chalk-muted">
+                <span
+                  aria-hidden
+                  className="size-2.5 rounded-full border border-chalk/40"
+                  style={{ background: team.colours.shirt }}
+                />
+                {t('prematch.rating', { rating: sim.teamRating(team) })} · {team.formation}
+              </p>
+            </div>
+          );
+        })}
+        <span className="order-2 text-chalk-muted">–</span>
       </div>
       <div className="space-y-2">
         <Choice

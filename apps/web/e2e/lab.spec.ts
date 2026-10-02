@@ -204,3 +204,25 @@ test('a small pack turns its best card over simply, and the odds are shown', asy
   expect(steps).not.toContain('lights');
   expect(errors).toEqual([]);
 });
+
+test('the kits lab dresses a club in its three kits', async ({ page }) => {
+  test.slow();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  // The stand-in mannequin: the real character is not in the repository (D-019).
+  await page.goto('/lab/kits?q=low&mannequin&club=ac-cambrai-59122');
+
+  const stage = page.locator('[data-state]');
+  await expect(stage).toHaveAttribute('data-state', 'ready', { timeout: 60_000 });
+  await expect(page.getByRole('combobox', { name: 'Club' })).toHaveValue('ac-cambrai-59122');
+  await expect(page.getByRole('note')).toContainText('Mannequin de test');
+  for (const name of ['Domicile', 'Extérieur', 'Gardien'])
+    await expect(page.getByText(name, { exact: true })).toBeVisible();
+
+  await page.getByRole('combobox', { name: 'Club' }).selectOption('as-steenvoorde-59580');
+  await page.getByRole('button', { name: 'Dos' }).click();
+  await page.getByRole('button', { name: 'Réglages' }).click();
+  await expect(page.getByText('Fin des manches (bras)')).toBeVisible();
+  await page.getByRole('button', { name: 'Valeurs par défaut' }).click();
+  expect(errors).toEqual([]);
+});

@@ -21,6 +21,7 @@ import {
   cardNode,
   DEFAULT_CARD_TUNING,
   lookOf,
+  playerLook,
   silhouette,
   type CardFace,
   type CardLook,
@@ -171,5 +172,25 @@ describe('silhouette', () => {
   it('shrinks with the inset and stays closed', () => {
     expect(silhouette(0)).toMatch(/^M0 24 .* Z$/);
     expect(silhouette(8)).toMatch(/^M8 /);
+  });
+});
+
+describe('3D character looks', () => {
+  it("come from the player's card: skin, hair, number; gloves for the goalkeeper only", () => {
+    const club = WORLD.clubs[0] as Club;
+    const kits = kitsOf(club);
+    const squad = generateSquad(club).players;
+    const boots = new Set<string>();
+    for (const player of squad) {
+      const keeper = player.positions[0] === 'GK';
+      const look = playerLook(player, keeper ? kits.keeper : kits.home);
+      expect(look).toEqual(playerLook(player, keeper ? kits.keeper : kits.home));
+      expect(look.number).toBe(player.number);
+      expect(look.skin).toMatch(/^#[0-9a-f]{6}$/);
+      expect(look.hair === null).toBe(player.appearance.hair === 'bald');
+      expect(look.gloves !== null).toBe(keeper);
+      boots.add(look.boots);
+    }
+    expect(boots.size).toBeGreaterThan(1);
   });
 });

@@ -512,6 +512,51 @@
         "speed": "Vitesse",
         "reset": "Valeurs par défaut"
       }
+    },
+    "kits": {
+      "title": "Maillots en 3D",
+      "loading": "Habillage des joueurs…",
+      "failed": "La 3D n'est pas disponible sur cet appareil ou ce navigateur.",
+      "club": "Club",
+      "player": "Joueur",
+      "clip": "Animation",
+      "front": "Face",
+      "back": "Dos",
+      "tuningToggle": "Réglages",
+      "kitNames": {
+        "home": "Domicile",
+        "away": "Extérieur",
+        "keeper": "Gardien"
+      },
+      "mannequin": "Mannequin de test : le personnage réel n'est pas disponible ici",
+      "tuning": {
+        "sleeveEnd": "Fin des manches (bras)",
+        "longSleeveEnd": "Fin des manches longues (gardien)",
+        "cuff": "Poignet des manches",
+        "handStart": "Début de la main",
+        "waist": "Taille du short (m)",
+        "shortsHem": "Bas du short (jambe)",
+        "sockTop": "Haut des chaussettes (jambe)",
+        "sockCuff": "Revers des chaussettes",
+        "bootTop": "Haut des chaussures (jambe)",
+        "trim": "Liseré du short (côté)",
+        "collarWidth": "Largeur du col (m)",
+        "collarY": "Hauteur de l'encolure (m)",
+        "vDepth": "Profondeur du col en V (m)",
+        "neckRadius": "Rayon de l'encolure (m)",
+        "stripeWidth": "Largeur des rayures (m)",
+        "hoopWidth": "Largeur des cerceaux (m)",
+        "sashWidth": "Largeur de l'écharpe (m)",
+        "checkSize": "Taille des damiers (m)",
+        "printSize": "Taille du flocage poitrine (m)",
+        "printY": "Hauteur du flocage poitrine (m)",
+        "numberHeight": "Hauteur du numéro (m)",
+        "numberY": "Hauteur du numéro (m, dos)",
+        "hairLine": "Ligne des cheveux (m)",
+        "hairBack": "Cheveux à l'arrière (m)",
+        "jointTint": "Teinte des articulations",
+        "reset": "Valeurs par défaut"
+      }
     }
   },
   "commentary": {
@@ -747,6 +792,8 @@
     "webglError": "WebGL 2 n'est pas disponible : l'action sera résolue par le coach.",
     "prematch": {
       "title": "Avant-match",
+      "home": "Domicile (ton équipe)",
+      "away": "Extérieur",
       "rating": "note {rating}",
       "formation": "Formation",
       "style": "Style de jeu",

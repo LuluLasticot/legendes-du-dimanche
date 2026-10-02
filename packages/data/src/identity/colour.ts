@@ -36,6 +36,20 @@ export function luminance(hex: string): number {
   return 0.2126 * r * r + 0.7152 * g * g + 0.0722 * b * b;
 }
 
+/**
+ * How far apart two colours look, 0 (same) to about 765 (black and white): RGB distance weighted
+ * by the mean red ("redmean"), a cheap stand-in for a perceptual distance.
+ */
+export function colourDistance(a: string, b: string): number {
+  const [ar, ag, ab] = parseHex(a);
+  const [br, bg, bb] = parseHex(b);
+  const r = (ar + br) / 2;
+  const dr = ar - br;
+  const dg = ag - bg;
+  const db = ab - bb;
+  return Math.sqrt((2 + r / 256) * dr * dr + 4 * dg * dg + (2 + (255 - r) / 256) * db * db);
+}
+
 /** Contrast ratio between two colours, 1 (same) to 21 (black on white). */
 export function contrast(a: string, b: string): number {
   const la = luminance(a);

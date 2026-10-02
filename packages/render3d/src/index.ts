@@ -27,6 +27,8 @@ export {
 export { mountPreviewScene, type PreviewHandle } from './scenes/preview.ts';
 export {
   mountBallSandbox,
+  type MomentLook,
+  type MomentLooks,
   type MomentResult,
   type SandboxHandle,
   type SandboxOutcome,
@@ -88,3 +90,17 @@ export {
   type PackStep,
   type PackTuning,
 } from './scenes/pack-opening.ts';
+export {
+  DEFAULT_KIT_SHAPE,
+  plainLook,
+  type CharacterKitSpec,
+  type CharacterLook,
+  type KitShape,
+} from './players/kit-material.ts';
+export { createMannequinAsset } from './players/mannequin.ts';
+export {
+  mountKitViewer,
+  type KitViewerHandle,
+  type KitViewerInfo,
+  type KitViewerOptions,
+} from './scenes/kit-viewer.ts';
