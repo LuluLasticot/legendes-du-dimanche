@@ -22,7 +22,7 @@ export default defineConfig({
     {
       name: 'mobile',
       use: { ...devices['Pixel 7'], launchOptions: { args: GL } },
-      testMatch: /lab\.spec/,
+      testMatch: /(lab|public)\.spec/,
     },
   ],
   webServer: {

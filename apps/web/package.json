@@ -20,11 +20,13 @@
     "@legendes/render3d": "workspace:*",
     "@legendes/shared": "workspace:*",
     "@legendes/ui": "workspace:*",
+    "@resvg/resvg-js": "^2.6.2",
     "@vercel/blob": "^2.8.0",
     "next": "16.3.6",
     "next-intl": "^4.14.7",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "sharp": "^0.35.4",
     "tweakpane": "^4.0.5",
     "zod": "catalog:"
   },

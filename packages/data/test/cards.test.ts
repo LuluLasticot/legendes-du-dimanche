@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { RATING_MAX } from '@legendes/shared';
-import { cardOf, cardVariantsOf, generateSquad, WORLD, type Player } from '../src/index.ts';
+import {
+  cardOf,
+  cardVariantsOf,
+  findCard,
+  generateSquad,
+  SEASON,
+  WORLD,
+  type Player,
+} from '../src/index.ts';
 
 const players: Player[] = WORLD.clubs.slice(0, 40).flatMap((c) => [...generateSquad(c).players]);
 
@@ -44,5 +52,33 @@ describe('cards', () => {
     expect(card.player.composure).toBeGreaterThan((pro as Player).composure - 1);
     expect(card.boost).toBeGreaterThanOrEqual(1);
     expect(() => cardOf(amateur as Player, 'former-pro')).toThrow(/no former-pro card/);
+  });
+});
+
+describe('finding a card from its id', () => {
+  const club = WORLD.clubs[0]!;
+  const players = generateSquad(club).players;
+
+  it('finds base and special cards, the same as drawn', () => {
+    const player = players[3]!;
+    expect(findCard(player.id)).toEqual({ card: cardOf(player), club });
+    expect(findCard(`${player.id}~weekend`)?.card).toEqual(cardOf(player, 'weekend'));
+  });
+
+  it('rejects ids that do not name a card of the current season', () => {
+    const player = players[0]!;
+    const withoutPro = players.find((p) => !p.traits.includes('former-pro'))!;
+    for (const id of [
+      '',
+      'nope',
+      `${player.id}~base`,
+      `${player.id}~legend`,
+      `${withoutPro.id}~former-pro`,
+      player.id.replace(SEASON, '1999-00'),
+      player.id.replace(club.id, 'no-such-club'),
+      `${club.id}-${SEASON}-99`,
+    ]) {
+      expect(findCard(id), id).toBeNull();
+    }
   });
 });

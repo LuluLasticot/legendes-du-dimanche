@@ -943,5 +943,45 @@
       "atLeastOne": "Au moins une",
       "note": "Tirage au hasard parmi les joueurs générés du pilote. Dans le jeu, le tirage se fera sur le serveur."
     }
+  },
+  "share": {
+    "brand": "Légendes du Dimanche",
+    "fictional": "Joueur fictif · football amateur des Hauts-de-France",
+    "clubFootnote": "Jeu non officiel · blason et sponsors fictifs",
+    "cardLine": "{rating} · {position} · N° {number}",
+    "clubLine": "{division} · {city}",
+    "clubPlace": "{city} · {stadium}",
+    "cardTitle": "{name} ({club}) — Légendes du Dimanche",
+    "cardDescription": "Carte {eyebrow} : {rating}, {position} à {club}. Joueur fictif du jeu de cartes du football amateur.",
+    "clubTitle": "{club} — Légendes du Dimanche",
+    "clubDescription": "{club}, {division} ({city}) : blason, maillots et effectif du club dans le jeu de cartes du football amateur. Sponsor maillot fictif : {sponsor}.",
+    "story": "Image pour une story",
+    "copy": "Copier le lien",
+    "copied": "Lien copié",
+    "native": "Partager",
+    "shareText": "Ma carte {name} dans Légendes du Dimanche"
+  },
+  "cardPage": {
+    "variants": "Versions de la carte",
+    "view3d": "Voir en 3D",
+    "view2d": "Revenir à la carte",
+    "facts": "Fiche",
+    "age": "{age} ans",
+    "height": "{height} cm",
+    "foot": "Pied faible {stars}/5 · gestes techniques {skills}/5",
+    "traits": "Traits",
+    "fictional": "Ce joueur est fictif : il est généré pour le jeu, comme tous les joueurs des clubs du pilote. Les vrais joueurs n'y entrent qu'avec leur accord."
+  },
+  "clubPage": {
+    "kits": "Maillots",
+    "squad": "Effectif {season}",
+    "sponsor": "Sponsor maillot (fictif)",
+    "check": "Fiche à vérifier : divisions, couleurs et stades viennent des données publiques de la saison ; le blason et les sponsors sont générés.",
+    "lines": {
+      "goalkeeper": "Gardiens",
+      "defence": "Défenseurs",
+      "midfield": "Milieux",
+      "attack": "Attaquants"
+    }
   }
 }

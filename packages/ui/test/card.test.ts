@@ -21,8 +21,13 @@ import {
   cardNode,
   DEFAULT_CARD_TUNING,
   lookOf,
+  cardShareNode,
+  cardStoryNode,
+  clubShareNode,
   playerLook,
+  SHARE_SIZE,
   silhouette,
+  STORY_SIZE,
   type CardFace,
   type CardLook,
 } from '../src/card/index.ts';
@@ -192,5 +197,72 @@ describe('3D character looks', () => {
       boots.add(look.boots);
     }
     expect(boots.size).toBeGreaterThan(1);
+  });
+});
+
+describe('share images', () => {
+  const club = WORLD.clubs[0] as Club;
+  const player = generateSquad(club).players[0]!;
+  const face: CardFace = {
+    uid: player.id,
+    look: 'gold-rare',
+    rating: player.rating,
+    position: 'MC',
+    name: player.displayName,
+    division: 'D1',
+    crest: crestOf(club),
+    clubColours: club.colours,
+    stats: [{ label: 'VIT', value: 70 }],
+    weakFoot: 3,
+    skillMoves: 2,
+    labels: { weakFoot: 'PF', skillMoves: 'GT' },
+    trait: null,
+    promo: null,
+    appearance: player.appearance,
+    kit: kitsOf(club).home,
+  };
+  const labels = {
+    eyebrow: 'Or rare',
+    line: '80 · Milieu central · N° 8',
+    club: club.name,
+    clubLine: 'D1 · Ville',
+    brand: 'Légendes du Dimanche',
+    footnote: 'Joueur fictif',
+  };
+
+  it('draw the card of the game, its player and the brand, well formed and sized', () => {
+    for (const [node, size] of [
+      [cardShareNode(face, labels), SHARE_SIZE],
+      [cardStoryNode(face, labels), STORY_SIZE],
+    ] as const) {
+      const svg = toSvgString(node);
+      expect(svg).not.toMatch(/NaN|undefined/);
+      expect(wellFormed(svg)).toBe(true);
+      expect(node.attrs['width']).toBe(size.width);
+      expect(node.attrs['height']).toBe(size.height);
+      expect(svg).toContain(player.displayName);
+      expect(svg).toContain('LÉGENDES DU DIMANCHE');
+    }
+  });
+
+  it('draw a club with its crest, its name on one or two lines, and its kits', () => {
+    const kits = kitsOf(club);
+    for (const name of [club.name, 'Union Sportive Assevent-Boussois Football Club']) {
+      const svg = toSvgString(
+        clubShareNode(
+          { id: club.id, crest: crestOf(club), colour: club.colours.primary },
+          [kits.home, kits.away, kits.keeper],
+          {
+            eyebrow: 'D1',
+            name,
+            line: 'Ville · Stade',
+            brand: 'Légendes du Dimanche',
+            footnote: 'Jeu non officiel',
+          },
+        ),
+      );
+      expect(wellFormed(svg), name).toBe(true);
+      expect(svg).not.toMatch(/NaN|undefined/);
+    }
   });
 });

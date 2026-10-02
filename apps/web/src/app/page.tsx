@@ -1,5 +1,6 @@
 import { cardOf, generateSquad, WORLD } from '@legendes/data';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import { PlayerCard } from '@/components/card/player-card';
 import { DeterminismBadge } from '@/components/determinism-badge';
 
@@ -55,13 +56,16 @@ export default async function HomePage() {
         </section>
 
         <section className="flex flex-col items-center gap-3 md:items-end">
-          <div className="rotate-[-4deg] transition-transform duration-500 hover:rotate-0">
+          <Link
+            href={`/carte/${showcase.card.id}`}
+            className="block rotate-[-4deg] transition-transform duration-500 hover:rotate-0"
+          >
             <PlayerCard
               card={showcase.card}
               club={showcase.club}
               className="w-[260px] drop-shadow-[0_24px_30px_rgb(0_0_0/0.6)]"
             />
-          </div>
+          </Link>
           <p className="max-w-[260px] text-center text-xs text-chalk-faint">
             {t('home.cardPreview')}
           </p>
