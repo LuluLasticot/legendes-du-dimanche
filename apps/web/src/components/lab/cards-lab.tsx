@@ -19,7 +19,8 @@ import {
   type CardTuning,
 } from '@legendes/ui/card';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { CardViewer3D } from '@/components/card/card-viewer-3d';
 import { PlayerCard } from '@/components/card/player-card';
 
 interface Entry {
@@ -82,6 +83,7 @@ export function CardsLab() {
   const [query, setQuery] = useState('');
   const [variant, setVariant] = useState<CardVariant>('base');
   const templates = useMemo(() => showcase(), []);
+  const [open, setOpen] = useState<Entry | null>(null);
 
   const results = useMemo(() => {
     const q = foldText(query);
@@ -111,12 +113,14 @@ export function CardsLab() {
           <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">
             {templates.map(({ card, club, look }) => (
               <li key={look} className="flex flex-col items-center gap-2">
-                <PlayerCard
-                  card={card}
-                  club={club}
-                  tuning={tuning}
-                  className="w-full max-w-[220px] drop-shadow-[0_14px_18px_rgb(0_0_0/0.55)] transition duration-300 hover:-translate-y-1 hover:scale-[1.03]"
-                />
+                <CardButton entry={{ card, club }} onOpen={setOpen}>
+                  <PlayerCard
+                    card={card}
+                    club={club}
+                    tuning={tuning}
+                    className="w-full drop-shadow-[0_14px_18px_rgb(0_0_0/0.55)] transition duration-300 group-hover:-translate-y-1 group-hover:scale-[1.03]"
+                  />
+                </CardButton>
                 <p className="text-center text-xs text-chalk-muted">
                   {t(`looks.${look}`)} · {club.shortName}
                 </p>
@@ -155,12 +159,14 @@ export function CardsLab() {
           <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
             {results.map(({ card, club }) => (
               <li key={card.id}>
-                <PlayerCard
-                  card={card}
-                  club={club}
-                  tuning={tuning}
-                  className="w-full max-w-[220px] drop-shadow-[0_10px_14px_rgb(0_0_0/0.5)]"
-                />
+                <CardButton entry={{ card, club }} onOpen={setOpen}>
+                  <PlayerCard
+                    card={card}
+                    club={club}
+                    tuning={tuning}
+                    className="w-full drop-shadow-[0_10px_14px_rgb(0_0_0/0.5)]"
+                  />
+                </CardButton>
               </li>
             ))}
           </ul>
@@ -197,6 +203,64 @@ export function CardsLab() {
           {t('tuning.reset')}
         </button>
       </aside>
+      {open && <ViewerDialog entry={open} onClose={() => setOpen(null)} />}
     </div>
+  );
+}
+
+function CardButton({
+  entry,
+  onOpen,
+  children,
+}: {
+  entry: Entry;
+  onOpen: (entry: Entry) => void;
+  children: React.ReactNode;
+}) {
+  const t = useTranslations('lab.cards.viewer');
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(entry)}
+      aria-label={t('open', {
+        label: `${entry.card.player.displayName} ${entry.card.player.rating}`,
+      })}
+      className="group block w-full max-w-[220px] cursor-zoom-in rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-floodlight-400"
+    >
+      {children}
+    </button>
+  );
+}
+
+function ViewerDialog({ entry, onClose }: { entry: Entry; onClose: () => void }) {
+  const t = useTranslations('lab.cards.viewer');
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      onClose={onClose}
+      aria-label={t('title')}
+      className="m-0 h-dvh max-h-none w-screen max-w-none bg-pitch-950/95 p-4 text-chalk backdrop:bg-black/70"
+    >
+      <div className="mx-auto flex h-full max-w-3xl flex-col">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-2xl">{t('title')}</h2>
+          <button
+            type="button"
+            onClick={() => ref.current?.close()}
+            className="rounded-md border border-chalk/20 px-3 py-1.5 text-sm hover:border-floodlight-400"
+          >
+            {t('close')}
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 py-3">
+          <CardViewer3D card={entry.card} club={entry.club} />
+        </div>
+      </div>
+    </dialog>
   );
 }

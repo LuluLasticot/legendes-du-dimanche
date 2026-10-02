@@ -13,7 +13,11 @@ import {
 } from '@legendes/data';
 import {
   avatarContent,
+  CARD_FINISHES,
   CARD_LOOKS,
+  cardBackMaskNode,
+  cardBackNode,
+  cardMaskNode,
   cardNode,
   DEFAULT_CARD_TUNING,
   lookOf,
@@ -118,6 +122,34 @@ describe('card templates', () => {
     const face = samples.get('gold-rare') as CardFace;
     const svg = toSvgString(cardNode(face, { ...DEFAULT_CARD_TUNING, grain: 0 }));
     expect(svg).not.toContain('feTurbulence');
+  });
+});
+
+describe('3D sources', () => {
+  it.each([...CARD_LOOKS])('%s: mask, back and back mask are well formed and scoped', (look) => {
+    const face = samples.get(look) as CardFace;
+    const drawings = [
+      toSvgString(cardMaskNode(face)),
+      toSvgString(cardBackNode(look, `${face.uid}-back`)),
+      toSvgString(cardBackMaskNode(look, `${face.uid}-back`)),
+    ];
+    for (const svg of drawings) {
+      expect(svg).toMatch(/^<svg [^>]*viewBox="0 0 250 350"/);
+      expect(svg).not.toMatch(/NaN|undefined|null/);
+      expect(wellFormed(svg)).toBe(true);
+      for (const [, ref] of svg.matchAll(/url\(#([^)]+)\)/g))
+        expect(svg, `dangling reference ${ref}`).toContain(`id="${ref}"`);
+    }
+    // The mask paints its own areas in pure channels: red frame, green film, blue protection.
+    expect(drawings[0]).toContain('fill="#ff0000"');
+    expect(drawings[0]).toContain('fill="#00ff00"');
+    expect(drawings[0]).toContain('0 0 0 0 1');
+  });
+
+  it('finishes rank the templates from bronze common to the top promo', () => {
+    const ranks = CARD_LOOKS.map((look) => CARD_FINISHES[look].rank);
+    expect([...ranks].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(CARD_FINISHES['gold-rare'].foil).toBeGreaterThan(CARD_FINISHES['gold-common'].foil);
   });
 });
 

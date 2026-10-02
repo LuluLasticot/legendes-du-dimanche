@@ -103,3 +103,26 @@ test('the cards lab shows every template and finds a player', async ({ page }) =
   await expect(reset).toBeEnabled();
   expect(errors).toEqual([]);
 });
+
+test('a card opens in 3D, reveals itself and turns over', async ({ page }) => {
+  test.slow();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  // Low quality: the runners render WebGL in software.
+  await page.goto('/lab/cards?q=low');
+  await page
+    .getByRole('button', { name: /^Voir en 3D/ })
+    .first()
+    .click();
+
+  const dialog = page.getByRole('dialog', { name: 'Carte en 3D' });
+  await expect(dialog.locator('canvas')).toBeVisible();
+  // Textures drawn (fonts embedded), scene mounted: the buttons come alive.
+  const flip = dialog.getByRole('button', { name: 'Retourner' });
+  await expect(flip).toBeEnabled({ timeout: 30_000 });
+  await flip.click();
+  await dialog.getByRole('button', { name: 'Rejouer la révélation' }).click();
+  await dialog.getByRole('button', { name: 'Fermer' }).click();
+  await expect(dialog).toBeHidden();
+  expect(errors).toEqual([]);
+});
