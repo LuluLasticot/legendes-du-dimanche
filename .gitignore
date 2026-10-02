@@ -44,3 +44,7 @@ apps/web/public/assets/characters/
 
 /test-results/
 /playwright-report/
+# Our own footballer (D-039): the .blend and its build script are versioned; the FBX sent to
+# Mixamo is exported from them, and Blender's backups are noise
+assets-src/blender/*.fbx
+assets-src/blender/*.blend1
