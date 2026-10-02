@@ -1,10 +1,15 @@
 import * as THREE from 'three';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { describe, expect, it } from 'vitest';
+import type { CharacterAsset } from '../src/players/character-asset.ts';
 import {
+  KIT_ZONES,
   KitMaterials,
+  mergeKitZones,
   plainLook,
   prepareKitRig,
   type CharacterLook,
+  type KitZone,
 } from '../src/players/kit-material.ts';
 import { createMannequinAsset } from '../src/players/mannequin.ts';
 
@@ -126,6 +131,170 @@ describe('a dressed character', () => {
     expect(character.part('head').y).toBeGreaterThan(1.4);
     expect(character.part('head').y).toBeLessThan(1.9);
     expect(character.part('hips').y).toBeGreaterThan(0.8);
+    character.dispose();
+  });
+});
+
+// ─── Zoned assets (the modelled footballer, D-039) ──────────────────────────────────────────
+
+/** Zone of a mannequin triangle from its centre (metres), standing in for the model's materials. */
+function zoneAt(x: number, y: number): KitZone {
+  const ax = Math.abs(x);
+  if (ax > 0.7) return 'hands';
+  if (ax > 0.32) return 'skin_forearms';
+  if (ax > 0.2 && y > 1.3) return 'kit_sleeves';
+  if (y > 1.72) return 'hair';
+  if (y > 1.62) return 'skin';
+  if (y > 1.47) return 'kit_collar';
+  if (y > 0.95) return 'kit_shirt';
+  if (y > 0.6) return 'kit_shorts';
+  if (y > 0.45) return 'skin';
+  if (y > 0.42) return 'kit_socks_cuff';
+  if (y > 0.12) return 'kit_socks';
+  return 'kit_boots';
+}
+
+/**
+ * The mannequin cut into zones the way a modelled asset arrives: `'meshes'` = one skinned mesh
+ * per material (a glTF mesh with one primitive per material), `'groups'` = one mesh with groups.
+ */
+function zonedAsset(form: 'meshes' | 'groups'): { asset: CharacterAsset; triangles: number } {
+  const base = createMannequinAsset();
+  const scene = cloneSkinned(base.scene);
+  let source: THREE.SkinnedMesh | null = null;
+  scene.traverse((o) => {
+    if (o instanceof THREE.SkinnedMesh) source = o;
+  });
+  const mesh = source as unknown as THREE.SkinnedMesh;
+  const position = mesh.geometry.getAttribute('position');
+  const index = mesh.geometry.index!;
+  const byZone = new Map<KitZone, number[]>();
+  const p = new THREE.Vector3();
+  for (let t = 0; t < index.count; t += 3) {
+    p.set(0, 0, 0);
+    for (let k = 0; k < 3; k++) {
+      const i = index.getX(t + k);
+      p.x += position.getX(i) / 300;
+      p.y += position.getY(i) / 300;
+    }
+    const zone = zoneAt(p.x, p.y);
+    const list = byZone.get(zone) ?? [];
+    list.push(index.getX(t), index.getX(t + 1), index.getX(t + 2));
+    byZone.set(zone, list);
+  }
+  const geometryWith = (indices: number[]): THREE.BufferGeometry => {
+    const g = new THREE.BufferGeometry();
+    for (const name of ['position', 'normal', 'skinIndex', 'skinWeight']) {
+      g.setAttribute(name, mesh.geometry.getAttribute(name));
+    }
+    g.setIndex(indices);
+    return g;
+  };
+  const material = (zone: KitZone) => new THREE.MeshStandardMaterial({ name: zone });
+  const parts: THREE.SkinnedMesh[] = [];
+  if (form === 'meshes') {
+    for (const [zone, indices] of byZone) {
+      parts.push(new THREE.SkinnedMesh(geometryWith(indices), material(zone)));
+    }
+  } else {
+    const all: number[] = [];
+    const materials: THREE.Material[] = [];
+    const geometry = geometryWith([]);
+    for (const [zone, indices] of byZone) {
+      geometry.addGroup(all.length, indices.length, materials.length);
+      materials.push(material(zone));
+      all.push(...indices);
+    }
+    geometry.setIndex(all);
+    parts.push(new THREE.SkinnedMesh(geometry, materials));
+  }
+  for (const part of parts) {
+    part.name = 'Footballer';
+    mesh.parent!.add(part);
+    part.bind(mesh.skeleton, mesh.bindMatrix.clone());
+  }
+  mesh.removeFromParent();
+  return { asset: { ...base, scene }, triangles: index.count / 3 };
+}
+
+function skinnedMeshes(root: THREE.Object3D): THREE.SkinnedMesh[] {
+  const found: THREE.SkinnedMesh[] = [];
+  root.traverse((o) => {
+    if ((o as THREE.SkinnedMesh).isSkinnedMesh) found.push(o as THREE.SkinnedMesh);
+  });
+  return found;
+}
+
+describe('a modelled asset with zones', () => {
+  for (const form of ['meshes', 'groups'] as const) {
+    it(`merges its zones into one mesh with a zone per vertex (${form})`, () => {
+      const { asset: zoned, triangles } = zonedAsset(form);
+      expect(mergeKitZones(zoned.scene)).toBe(true);
+      const [body, ...others] = skinnedMeshes(zoned.scene);
+      expect(others).toHaveLength(0);
+      expect(Array.isArray(body!.material)).toBe(false);
+      const geometry = body!.geometry;
+      const zone = geometry.getAttribute('kitZone');
+      const position = geometry.getAttribute('position');
+      const idx = geometry.index!;
+      expect(idx.count / 3).toBe(triangles);
+      // Every triangle keeps the zone of the material it came from, on its three vertices.
+      for (let t = 0; t < idx.count; t += 3) {
+        const [a, b, c] = [idx.getX(t), idx.getX(t + 1), idx.getX(t + 2)];
+        const x = (position.getX(a) + position.getX(b) + position.getX(c)) / 300;
+        const y = (position.getY(a) + position.getY(b) + position.getY(c)) / 300;
+        const expected = KIT_ZONES.indexOf(zoneAt(x, y));
+        expect([zone.getX(a), zone.getX(b), zone.getX(c)]).toEqual([expected, expected, expected]);
+      }
+      // Merging twice is a no-op.
+      expect(mergeKitZones(zoned.scene)).toBe(true);
+      expect(skinnedMeshes(zoned.scene)).toHaveLength(1);
+    });
+  }
+
+  it('measures the kit on the model: sleeve hem, end of the forearm, bottom of the collar', () => {
+    const { asset: zoned } = zonedAsset('meshes');
+    const zonedRig = prepareKitRig(zoned.scene);
+    expect(zonedRig.zones).toBe(true);
+    expect(zonedRig.fromBones).toBe(true);
+    // Sleeves stop where the forearms start (|x| 0.32 m), forearms at the hands (0.7 m).
+    expect(zonedRig.sleeveEnd).toBeGreaterThan(0.2);
+    expect(zonedRig.sleeveEnd).toBeLessThan(zonedRig.forearmEnd);
+    expect(zonedRig.forearmEnd).toBeLessThan(1.05);
+    expect(zonedRig.collarBottom).toBeGreaterThan(zonedRig.chestY);
+    expect(zonedRig.collarBottom).toBeLessThan(zonedRig.headY);
+  });
+
+  it('switches the shader to its zones, with its own program', () => {
+    const { asset: zoned } = zonedAsset('meshes');
+    const zoneMaterials = new KitMaterials(prepareKitRig(zoned.scene), look(5));
+    const plain = new KitMaterials(rig, look(5));
+    expect(zoneMaterials.body.defines).toHaveProperty('KIT_ZONES');
+    expect(plain.body.defines ?? {}).not.toHaveProperty('KIT_ZONES');
+    expect(zoneMaterials.body.customProgramCacheKey()).not.toBe(plain.body.customProgramCacheKey());
+    const { vertex, fragment } = patched(zoneMaterials.body);
+    expect(vertex).toContain('vKitZone = kitZone;');
+    expect(fragment).toContain('float zone = floor(vKitZone + 0.5);');
+  });
+
+  it('leaves an asset without zones as it is (fallback: Y Bot, mannequin)', () => {
+    const scene = cloneSkinned(createMannequinAsset().scene);
+    const before = skinnedMeshes(scene);
+    expect(mergeKitZones(scene)).toBe(false);
+    expect(skinnedMeshes(scene)).toEqual(before);
+    expect(rig.zones).toBe(false);
+  });
+
+  it('dresses a zoned character in one draw call, at its size', async () => {
+    const { Character } = await import('../src/players/character.ts');
+    const { asset: zoned } = zonedAsset('meshes');
+    const character = new Character(zoned, look(10));
+    character.update(0);
+    const meshes = skinnedMeshes(character.root);
+    expect(meshes).toHaveLength(1);
+    expect(meshes[0]!.material).toBeInstanceOf(THREE.MeshStandardMaterial);
+    expect(character.part('head').y).toBeGreaterThan(1.4);
+    expect(character.part('head').y).toBeLessThan(1.9);
     character.dispose();
   });
 });
