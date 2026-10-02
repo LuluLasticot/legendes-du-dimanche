@@ -326,7 +326,13 @@ export function KitsLab() {
                 height: info.rig.height.toFixed(2),
                 hip: info.rig.hipY.toFixed(2),
                 neck: info.rig.neckY.toFixed(2),
-              })}
+              })}{' '}
+              {info.rig.zones
+                ? t('rig.zones', {
+                    sleeve: info.rig.sleeveEnd.toFixed(2),
+                    collar: info.rig.collarBottom.toFixed(2),
+                  })
+                : t('rig.cut')}
             </p>
           )}
           {SLIDERS.map(([key, min, max, step]) => (
