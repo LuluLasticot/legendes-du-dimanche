@@ -28,6 +28,29 @@ export interface Card3DSources {
   readonly finish: Card3DFinish;
 }
 
+/**
+ * Textures shared by several cards (the backs of a pack's cards of the same tier): one upload per
+ * source. Owned and disposed by the scene; a card never disposes a cached texture.
+ */
+export class TextureCache {
+  private readonly textures = new Map<TexImageSource, THREE.Texture>();
+  constructor(private readonly anisotropy = 8) {}
+
+  get(source: TexImageSource, srgb: boolean): THREE.Texture {
+    let t = this.textures.get(source);
+    if (!t) {
+      t = texture(source, srgb, this.anisotropy);
+      this.textures.set(source, t);
+    }
+    return t;
+  }
+
+  dispose(): void {
+    for (const t of this.textures.values()) t.dispose();
+    this.textures.clear();
+  }
+}
+
 function texture(source: TexImageSource, srgb: boolean, anisotropy: number): THREE.Texture {
   const t = new THREE.Texture(source);
   t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
@@ -55,6 +78,11 @@ export class Card3D {
   sweep = -3;
   /** Holographic strength multiplier. */
   holo = 1;
+  /**
+   * World-space plane (normal, offset): the card is only drawn where `n·p + w ≥ 0`. The default
+   * keeps everything; a pack uses it to hide the cards below its torn edge.
+   */
+  readonly clip = new THREE.Vector4(0, 0, 0, 1);
 
   private readonly textures: THREE.Texture[];
   private readonly materials: THREE.ShaderMaterial[];
@@ -63,7 +91,10 @@ export class Card3D {
   private readonly backUniforms: Record<string, THREE.IUniform>;
   private readonly edgeUniforms: Record<string, THREE.IUniform>;
 
-  constructor(sources: Card3DSources, anisotropy = 8) {
+  /** The two faces, for picking a card under the pointer. */
+  readonly pickable: THREE.Object3D[];
+
+  constructor(sources: Card3DSources, anisotropy = 8, cache?: TextureCache) {
     const shape = shapeFromPath(sources.outline, 250, 350);
     const front = faceGeometry(shape, 250, 350);
     const edge = edgeGeometry(shape, THICKNESS);
@@ -73,9 +104,11 @@ export class Card3D {
     const glowColour = new THREE.Color(f.glow);
     const faceTex = texture(sources.face, true, anisotropy);
     const faceMask = texture(sources.faceMask, false, anisotropy);
-    const backTex = texture(sources.back, true, anisotropy);
-    const backMask = texture(sources.backMask, false, anisotropy);
-    this.textures = [faceTex, faceMask, backTex, backMask];
+    const backTex = cache ? cache.get(sources.back, true) : texture(sources.back, true, anisotropy);
+    const backMask = cache
+      ? cache.get(sources.backMask, false)
+      : texture(sources.backMask, false, anisotropy);
+    this.textures = cache ? [faceTex, faceMask] : [faceTex, faceMask, backTex, backMask];
 
     const surface = (
       layout: THREE.Texture,
@@ -100,6 +133,7 @@ export class Card3D {
         uHolo: { value: 1 },
         uSweep: { value: -3 },
         uTime: { value: 0 },
+        uClip: { value: this.clip },
       };
     };
     this.frontUniforms = surface(faceTex, faceMask, sources.faceMask, f.foil);
@@ -111,6 +145,7 @@ export class Card3D {
       uGlow: { value: 0 },
       uGlowCol: { value: glowColour },
       uDim: { value: 0 },
+      uClip: { value: this.clip },
     };
     const material = (uniforms: Record<string, THREE.IUniform>, fs: string, vs: string) =>
       new THREE.ShaderMaterial({ uniforms, vertexShader: vs, fragmentShader: CARD_COMMON + fs });
@@ -126,6 +161,7 @@ export class Card3D {
     backMesh.rotation.y = Math.PI;
     backMesh.position.z = -THICKNESS / 2;
     this.group.add(frontMesh, backMesh, new THREE.Mesh(edge, edgeMat));
+    this.pickable = [frontMesh, backMesh];
   }
 
   /** Pushes the animation state to the shaders. */

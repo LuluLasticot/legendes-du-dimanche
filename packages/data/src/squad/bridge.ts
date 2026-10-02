@@ -14,6 +14,8 @@ import {
   type PlayStyle,
   type Tactic,
 } from '@legendes/engine/sim';
+import { pickInk } from '../identity/colour.ts';
+import { kitsOf, type KitSpec } from '../identity/kit.ts';
 import { DISTRICTS } from '../reference.ts';
 import type { Club } from '../schema.ts';
 import type { Player, Squad } from './player.ts';
@@ -77,13 +79,12 @@ const STYLES: readonly (readonly [PlayStyle, number])[] = [
 ];
 
 /** Readable colours for a kit: shirt, shorts, and the number that shows on the shirt. */
-function kitOf(club: Club): MatchTeam['colours'] {
-  const { primary, secondary } = club.colours;
-  const light = (hex: string): boolean => {
-    const n = parseInt(hex.slice(1), 16);
-    return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 > 150;
+function coloursOf(kit: KitSpec): MatchTeam['colours'] {
+  return {
+    shirt: kit.body,
+    shorts: kit.shorts,
+    number: pickInk([kit.body], ['#ffffff', '#111111'], 3),
   };
-  return { shirt: primary, shorts: secondary, number: light(primary) ? '#111111' : '#ffffff' };
 }
 
 /**
@@ -93,8 +94,14 @@ function kitOf(club: Club): MatchTeam['colours'] {
 export function toMatchTeam(
   club: Club,
   squad: Squad,
-  options: { formation?: Formation; tactic?: Tactic } = {},
+  options: {
+    formation?: Formation;
+    tactic?: Tactic;
+    /** The kit worn (default: home; `matchKits` picks the away kit on a clash). */
+    kit?: KitSpec;
+  } = {},
 ): MatchTeam {
+  const colours = coloursOf(options.kit ?? kitsOf(club).home);
   const players = squad.players.map((p) => toMatchPlayer(p, club));
   const build = (formation: Formation): MatchTeam => {
     const eleven = pickEleven(players, formation);
@@ -109,7 +116,7 @@ export function toMatchTeam(
     return {
       id: club.id,
       name: club.name,
-      colours: kitOf(club),
+      colours,
       formation,
       lineup: eleven.map((p) => p.id),
       bench: [...(keeper ? [keeper] : []), ...others].map((p) => p.id),

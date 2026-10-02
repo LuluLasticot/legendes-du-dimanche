@@ -26,6 +26,10 @@ const STAND = { x0: 6, length: 32, steps: 5, stepDepth: 0.85, stepHeight: 0.45 }
 export interface StadiumOptions {
   readonly surface: physics.PhysicsSurface;
   readonly profile: QualityProfile;
+  /** The floodlight masts (default true; a scene can draw its own). */
+  readonly masts?: boolean;
+  /** Shadows of the key light (default true). */
+  readonly shadows?: boolean;
 }
 
 // ─── Pitch texture ────────────────────────────────────────────────────────────
@@ -258,7 +262,10 @@ void main() {
 
 export class Stadium {
   private readonly scene: THREE.Scene;
-  private readonly root = new THREE.Group();
+  /** Everything the stadium adds to the scene (a scene may move or turn it). */
+  readonly root = new THREE.Group();
+  private readonly lights: { light: THREE.Light; intensity: number }[] = [];
+  private readonly lamps: { colour: THREE.Color; base: THREE.Color }[] = [];
   private readonly pitchMaterial: THREE.MeshStandardMaterial;
   private readonly textures: THREE.Texture[] = [];
   private readonly nets: Readonly<Record<'attack' | 'defence', Net>>;
@@ -325,7 +332,7 @@ export class Stadium {
     this.root.add(this.nets.attack.lines, this.nets.defence.lines);
     this.buildStand();
     this.buildClubhouse();
-    this.buildFloodlights();
+    this.buildFloodlights(options.masts ?? true, options.shadows ?? true);
     this.buildSurroundings();
     this.crowd = new Crowd(
       {
@@ -350,6 +357,18 @@ export class Stadium {
   /** The crowd reacts: a goal, a near miss ("ouh"), a goal conceded. */
   crowdReaction(kind: CrowdReaction): void {
     this.crowd.react(kind);
+  }
+
+  /**
+   * The floodlights' power, 0 (switched off: only the night sky) to 1 (a match night). The sky
+   * light keeps a little of its strength so the ground never goes fully black.
+   */
+  setLighting(level: number): void {
+    const k = Math.max(0, level);
+    for (const { light, intensity } of this.lights) {
+      light.intensity = intensity * (light instanceof THREE.HemisphereLight ? 0.25 + 0.75 * k : k);
+    }
+    for (const { colour, base } of this.lamps) colour.copy(base).multiplyScalar(k);
   }
 
   setSurface(surface: physics.PhysicsSurface): void {
@@ -555,7 +574,7 @@ export class Stadium {
     this.root.add(building, windows);
   }
 
-  private buildFloodlights(): void {
+  private buildFloodlights(masts: boolean, shadows: boolean): void {
     const height = 20;
     // Four corner masts plus two behind each goal (common on amateur grounds, and what the
     // player sees when shooting).
@@ -569,67 +588,76 @@ export class Stadium {
       [-(HX + 16), 24],
       [-(HX + 16), -24],
     ];
-    const mastMaterial = new THREE.MeshStandardMaterial({
-      color: 0x2b302e,
-      roughness: 0.8,
-      metalness: 0.4,
-    });
-    this.root.add(
-      instanced(
-        new THREE.CylinderGeometry(0.22, 0.36, height, 8),
-        mastMaterial,
-        corners.map(([x, z]) => compose(x, height / 2, z)),
-      ),
-    );
-    const heads: THREE.Matrix4[] = corners.map(([x, z]) => {
-      const m = new THREE.Matrix4().lookAt(
-        new THREE.Vector3(x, height + 0.6, z),
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 1, 0),
+    if (masts) {
+      const mastMaterial = new THREE.MeshStandardMaterial({
+        color: 0x2b302e,
+        roughness: 0.8,
+        metalness: 0.4,
+      });
+      this.root.add(
+        instanced(
+          new THREE.CylinderGeometry(0.22, 0.36, height, 8),
+          mastMaterial,
+          corners.map(([x, z]) => compose(x, height / 2, z)),
+        ),
       );
-      m.setPosition(x, height + 0.6, z);
-      return m;
-    });
-    this.root.add(
-      instanced(
-        new THREE.PlaneGeometry(3.4, 1.8),
-        new THREE.MeshBasicMaterial({ color: new THREE.Color(9, 8, 6.2), side: THREE.DoubleSide }),
-        heads,
-      ),
-    );
+      const heads: THREE.Matrix4[] = corners.map(([x, z]) => {
+        const m = new THREE.Matrix4().lookAt(
+          new THREE.Vector3(x, height + 0.6, z),
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(0, 1, 0),
+        );
+        m.setPosition(x, height + 0.6, z);
+        return m;
+      });
+      this.root.add(
+        instanced(
+          new THREE.PlaneGeometry(3.4, 1.8),
+          this.lamp(
+            new THREE.MeshBasicMaterial({
+              color: new THREE.Color(9, 8, 6.2),
+              side: THREE.DoubleSide,
+            }),
+          ),
+          heads,
+        ),
+      );
 
-    const halo = radialTexture();
-    this.textures.push(halo);
-    const glowGeometry = new THREE.BufferGeometry();
-    glowGeometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute(
-        corners.flatMap(([x, z]) => [x, height + 0.6, z]),
-        3,
-      ),
-    );
-    const glow = new THREE.Points(
-      glowGeometry,
-      new THREE.PointsMaterial({
-        map: halo,
-        size: 16,
-        sizeAttenuation: true,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        color: new THREE.Color(1.4, 1.25, 1),
-        fog: false,
-      }),
-    );
-    glow.frustumCulled = false;
-    this.root.add(glow);
+      const halo = radialTexture();
+      this.textures.push(halo);
+      const glowGeometry = new THREE.BufferGeometry();
+      glowGeometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(
+          corners.flatMap(([x, z]) => [x, height + 0.6, z]),
+          3,
+        ),
+      );
+      const glow = new THREE.Points(
+        glowGeometry,
+        this.lamp(
+          new THREE.PointsMaterial({
+            map: halo,
+            size: 16,
+            sizeAttenuation: true,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            color: new THREE.Color(1.4, 1.25, 1),
+            fog: false,
+          }),
+        ),
+      );
+      glow.frustumCulled = false;
+      this.root.add(glow);
+    }
 
     // Lighting: sky/ground ambience, a key light from one mast (shadows) and a softer fill.
-    this.root.add(new THREE.HemisphereLight(0x9fb4d8, 0x0d2012, 0.45));
+    const sky = new THREE.HemisphereLight(0x9fb4d8, 0x0d2012, 0.45);
     const key = new THREE.DirectionalLight(0xfff0d8, 2.4);
     key.position.set(HX + 9, height, -(HZ + 9));
     key.target.position.set(HX - 20, 0, 0);
-    key.castShadow = this.profile.shadowMapSize > 0;
+    key.castShadow = shadows && this.profile.shadowMapSize > 0;
     key.shadow.mapSize.set(this.profile.shadowMapSize || 512, this.profile.shadowMapSize || 512);
     Object.assign(key.shadow.camera, {
       left: -32,
@@ -642,7 +670,14 @@ export class Stadium {
     key.shadow.bias = -0.0005;
     const fill = new THREE.DirectionalLight(0xdfe8ff, 0.9);
     fill.position.set(-(HX + 9), height, HZ + 9);
-    this.root.add(key, key.target, fill);
+    this.root.add(sky, key, key.target, fill);
+    for (const light of [sky, key, fill]) this.lights.push({ light, intensity: light.intensity });
+  }
+
+  /** Registers a lamp's material so `setLighting` can dim it. */
+  private lamp<M extends THREE.MeshBasicMaterial | THREE.PointsMaterial>(material: M): M {
+    this.lamps.push({ colour: material.color, base: material.color.clone() });
+    return material;
   }
 
   private buildSurroundings(): void {

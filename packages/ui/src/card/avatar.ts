@@ -15,8 +15,17 @@ import {
 export const AVATAR_WIDTH = 160;
 export const AVATAR_HEIGHT = 176;
 
-const SKIN: readonly string[] = ['#f5d6c1', '#e6b692', '#cf9870', '#ad7249', '#865234', '#5b3620'];
-const HAIR: Readonly<Record<Appearance['hairColour'], string>> = {
+/** Skin tones 1 to 6 (shared with the 3D character). */
+export const SKIN_TONES: readonly string[] = [
+  '#f5d6c1',
+  '#e6b692',
+  '#cf9870',
+  '#ad7249',
+  '#865234',
+  '#5b3620',
+];
+/** Hair colours (shared with the 3D character). */
+export const HAIR_COLOURS: Readonly<Record<Appearance['hairColour'], string>> = {
   black: '#1b1613',
   brown: '#4b2f1d',
   blond: '#c7a059',
@@ -172,9 +181,9 @@ function beard(style: Appearance['beard'], hw: number, colour: string): SvgEleme
 
 /** The portrait as SVG elements in a 160 × 176 box. `uid` makes clip identifiers unique. */
 export function avatarContent(look: Appearance, kit: KitSpec, uid: string): SvgElement[] {
-  const skin = SKIN[look.skin - 1] ?? SKIN[2]!;
+  const skin = SKIN_TONES[look.skin - 1] ?? SKIN_TONES[2]!;
   const shade = darken(skin, 0.2);
-  const hair = HAIR[look.hairColour];
+  const hair = HAIR_COLOURS[look.hairColour];
   const build = BUILD[look.build];
   const hw = build.head;
   const brow =

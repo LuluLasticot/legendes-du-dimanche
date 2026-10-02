@@ -6,6 +6,9 @@ import type * as THREE from 'three';
 import type { moments } from '@legendes/engine';
 import { Character, type Kit } from './character.ts';
 import type { CharacterAsset } from './character-asset.ts';
+import type { CharacterLook } from './kit-material.ts';
+
+type Look = Kit | CharacterLook;
 
 export class PitchExtras {
   private readonly characters: Character[] = [];
@@ -15,23 +18,28 @@ export class PitchExtras {
     private readonly asset: CharacterAsset,
   ) {}
 
-  /** Puts the players in place, facing `look`; reuses the characters it already has. */
+  /**
+   * Puts the players in place, facing `look`; reuses the characters it already has. `kits`
+   * gives the n-th player of each side his kit.
+   */
   set(
     players: readonly moments.BackgroundPlayer[],
     look: { x: number; z: number },
-    kits: { readonly attack: Kit; readonly defend: Kit },
+    kits: { readonly attack: (index: number) => Look; readonly defend: (index: number) => Look },
   ): void {
     while (this.characters.length > players.length) this.characters.pop()?.dispose();
     const idle = this.asset.clips.get('player_idle')?.duration ?? 10;
+    const counts = { attack: 0, defend: 0 };
     players.forEach((player, i) => {
+      const kit = kits[player.side](counts[player.side]++);
       let character = this.characters[i];
       if (!character) {
-        character = new Character(this.asset, kits[player.side]);
+        character = new Character(this.asset, kit);
         character.setShadows(false);
         this.scene.add(character.root);
         this.characters.push(character);
       }
-      character.setKit(kits[player.side]);
+      character.setKit(kit);
       character.place(
         player.feet,
         Character.yawFacing(look.x - player.feet.x, look.z - player.feet.z),

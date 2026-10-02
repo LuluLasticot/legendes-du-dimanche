@@ -126,3 +126,103 @@ test('a card opens in 3D, reveals itself and turns over', async ({ page }) => {
   await expect(dialog).toBeHidden();
   expect(errors).toEqual([]);
 });
+
+const packTuning = (overrides: Record<string, number>) => ({
+  walkoutRank: 4,
+  lightsGap: 0.42,
+  clueHold: 1.25,
+  clueGap: 0.3,
+  tension: 1.5,
+  flash: 1,
+  shake: 1,
+  particles: 1,
+  speed: 3,
+  ...overrides,
+});
+
+test('a pack opens: tear, the best card, the grid, the summary', async ({ page }) => {
+  test.slow();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.addInitScript((tuning) => {
+    window.localStorage.setItem('ld.lab.pack.tuning', JSON.stringify(tuning));
+  }, packTuning({}));
+  await page.goto('/lab/pack?q=low');
+
+  const stage = page.locator('[data-step]');
+  await expect(stage).toHaveAttribute('data-step', 'idle', { timeout: 60_000 });
+  await page.getByRole('button', { name: 'Ouvrir le pack' }).click();
+  await expect(stage).toHaveAttribute('data-step', 'hero', { timeout: 60_000 });
+  await expect(page.getByText('Touche pour voir le reste du pack')).toBeVisible();
+
+  await page.locator('canvas').click();
+  await expect(stage).toHaveAttribute('data-step', 'grid');
+  await page.getByRole('button', { name: 'Tout retourner' }).click();
+  await expect(stage).toHaveAttribute('data-step', 'summary', { timeout: 30_000 });
+  await expect(page.getByRole('status')).toContainText('Ton pack');
+  await expect(page.getByRole('button', { name: 'Nouveau pack' })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('a small pack turns its best card over simply, and the odds are shown', async ({ page }) => {
+  test.slow();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.addInitScript(
+    (tuning) => {
+      window.localStorage.setItem('ld.lab.pack.tuning', JSON.stringify(tuning));
+    },
+    packTuning({ speed: 1.5 }),
+  );
+  await page.goto('/lab/pack?q=low');
+  const stage = page.locator('[data-step]');
+  await expect(stage).toHaveAttribute('data-step', 'idle', { timeout: 60_000 });
+
+  await page.getByRole('combobox', { name: 'Type de pack' }).selectOption('bronze');
+  await expect(stage).toHaveAttribute('data-step', 'idle', { timeout: 60_000 });
+  // A bronze pack's best card is a bronze rare, unless a promo shows up (0.8 %): pin it.
+  await page.getByRole('combobox', { name: 'Meilleure carte' }).selectOption('bronze-rare');
+  await expect(stage).toHaveAttribute('data-step', 'idle', { timeout: 60_000 });
+  await page.getByRole('button', { name: 'Probabilités' }).click();
+  await expect(page.getByRole('region', { name: 'Probabilités' })).toContainText('Bronze rare');
+
+  // Every step the scene goes through: a bronze card gets no walkout (no floodlights, no clue).
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as { packSteps: string[] }).packSteps = seen;
+    const node = document.querySelector('[data-step]');
+    if (!node) return;
+    new MutationObserver(() => seen.push(node.getAttribute('data-step') ?? '')).observe(node, {
+      attributes: true,
+      attributeFilter: ['data-step'],
+    });
+  });
+  await page.getByRole('button', { name: 'Ouvrir le pack' }).click();
+  await expect(stage).toHaveAttribute('data-step', 'hero', { timeout: 60_000 });
+  const steps = await page.evaluate(() => (window as unknown as { packSteps: string[] }).packSteps);
+  expect(steps).toContain('tension');
+  expect(steps).not.toContain('lights');
+  expect(errors).toEqual([]);
+});
+
+test('the kits lab dresses a club in its three kits', async ({ page }) => {
+  test.slow();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  // The stand-in mannequin: the real character is not in the repository (D-019).
+  await page.goto('/lab/kits?q=low&mannequin&club=ac-cambrai-59122');
+
+  const stage = page.locator('[data-state]');
+  await expect(stage).toHaveAttribute('data-state', 'ready', { timeout: 60_000 });
+  await expect(page.getByRole('combobox', { name: 'Club' })).toHaveValue('ac-cambrai-59122');
+  await expect(page.getByRole('note')).toContainText('Mannequin de test');
+  for (const name of ['Domicile', 'Extérieur', 'Gardien'])
+    await expect(page.getByText(name, { exact: true })).toBeVisible();
+
+  await page.getByRole('combobox', { name: 'Club' }).selectOption('as-steenvoorde-59580');
+  await page.getByRole('button', { name: 'Dos' }).click();
+  await page.getByRole('button', { name: 'Réglages' }).click();
+  await expect(page.getByText('Fin des manches (bras)')).toBeVisible();
+  await page.getByRole('button', { name: 'Valeurs par défaut' }).click();
+  expect(errors).toEqual([]);
+});

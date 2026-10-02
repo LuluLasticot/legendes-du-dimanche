@@ -20,9 +20,12 @@ vec3 envMap(vec3 R){
 `;
 
 export const CARD_VS = /* glsl */ `
+uniform vec4 uClip;
 varying vec2 vUv; varying vec3 vPosV; varying vec3 vNrmV; varying vec3 vTanV; varying vec3 vBitV;
+varying float vClip;
 void main(){
   vUv = uv;
+  vClip = dot(uClip.xyz, (modelMatrix*vec4(position, 1.)).xyz) + uClip.w;
   vec4 mv = modelViewMatrix*vec4(position, 1.);
   vPosV = mv.xyz;
   mat3 m3 = mat3(modelViewMatrix);
@@ -39,6 +42,7 @@ uniform vec3 uMetal; uniform float uFoil; uniform float uGlitter; uniform float 
 uniform float uGlow; uniform vec3 uGlowCol; uniform float uFlash; uniform float uDim;
 uniform float uHolo; uniform float uSweep; uniform float uTime;
 varying vec2 vUv; varying vec3 vPosV; varying vec3 vNrmV; varying vec3 vTanV; varying vec3 vBitV;
+varying float vClip;
 
 float holoStars(vec2 uv){
   vec2 g = uv*vec2(uAspect, 1.)*15.;
@@ -50,6 +54,7 @@ float holoStars(vec2 uv){
 }
 
 void main(){
+  if (vClip < 0.) discard;
   vec4 lay = texture2D(uLayout, vUv);
   vec4 msk = texture2D(uMask, vUv);
   vec3 V = normalize(-vPosV);
@@ -117,8 +122,10 @@ void main(){
 `;
 
 export const EDGE_VS = /* glsl */ `
-varying vec3 vPosV; varying vec3 vNrmV;
+uniform vec4 uClip;
+varying vec3 vPosV; varying vec3 vNrmV; varying float vClip;
 void main(){
+  vClip = dot(uClip.xyz, (modelMatrix*vec4(position, 1.)).xyz) + uClip.w;
   vec4 mv = modelViewMatrix*vec4(position, 1.);
   vPosV = mv.xyz;
   vNrmV = normalize(normalMatrix*normal);
@@ -128,8 +135,9 @@ void main(){
 
 export const EDGE_FS = /* glsl */ `
 uniform vec3 uEdge; uniform float uFoil; uniform float uGlow; uniform vec3 uGlowCol; uniform float uDim;
-varying vec3 vPosV; varying vec3 vNrmV;
+varying vec3 vPosV; varying vec3 vNrmV; varying float vClip;
 void main(){
+  if (vClip < 0.) discard;
   vec3 V = normalize(-vPosV); vec3 N = normalize(vNrmV);
   vec3 e = envMap(reflect(-V, N));
   vec3 c = uEdge*(.3 + .9*e.g);
@@ -158,4 +166,25 @@ void main(){
 export const BACKDROP_VS = /* glsl */ `
 varying vec2 vUv;
 void main(){ vUv = uv; gl_Position = vec4(position.xy, .999, 1.); }
+`;
+
+/**
+ * Halo behind the pack and the cards (an additive plane in front of the stadium): a glow in the
+ * pack's colour, then the best card's, with slow beams turning through it.
+ */
+export const HALO_VS = /* glsl */ `
+varying vec2 vUv;
+void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position, 1.); }
+`;
+export const HALO_FS = /* glsl */ `
+uniform float uTime; uniform vec3 uTint; uniform float uPower; uniform float uAspect;
+varying vec2 vUv;
+void main(){
+  vec2 p = (vUv - vec2(.5, .53))*vec2(uAspect, 1.);
+  float r = length(p);
+  float a = atan(p.x, p.y + 1.4);
+  float beams = pow(.5 + .5*cos(a*24. + uTime*.25), 12.)*smoothstep(1.2, .1, r);
+  vec3 col = uTint*(.01 + .18*uPower)*exp(-r*r*6.) + uTint*beams*(.006 + .06*uPower);
+  gl_FragColor = vec4(col, 1.);
+}
 `;
