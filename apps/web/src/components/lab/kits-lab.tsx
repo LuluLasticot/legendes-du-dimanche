@@ -320,6 +320,15 @@ export function KitsLab() {
 
       {panel && shape && defaults && (
         <div className="absolute top-14 right-3 bottom-3 w-72 overflow-y-auto rounded-lg border border-chalk/15 bg-pitch-950/90 p-3 text-xs text-chalk backdrop-blur">
+          {info && (
+            <p className="mb-3 rounded-md bg-chalk/10 p-2 text-chalk-muted" data-testid="rig">
+              {t(info.rig.fromBones ? 'rig.bones' : 'rig.guessed', {
+                height: info.rig.height.toFixed(2),
+                hip: info.rig.hipY.toFixed(2),
+                neck: info.rig.neckY.toFixed(2),
+              })}
+            </p>
+          )}
           {SLIDERS.map(([key, min, max, step]) => (
             <label key={key} className="mb-2 block">
               <span className="flex justify-between">

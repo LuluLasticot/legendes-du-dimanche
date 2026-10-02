@@ -128,6 +128,10 @@ export interface KitRig {
   readonly chestY: number;
   /** Depth of the neck's axis (model z). */
   readonly neckZ: number;
+  /** Height of the body, metres. */
+  readonly height: number;
+  /** False when the bones did not fit the body and the usual proportions were used. */
+  readonly fromBones: boolean;
 }
 
 const PATTERN_INDEX: Readonly<Record<KitPattern, number>> = {
@@ -145,34 +149,26 @@ const ARM_BONE = /(Left|Right)(Arm|ForeArm|Hand)/;
 
 const rigs = new WeakMap<THREE.Object3D, KitRig>();
 
-/**
- * Rest (bind) positions of the bones, model space. Read from the inverse bind matrices, never
- * by posing the skeleton: `Skeleton.pose()` sets the root bone as if its parent were the world,
- * and on the converted asset (bones in centimetres under a node scaled to metres) it shrank
- * every character a hundredfold.
- */
-function bindPositions(
-  meshes: readonly THREE.SkinnedMesh[],
-  rootInv: THREE.Matrix4,
-): Map<string, THREE.Vector3> {
-  const out = new Map<string, THREE.Vector3>();
-  const m = new THREE.Matrix4();
-  for (const mesh of meshes) {
-    mesh.skeleton.bones.forEach((bone, i) => {
-      const inverse = mesh.skeleton.boneInverses[i];
-      if (!inverse || out.has(bone.name)) return;
-      // Bone in bind space, back to the mesh, then to the model.
-      m.copy(inverse).invert().premultiply(mesh.bindMatrixInverse).premultiply(mesh.matrixWorld);
-      out.set(bone.name, new THREE.Vector3().setFromMatrixPosition(m).applyMatrix4(rootInv));
-    });
-  }
-  return out;
+/** World position, model space, of a vertex as three skins it (`dir`: a direction instead). */
+function skinned(
+  mesh: THREE.SkinnedMesh,
+  index: number,
+  local: THREE.Vector3,
+  toModel: THREE.Matrix4,
+): THREE.Vector3 {
+  return mesh.applyBoneTransform(index, local).applyMatrix4(toModel);
 }
 
 /**
  * Adds the kit attributes (`kitRest`, `kitNormal`, `kitLimb`) to every skinned mesh of an
- * asset's template scene, in its bind pose, and returns its landmarks. Clones share the
- * geometry, so this runs once per asset.
+ * asset's template scene and returns its landmarks. Clones share the geometry, so this runs once
+ * per asset.
+ *
+ * Everything is read in the template's own pose, exactly as three draws it: each vertex skinned
+ * by its bones (`applyBoneTransform`) and each bone's world position. Nothing relies on the
+ * inverse bind matrices, whose space depends on the exporter, and the skeleton is never posed
+ * (`Skeleton.pose()` shrank the converted asset a hundredfold). Landmarks that do not fit the
+ * body (wrong order, outside it) are replaced by its usual proportions.
  */
 export function prepareKitRig(template: THREE.Object3D): KitRig {
   const cached = rigs.get(template);
@@ -184,39 +180,108 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
   });
   template.updateMatrixWorld(true);
   const rootInv = template.matrixWorld.clone().invert();
-  const bones = bindPositions(meshes, rootInv);
 
-  // Height from the meshes, for missing bones (a rig without Mixamo names still renders).
+  // Vertices and normals as drawn, model space.
+  const v = new THREE.Vector3();
+  const e = new THREE.Vector3();
+  const normalMatrix = new THREE.Matrix3();
+  const drawn = meshes.map((mesh) => {
+    const toModel = mesh.matrixWorld.clone().premultiply(rootInv);
+    normalMatrix.getNormalMatrix(toModel);
+    const positions = mesh.geometry.getAttribute('position');
+    const normals = mesh.geometry.getAttribute('normal');
+    const count = positions.count;
+    const rest = new Float32Array(count * 3);
+    const restNormal = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      v.fromBufferAttribute(positions, i);
+      const p = skinned(mesh, i, v.clone(), toModel);
+      rest.set([p.x, p.y, p.z], i * 3);
+      // The normal skinned like the surface: a point a little along it, minus the vertex.
+      let n = new THREE.Vector3(0, 1, 0);
+      if (normals) {
+        e.fromBufferAttribute(normals, i);
+        const step = Math.max(1e-4, v.length() * 1e-3);
+        n = skinned(mesh, i, v.clone().addScaledVector(e, step), toModel).sub(p);
+      }
+      // A degenerate normal (pole of a lathe, welded seam) would be NaN in the shader.
+      if (n.lengthSq() < 1e-20) n.set(0, 1, 0);
+      n.normalize();
+      restNormal.set([n.x, n.y, n.z], i * 3);
+    }
+    return { mesh, rest, restNormal, count };
+  });
+
   const box = new THREE.Box3();
-  for (const mesh of meshes) {
-    mesh.geometry.computeBoundingBox();
-    const local = mesh.geometry.boundingBox;
-    if (local) box.union(local.clone().applyMatrix4(mesh.matrixWorld).applyMatrix4(rootInv));
+  for (const { rest } of drawn) {
+    for (let i = 0; i < rest.length; i += 3) box.expandByPoint(v.fromArray(rest, i));
   }
-  const height = Math.max(0.5, box.max.y - box.min.y);
+  const height = Math.max(1e-3, box.max.y - box.min.y);
   const at = (k: number): number => box.min.y + height * k;
 
-  /** Mean rest position of the named bones, or a height guessed from the body. */
-  const pos = (names: readonly string[], k: number): THREE.Vector3 => {
-    const found = names.flatMap((name) => bones.get(`mixamorig${name}`) ?? []);
-    if (found.length === 0) return new THREE.Vector3(0, at(k), 0);
-    return found.reduce((sum, v) => sum.add(v), new THREE.Vector3()).divideScalar(found.length);
+  /** Mean world position of the named bones (model space), or null when one is missing. */
+  const bone = (...names: readonly string[]): THREE.Vector3 | null => {
+    const sum = new THREE.Vector3();
+    for (const name of names) {
+      const found = template.getObjectByName(`mixamorig${name}`);
+      if (!found) return null;
+      sum.add(found.getWorldPosition(new THREE.Vector3()).applyMatrix4(rootInv));
+    }
+    return sum.divideScalar(names.length);
   };
-  const hips = pos(['Hips'], 0.55);
-  const hip = pos(['LeftUpLeg', 'RightUpLeg'], 0.5);
-  const ankle = pos(['LeftFoot', 'RightFoot'], 0.05);
-  const neck = pos(['Neck'], 0.84);
-  const head = pos(['Head'], 0.9);
-  const chest = pos(['Spine2'], 0.75);
-  const shoulders = [pos(['LeftArm'], 0.8), pos(['RightArm'], 0.8)];
-  const wrists = [pos(['LeftHand'], 0.8), pos(['RightHand'], 0.8)];
-  // Without arm bones, arms are guessed sideways (T pose).
-  if (!bones.has('mixamorigLeftArm')) {
-    shoulders[0]!.x = 0.2;
-    shoulders[1]!.x = -0.2;
-    wrists[0]!.x = 0.75;
-    wrists[1]!.x = -0.75;
+  const read = {
+    hips: bone('Hips'),
+    hip: bone('LeftUpLeg', 'RightUpLeg'),
+    ankle: bone('LeftFoot', 'RightFoot'),
+    chest: bone('Spine2'),
+    neck: bone('Neck'),
+    head: bone('Head'),
+    shoulders: [bone('LeftArm'), bone('RightArm')],
+    wrists: [bone('LeftHand'), bone('RightHand')],
+  };
+  const inside = (p: THREE.Vector3 | null): p is THREE.Vector3 =>
+    p !== null &&
+    box
+      .clone()
+      .expandByScalar(height * 0.05)
+      .containsPoint(p);
+  const fits =
+    [
+      read.hips,
+      read.hip,
+      read.ankle,
+      read.chest,
+      read.neck,
+      read.head,
+      ...read.shoulders,
+      ...read.wrists,
+    ].every(inside) &&
+    read.ankle!.y < read.hip!.y &&
+    read.hip!.y <= read.hips!.y + height * 0.02 &&
+    read.hips!.y < read.chest!.y &&
+    read.chest!.y < read.neck!.y &&
+    read.neck!.y < read.head!.y;
+  if (!fits) {
+    console.warn('[kit] landmarks from the bones do not fit the body: using its proportions', {
+      height,
+      read,
+    });
   }
+  const guess = (x: number, k: number): THREE.Vector3 => new THREE.Vector3(x, at(k), 0);
+  const w = height;
+  const hips = fits ? read.hips! : guess(0, 0.555);
+  const hip = fits ? read.hip! : guess(0, 0.515);
+  const ankle = fits ? read.ankle! : guess(0, 0.05);
+  const chest = fits ? read.chest! : guess(0, 0.75);
+  const neck = fits ? read.neck! : guess(0, 0.833);
+  const head = fits ? read.head! : guess(0, 0.88);
+  // Without bones that fit, arms are guessed sideways (T pose).
+  const shoulders = fits
+    ? [read.shoulders[0]!, read.shoulders[1]!]
+    : [guess(0.1 * w, 0.795), guess(-0.1 * w, 0.795)];
+  const wrists = fits
+    ? [read.wrists[0]!, read.wrists[1]!]
+    : [guess(0.39 * w, 0.795), guess(-0.39 * w, 0.795)];
 
   const rig: KitRig = {
     hipsY: hips.y,
@@ -226,35 +291,21 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
     headY: head.y,
     chestY: chest.y,
     neckZ: neck.z,
+    height,
+    fromBones: fits,
   };
 
-  const p = new THREE.Vector3();
-  const n = new THREE.Vector3();
   const d = new THREE.Vector3();
-  const normalMatrix = new THREE.Matrix3();
   const legSpan = Math.max(1e-3, hip.y - ankle.y);
-  for (const mesh of meshes) {
+  for (const { mesh, rest, restNormal, count } of drawn) {
     const geometry = mesh.geometry;
     if (geometry.getAttribute('kitRest')) continue;
-    const positions = geometry.getAttribute('position');
-    const count = positions.count;
-    const normals = geometry.getAttribute('normal');
     const skinIndex = geometry.getAttribute('skinIndex');
     const skinWeight = geometry.getAttribute('skinWeight');
-    const isArm = mesh.skeleton.bones.map((bone) => ARM_BONE.test(bone.name));
-    const toModel = mesh.matrixWorld.clone().premultiply(rootInv);
-    normalMatrix.getNormalMatrix(toModel);
-    const rest = new Float32Array(count * 3);
-    const restNormal = new Float32Array(count * 3);
+    const isArm = mesh.skeleton.bones.map((b) => ARM_BONE.test(b.name));
     const limb = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      // In the bind pose every skinning matrix is the identity: the rest position is the raw
-      // vertex (no bone transform, whatever pose the template's bones are in).
-      p.fromBufferAttribute(positions, i).applyMatrix4(toModel);
-      if (normals) n.fromBufferAttribute(normals, i).applyMatrix3(normalMatrix);
-      // A degenerate normal (pole of a lathe, welded seam) would be NaN in the shader.
-      if (!normals || n.lengthSq() < 1e-10) n.set(0, 1, 0);
-      n.normalize();
+      v.fromArray(rest, i * 3);
       let arm = 0;
       if (skinIndex && skinWeight) {
         for (let k = 0; k < 4; k++) {
@@ -262,13 +313,11 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
         }
       }
       // Along the nearer arm: 0 at the shoulder joint, 1 at the wrist.
-      const side = p.distanceToSquared(shoulders[0]!) <= p.distanceToSquared(shoulders[1]!) ? 0 : 1;
+      const side = v.distanceToSquared(shoulders[0]!) <= v.distanceToSquared(shoulders[1]!) ? 0 : 1;
       const shoulder = shoulders[side]!;
       d.subVectors(wrists[side]!, shoulder);
-      const armT = d.dot(p.clone().sub(shoulder)) / Math.max(1e-6, d.lengthSq());
-      const legT = (hip.y - p.y) / legSpan;
-      rest.set([p.x, p.y, p.z], i * 3);
-      restNormal.set([n.x, n.y, n.z], i * 3);
+      const armT = d.dot(v.clone().sub(shoulder)) / Math.max(1e-9, d.lengthSq());
+      const legT = (hip.y - v.y) / legSpan;
       limb.set([arm, armT, legT], i * 3);
     }
     geometry.setAttribute('kitRest', new THREE.BufferAttribute(rest, 3));

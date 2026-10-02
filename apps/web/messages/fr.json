@@ -556,6 +556,10 @@
         "hairBack": "Cheveux à l'arrière (m)",
         "jointTint": "Teinte des articulations",
         "reset": "Valeurs par défaut"
+      },
+      "rig": {
+        "bones": "Repères lus sur le squelette : taille {height} m, hanches {hip} m, cou {neck} m.",
+        "guessed": "Squelette incohérent, proportions par défaut : taille {height} m, hanches {hip} m, cou {neck} m."
       }
     }
   },

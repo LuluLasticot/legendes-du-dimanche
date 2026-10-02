@@ -8,7 +8,13 @@ import { Spring } from '../core/easing.ts';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
 import { Character } from '../players/character.ts';
 import { loadCharacterAsset, type CharacterAsset } from '../players/character-asset.ts';
-import { setKitShape, type CharacterLook, type KitShape } from '../players/kit-material.ts';
+import {
+  prepareKitRig,
+  setKitShape,
+  type CharacterLook,
+  type KitRig,
+  type KitShape,
+} from '../players/kit-material.ts';
 import { createMannequinAsset } from '../players/mannequin.ts';
 
 export interface KitViewerOptions extends StageOptions {
@@ -23,6 +29,8 @@ export interface KitViewerInfo {
   readonly real: boolean;
   /** Clips the character can play. */
   readonly clips: readonly string[];
+  /** Where the kit's landmarks were found (shown in the lab, to check a new asset). */
+  readonly rig: KitRig;
 }
 
 export interface KitViewerHandle {
@@ -176,7 +184,7 @@ export function mountKitViewer(
   const ready = (loaded: CharacterAsset, real: boolean): void => {
     if (disposed) return;
     asset = loaded;
-    info = { real, clips: [...loaded.clips.keys()].sort() };
+    info = { real, clips: [...loaded.clips.keys()].sort(), rig: prepareKitRig(loaded.scene) };
     sync();
     for (const callback of readyCallbacks) callback(info);
   };

@@ -95,6 +95,7 @@ export {
   plainLook,
   type CharacterKitSpec,
   type CharacterLook,
+  type KitRig,
   type KitShape,
 } from './players/kit-material.ts';
 export { createMannequinAsset } from './players/mannequin.ts';

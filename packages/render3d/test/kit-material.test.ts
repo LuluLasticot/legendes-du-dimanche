@@ -19,6 +19,15 @@ const mesh = (() => {
 })();
 
 describe('kit rig', () => {
+  it('reads bones and vertices in the same units (metres), from the bones', () => {
+    // Bound like a glTF: an asset in centimetres under a node scaled to metres.
+    expect(rig.fromBones).toBe(true);
+    expect(rig.height).toBeGreaterThan(1.6);
+    expect(rig.height).toBeLessThan(2);
+    expect(rig.hipY).toBeGreaterThan(0.8);
+    expect(rig.neckY).toBeLessThan(rig.height);
+  });
+
   it('finds the landmarks in body order, from the ankles up to the head', () => {
     expect(rig.ankleY).toBeLessThan(rig.hipY);
     expect(rig.hipY).toBeLessThan(rig.hipsY);

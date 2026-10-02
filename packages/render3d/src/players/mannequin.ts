@@ -269,7 +269,10 @@ export function createMannequinAsset(): CharacterAsset {
   character.add(hips, mesh);
   scene.add(character);
   scene.updateMatrixWorld(true);
-  mesh.bind(new THREE.Skeleton(list));
+  // Bound like GLTFLoader does, with glTF's convention: identity bind matrix, and inverse bind
+  // matrices that take a vertex of the mesh (centimetres) straight to world space.
+  const inverses = list.map((bone) => bone.matrixWorld.clone().invert().multiply(mesh.matrixWorld));
+  mesh.bind(new THREE.Skeleton(list, inverses), new THREE.Matrix4());
 
   const clip = idleClip();
   const meta: CharacterMeta = {
