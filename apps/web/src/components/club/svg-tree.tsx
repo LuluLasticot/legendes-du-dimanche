@@ -5,10 +5,23 @@ import { createElement, type ReactNode } from 'react';
 const reactName = (name: string): string =>
   name === 'class' ? 'className' : name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
+/** "mix-blend-mode:overlay" → { mixBlendMode: 'overlay' }. */
+function styleObject(style: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const rule of style.split(';')) {
+    const [name, value] = rule.split(':');
+    if (name && value) out[reactName(name.trim())] = value.trim();
+  }
+  return out;
+}
+
 function toReact(node: SvgNode, key?: number): ReactNode {
   if (typeof node === 'string') return node;
-  const props: Record<string, string | number> = {};
-  for (const [name, value] of Object.entries(node.attrs)) props[reactName(name)] = value;
+  const props: Record<string, string | number | Record<string, string>> = {};
+  for (const [name, value] of Object.entries(node.attrs)) {
+    if (name === 'style' && typeof value === 'string') props['style'] = styleObject(value);
+    else props[reactName(name)] = value;
+  }
   if (key !== undefined) props['key'] = key;
   return createElement(node.tag, props, ...node.children.map((child, i) => toReact(child, i)));
 }

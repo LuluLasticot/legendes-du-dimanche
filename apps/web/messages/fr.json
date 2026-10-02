@@ -10,8 +10,8 @@
     "titleSub": "du Dimanche",
     "tagline": "Ton club. Ta carte. Ta légende.",
     "pitch": "Ouvre des packs, collectionne les cartes des joueurs de ton district, compose ton onze et vis les actions décisives en 3D, sous les projecteurs du stade municipal.",
-    "status": "En construction — phase 0 : fondations",
-    "cardPreview": "Aperçu provisoire — joueur fictif",
+    "status": "En construction — phase 3 : univers et cartes",
+    "cardPreview": "Carte générée : joueur fictif d'un club du pilote, version Onze du week-end",
     "features": {
       "packs": {
         "title": "Des packs, pas de carte bancaire",
@@ -430,6 +430,37 @@
         "high-press": "Pressing haut",
         "low-block": "Bloc bas"
       }
+    },
+    "cards": {
+      "title": "Cartes",
+      "intro": "Les gabarits de cartes avec de vrais joueurs générés du pilote : bronze, argent et or en version commune et rare, et les promos Onze du week-end et Ancien pro. Les réglages ajustent le rendu de toutes les cartes de la page.",
+      "templates": "Gabarits",
+      "looks": {
+        "bronze-common": "Bronze",
+        "bronze-rare": "Bronze rare",
+        "silver-common": "Argent",
+        "silver-rare": "Argent rare",
+        "gold-common": "Or",
+        "gold-rare": "Or rare",
+        "weekend": "Onze du week-end",
+        "former-pro": "Ancien pro"
+      },
+      "search": {
+        "title": "Chercher un joueur",
+        "placeholder": "Nom, club ou ville",
+        "variant": "Version de la carte",
+        "hint": "Deux lettres au moins.",
+        "count": "{count, plural, =0 {Aucune carte} one {# carte} other {# cartes (12 au plus)}}"
+      },
+      "tuning": {
+        "title": "Réglages",
+        "frame": "Épaisseur du cadre",
+        "mesh": "Grillage",
+        "sheen": "Reflet",
+        "clubBand": "Couleurs du club",
+        "grain": "Grain",
+        "reset": "Valeurs par défaut"
+      }
     }
   },
   "commentary": {
@@ -757,5 +788,15 @@
       "fouls": "Fautes",
       "cards": "Cartons jaunes / rouges"
     }
+  },
+  "cards": {
+    "weakFoot": "PF",
+    "skillMoves": "GT",
+    "variants": {
+      "base": "Base",
+      "weekend": "Onze du week-end",
+      "former-pro": "Ancien pro"
+    },
+    "label": "Carte de {name} : {rating}, {position}, {club}"
   }
 }

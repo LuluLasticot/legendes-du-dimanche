@@ -214,6 +214,7 @@ export function shirtContent(kit: KitSpec, options: KitDrawOptions): SvgElement[
         x: 60,
         y: (options.crest === undefined ? 50 : 58) + i * 9.5 - (lines.length - 1) * 2,
         'text-anchor': 'middle',
+        class: 'ld-font-display',
         'font-family': FONT,
         'font-weight': 800,
         'font-size': 9,

@@ -3,11 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Design system: tokens (CSS variables + TS mirror), Tailwind v4 theme, React components.",
+  "description": "Design system: tokens (CSS variables + TS mirror), Tailwind v4 theme, and the player card drawn as an SVG tree.",
   "exports": {
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css",
-    "./theme.css": "./src/theme.css"
+    "./theme.css": "./src/theme.css",
+    "./card": "./src/card/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -18,5 +19,9 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@legendes/data": "workspace:*",
+    "@legendes/shared": "workspace:*"
   }
 }
