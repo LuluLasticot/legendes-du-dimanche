@@ -48,6 +48,38 @@
     repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.018) 0 64px, transparent 64px 128px);
 }
 
+/* Pack opening: clues that slam in, texts that rise, the dog of the joke. */
+@keyframes ld-slam {
+  0% {
+    opacity: 0;
+    transform: scale(1.8);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.96);
+    filter: blur(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes ld-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.ld-slam {
+  animation: ld-slam 0.55s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+.ld-rise {
+  animation: ld-rise 0.45s ease-out both;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

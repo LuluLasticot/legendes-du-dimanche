@@ -13,11 +13,21 @@ import {
 } from '@legendes/data';
 import {
   avatarContent,
+  CARD_FINISHES,
   CARD_LOOKS,
+  cardBackMaskNode,
+  cardBackNode,
+  cardMaskNode,
   cardNode,
   DEFAULT_CARD_TUNING,
   lookOf,
+  cardShareNode,
+  cardStoryNode,
+  clubShareNode,
+  playerLook,
+  SHARE_SIZE,
   silhouette,
+  STORY_SIZE,
   type CardFace,
   type CardLook,
 } from '../src/card/index.ts';
@@ -121,6 +131,34 @@ describe('card templates', () => {
   });
 });
 
+describe('3D sources', () => {
+  it.each([...CARD_LOOKS])('%s: mask, back and back mask are well formed and scoped', (look) => {
+    const face = samples.get(look) as CardFace;
+    const drawings = [
+      toSvgString(cardMaskNode(face)),
+      toSvgString(cardBackNode(look, `${face.uid}-back`)),
+      toSvgString(cardBackMaskNode(look, `${face.uid}-back`)),
+    ];
+    for (const svg of drawings) {
+      expect(svg).toMatch(/^<svg [^>]*viewBox="0 0 250 350"/);
+      expect(svg).not.toMatch(/NaN|undefined|null/);
+      expect(wellFormed(svg)).toBe(true);
+      for (const [, ref] of svg.matchAll(/url\(#([^)]+)\)/g))
+        expect(svg, `dangling reference ${ref}`).toContain(`id="${ref}"`);
+    }
+    // The mask paints its own areas in pure channels: red frame, green film, blue protection.
+    expect(drawings[0]).toContain('fill="#ff0000"');
+    expect(drawings[0]).toContain('fill="#00ff00"');
+    expect(drawings[0]).toContain('0 0 0 0 1');
+  });
+
+  it('finishes rank the templates from bronze common to the top promo', () => {
+    const ranks = CARD_LOOKS.map((look) => CARD_FINISHES[look].rank);
+    expect([...ranks].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(CARD_FINISHES['gold-rare'].foil).toBeGreaterThan(CARD_FINISHES['gold-common'].foil);
+  });
+});
+
 describe('avatars', () => {
   it('draw every combination of hair, beard, build and skin', () => {
     const kit = kitsOf(WORLD.clubs[0] as Club).home;
@@ -139,5 +177,92 @@ describe('silhouette', () => {
   it('shrinks with the inset and stays closed', () => {
     expect(silhouette(0)).toMatch(/^M0 24 .* Z$/);
     expect(silhouette(8)).toMatch(/^M8 /);
+  });
+});
+
+describe('3D character looks', () => {
+  it("come from the player's card: skin, hair, number; gloves for the goalkeeper only", () => {
+    const club = WORLD.clubs[0] as Club;
+    const kits = kitsOf(club);
+    const squad = generateSquad(club).players;
+    const boots = new Set<string>();
+    for (const player of squad) {
+      const keeper = player.positions[0] === 'GK';
+      const look = playerLook(player, keeper ? kits.keeper : kits.home);
+      expect(look).toEqual(playerLook(player, keeper ? kits.keeper : kits.home));
+      expect(look.number).toBe(player.number);
+      expect(look.skin).toMatch(/^#[0-9a-f]{6}$/);
+      expect(look.hair === null).toBe(player.appearance.hair === 'bald');
+      expect(look.gloves !== null).toBe(keeper);
+      boots.add(look.boots);
+    }
+    expect(boots.size).toBeGreaterThan(1);
+  });
+});
+
+describe('share images', () => {
+  const club = WORLD.clubs[0] as Club;
+  const player = generateSquad(club).players[0]!;
+  const face: CardFace = {
+    uid: player.id,
+    look: 'gold-rare',
+    rating: player.rating,
+    position: 'MC',
+    name: player.displayName,
+    division: 'D1',
+    crest: crestOf(club),
+    clubColours: club.colours,
+    stats: [{ label: 'VIT', value: 70 }],
+    weakFoot: 3,
+    skillMoves: 2,
+    labels: { weakFoot: 'PF', skillMoves: 'GT' },
+    trait: null,
+    promo: null,
+    appearance: player.appearance,
+    kit: kitsOf(club).home,
+  };
+  const labels = {
+    eyebrow: 'Or rare',
+    line: '80 · Milieu central · N° 8',
+    club: club.name,
+    clubLine: 'D1 · Ville',
+    brand: 'Légendes du Dimanche',
+    footnote: 'Joueur fictif',
+  };
+
+  it('draw the card of the game, its player and the brand, well formed and sized', () => {
+    for (const [node, size] of [
+      [cardShareNode(face, labels), SHARE_SIZE],
+      [cardStoryNode(face, labels), STORY_SIZE],
+    ] as const) {
+      const svg = toSvgString(node);
+      expect(svg).not.toMatch(/NaN|undefined/);
+      expect(wellFormed(svg)).toBe(true);
+      expect(node.attrs['width']).toBe(size.width);
+      expect(node.attrs['height']).toBe(size.height);
+      expect(svg).toContain(player.displayName);
+      expect(svg).toContain('LÉGENDES DU DIMANCHE');
+    }
+  });
+
+  it('draw a club with its crest, its name on one or two lines, and its kits', () => {
+    const kits = kitsOf(club);
+    for (const name of [club.name, 'Union Sportive Assevent-Boussois Football Club']) {
+      const svg = toSvgString(
+        clubShareNode(
+          { id: club.id, crest: crestOf(club), colour: club.colours.primary },
+          [kits.home, kits.away, kits.keeper],
+          {
+            eyebrow: 'D1',
+            name,
+            line: 'Ville · Stade',
+            brand: 'Légendes du Dimanche',
+            footnote: 'Jeu non officiel',
+          },
+        ),
+      );
+      expect(wellFormed(svg), name).toBe(true);
+      expect(svg).not.toMatch(/NaN|undefined/);
+    }
   });
 });

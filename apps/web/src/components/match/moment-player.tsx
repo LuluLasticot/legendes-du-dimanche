@@ -7,8 +7,10 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { GestureTrace, PowerGauge, StepHint } from '@/components/lab/moment-ui';
 import { publicEnv } from '@/env';
+import { momentLooks } from './moment-looks';
 
 interface Props {
+  setup: sim.MatchSetup;
   request: sim.MomentRequest;
   conditions: sim.MatchConditions;
   /** The moment's outcome, played by the player or left to the coach. */
@@ -21,7 +23,7 @@ interface Props {
  * A key moment of the match in 3D (GDD §7.4): mounts the situation for this request, shows
  * the hint of the step, the gauge and the finger trace, and hands the outcome back.
  */
-export function MomentPlayer({ request, conditions, onDone, onAuto }: Props) {
+export function MomentPlayer({ setup, request, conditions, onDone, onAuto }: Props) {
   const t = useTranslations('match');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const doneRef = useRef(onDone);
@@ -44,7 +46,12 @@ export function MomentPlayer({ request, conditions, onDone, onAuto }: Props) {
     );
     observer.observe(canvas);
     void import('@legendes/render3d')
-      .then((render3d) => {
+      .then(async (render3d) => {
+        // The clubs' kits; plain colours if the prints cannot be drawn (the moment still plays).
+        const looks = await momentLooks(render3d, setup, request).catch((error: unknown) => {
+          console.error(error);
+          return undefined;
+        });
         if (cancelled) return;
         handle = render3d.mountBallSandbox(
           canvas,
@@ -54,6 +61,7 @@ export function MomentPlayer({ request, conditions, onDone, onAuto }: Props) {
             characterAssetsUrl:
               publicEnv.NEXT_PUBLIC_CHARACTER_ASSETS_URL ?? '/api/assets/characters/',
             moment: { onOutcome: (result) => doneRef.current(result.outcome) },
+            ...(looks ? { looks } : {}),
           },
         );
         handle.onGesture((points) => setTrace(points ? [...points] : null));
@@ -69,7 +77,7 @@ export function MomentPlayer({ request, conditions, onDone, onAuto }: Props) {
       observer.disconnect();
       handle?.dispose();
     };
-  }, [request, conditions]);
+  }, [setup, request, conditions]);
 
   return (
     <div className="absolute inset-0 z-10 bg-pitch-950 select-none">

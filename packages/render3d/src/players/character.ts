@@ -1,4 +1,4 @@
-// An animated player: a skeleton clone of the shared asset, kit colours, an AnimationMixer with
+// An animated player: a skeleton clone of the shared asset, the club kit, an AnimationMixer with
 // cross-fades, and anchoring — after the pose is computed, the root is shifted so that a body
 // part (hands, foot) lands exactly where the simulation says it is. The engine decides, the
 // animation follows: contacts on screen are the contacts that were simulated.
@@ -6,11 +6,16 @@
 import * as THREE from 'three';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { CharacterAsset, ClipMeta } from './character-asset.ts';
+import { KitMaterials, plainLook, prepareKitRig, type CharacterLook } from './kit-material.ts';
 
+/** Two colours, for scenes without a club: shirt (and socks) and shorts. */
 export interface Kit {
   readonly shirt: number;
   readonly shorts: number;
 }
+
+const toLook = (kit: Kit | CharacterLook): CharacterLook =>
+  'kit' in kit ? kit : plainLook(kit.shirt, kit.shorts);
 
 export type BodyPart =
   'hands' | 'leftHand' | 'rightHand' | 'leftToe' | 'rightToe' | 'head' | 'hips';
@@ -46,38 +51,31 @@ export class Character {
   private currentName: string | null = null;
   private readonly tmp = new THREE.Vector3();
   private readonly tmp2 = new THREE.Vector3();
-  private readonly materials: THREE.MeshStandardMaterial[] = [];
+  private readonly kit: KitMaterials;
+  private readonly materials: THREE.MeshStandardMaterial[];
 
-  constructor(asset: CharacterAsset, kit: Kit) {
+  /** `kit`: a club look (`CharacterLook`), or two colours for scenes without a club. */
+  constructor(asset: CharacterAsset, kit: Kit | CharacterLook) {
     this.asset = asset;
+    // Kit attributes are added to the shared geometry once, before the first clone.
+    const rig = prepareKitRig(asset.scene);
+    this.kit = new KitMaterials(rig, toLook(kit));
+    this.materials = [this.kit.body, this.kit.joints];
     this.model = cloneSkinned(asset.scene);
     this.root.add(this.model);
     this.model.traverse((object) => {
       if (object instanceof THREE.SkinnedMesh) {
         object.castShadow = true;
         object.frustumCulled = false;
-        const joints = /joint/i.test(object.name);
-        const material = new THREE.MeshStandardMaterial({
-          color: joints ? kit.shorts : kit.shirt,
-          roughness: 0.75,
-          metalness: 0.05,
-        });
-        this.materials.push(material);
-        object.material = material;
+        object.material = /joint/i.test(object.name) ? this.kit.joints : this.kit.body;
       }
       if ((object as THREE.Bone).isBone) this.bones.set(object.name, object);
     });
     this.mixer = new THREE.AnimationMixer(this.model);
   }
 
-  setKit(kit: Kit): void {
-    this.model.traverse((object) => {
-      if (object instanceof THREE.SkinnedMesh) {
-        (object.material as THREE.MeshStandardMaterial).color.setHex(
-          /joint/i.test(object.name) ? kit.shorts : kit.shirt,
-        );
-      }
-    });
+  setKit(kit: Kit | CharacterLook): void {
+    this.kit.setLook(toLook(kit));
   }
 
   /** Casting a shadow costs a second pass: background players skip it. */
@@ -204,7 +202,7 @@ export class Character {
 
   dispose(): void {
     this.mixer.stopAllAction();
-    for (const material of this.materials) material.dispose();
+    this.kit.dispose();
     this.root.removeFromParent();
   }
 }

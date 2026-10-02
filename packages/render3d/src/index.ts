@@ -27,6 +27,8 @@ export {
 export { mountPreviewScene, type PreviewHandle } from './scenes/preview.ts';
 export {
   mountBallSandbox,
+  type MomentLook,
+  type MomentLooks,
   type MomentResult,
   type SandboxHandle,
   type SandboxOutcome,
@@ -63,3 +65,43 @@ export {
 export { MatchAudio, DEFAULT_VOLUMES, type AudioVolumes } from './audio/match-audio.ts';
 export { BallTrail, trailColour } from './fx/trail.ts';
 export { ImpactParticles, surfaceParticles, type ParticleKind } from './fx/particles.ts';
+export {
+  Card3D,
+  CARD3D_HEIGHT,
+  CARD3D_WIDTH,
+  type Card3DFinish,
+  type Card3DSources,
+} from './cards/card3d.ts';
+export { cardFontCss, rasterizeSvg, type CardFont } from './cards/raster.ts';
+export {
+  mountCardViewer,
+  type CardViewerHandle,
+  type CardViewerOptions,
+} from './scenes/card-viewer.ts';
+export { PackAudio } from './audio/pack-audio.ts';
+export { Pack3D, PACK3D_HEIGHT, PACK3D_WIDTH, type Pack3DSources } from './cards/pack3d.ts';
+export {
+  DEFAULT_PACK_TUNING,
+  mountPackOpening,
+  type PackCardAssets,
+  type PackOpeningAssets,
+  type PackOpeningHandle,
+  type PackOpeningOptions,
+  type PackStep,
+  type PackTuning,
+} from './scenes/pack-opening.ts';
+export {
+  DEFAULT_KIT_SHAPE,
+  plainLook,
+  type CharacterKitSpec,
+  type CharacterLook,
+  type KitRig,
+  type KitShape,
+} from './players/kit-material.ts';
+export { createMannequinAsset } from './players/mannequin.ts';
+export {
+  mountKitViewer,
+  type KitViewerHandle,
+  type KitViewerInfo,
+  type KitViewerOptions,
+} from './scenes/kit-viewer.ts';

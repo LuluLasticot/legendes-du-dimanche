@@ -433,7 +433,7 @@
     },
     "cards": {
       "title": "Cartes",
-      "intro": "Les gabarits de cartes avec de vrais joueurs générés du pilote : bronze, argent et or en version commune et rare, et les promos Onze du week-end et Ancien pro. Les réglages ajustent le rendu de toutes les cartes de la page.",
+      "intro": "Les gabarits de cartes avec de vrais joueurs générés du pilote : bronze, argent et or en version commune et rare, et les promos Onze du week-end et Ancien pro. Touche une carte pour la voir en 3D et rejouer sa révélation.",
       "templates": "Gabarits",
       "looks": {
         "bronze-common": "Bronze",
@@ -460,6 +460,106 @@
         "clubBand": "Couleurs du club",
         "grain": "Grain",
         "reset": "Valeurs par défaut"
+      },
+      "viewer": {
+        "open": "Voir en 3D : {label}",
+        "title": "Carte en 3D",
+        "close": "Fermer",
+        "flip": "Retourner",
+        "reveal": "Rejouer la révélation",
+        "gyro": "Activer le gyroscope",
+        "hint": "Incline la carte avec la souris ou le doigt ; touche ou glisse pour la retourner.",
+        "loading": "Préparation de la carte…",
+        "failed": "La 3D n'est pas disponible sur cet appareil ou ce navigateur."
+      }
+    },
+    "pack": {
+      "title": "Ouverture de pack",
+      "loading": "Préparation du pack…",
+      "failed": "La 3D n'est pas disponible sur cet appareil ou ce navigateur.",
+      "choose": "Type de pack",
+      "force": "Meilleure carte",
+      "forceAny": "Au hasard",
+      "hint": "Glisse le doigt le long du pointillé pour déchirer le pack",
+      "open": "Ouvrir le pack",
+      "skip": "Passer",
+      "mute": "Couper le son",
+      "unmute": "Remettre le son",
+      "showOdds": "Probabilités",
+      "tuningToggle": "Réglages",
+      "hero": {
+        "next": "Touche pour voir le reste du pack",
+        "new": "Nouvelle carte"
+      },
+      "grid": {
+        "hint": "Touche une carte pour la retourner",
+        "all": "Tout retourner"
+      },
+      "summary": {
+        "title": "Ton pack",
+        "again": "Nouveau pack",
+        "count": "{count, plural, one {# carte} other {# cartes}}"
+      },
+      "tuning": {
+        "walkoutRank": "Sortie des vestiaires dès le rang",
+        "lightsGap": "Écart entre projecteurs (s)",
+        "clueHold": "Durée d'un indice (s)",
+        "clueGap": "Blanc entre deux indices (s)",
+        "tension": "Tension (s)",
+        "flash": "Flash",
+        "shake": "Secousse",
+        "particles": "Particules",
+        "speed": "Vitesse",
+        "reset": "Valeurs par défaut"
+      }
+    },
+    "kits": {
+      "title": "Maillots en 3D",
+      "loading": "Habillage des joueurs…",
+      "failed": "La 3D n'est pas disponible sur cet appareil ou ce navigateur.",
+      "club": "Club",
+      "player": "Joueur",
+      "clip": "Animation",
+      "front": "Face",
+      "back": "Dos",
+      "tuningToggle": "Réglages",
+      "kitNames": {
+        "home": "Domicile",
+        "away": "Extérieur",
+        "keeper": "Gardien"
+      },
+      "mannequin": "Mannequin de test : le personnage réel n'est pas disponible ici",
+      "tuning": {
+        "sleeveEnd": "Fin des manches (bras)",
+        "longSleeveEnd": "Fin des manches longues (gardien)",
+        "cuff": "Poignet des manches",
+        "handStart": "Début de la main",
+        "waist": "Taille du short (m)",
+        "shortsHem": "Bas du short (jambe)",
+        "sockTop": "Haut des chaussettes (jambe)",
+        "sockCuff": "Revers des chaussettes",
+        "bootTop": "Haut des chaussures (jambe)",
+        "trim": "Liseré du short (côté)",
+        "collarWidth": "Largeur du col (m)",
+        "collarY": "Hauteur de l'encolure (m)",
+        "vDepth": "Profondeur du col en V (m)",
+        "neckRadius": "Rayon de l'encolure (m)",
+        "stripeWidth": "Largeur des rayures (m)",
+        "hoopWidth": "Largeur des cerceaux (m)",
+        "sashWidth": "Largeur de l'écharpe (m)",
+        "checkSize": "Taille des damiers (m)",
+        "printSize": "Taille du flocage poitrine (m)",
+        "printY": "Hauteur du flocage poitrine (m)",
+        "numberHeight": "Hauteur du numéro (m)",
+        "numberY": "Hauteur du numéro (m, dos)",
+        "hairLine": "Ligne des cheveux (m)",
+        "hairBack": "Cheveux à l'arrière (m)",
+        "jointTint": "Teinte des articulations",
+        "reset": "Valeurs par défaut"
+      },
+      "rig": {
+        "bones": "Repères lus sur le squelette : taille {height} m, hanches {hip} m, cou {neck} m.",
+        "guessed": "Squelette incohérent, proportions par défaut : taille {height} m, hanches {hip} m, cou {neck} m."
       }
     }
   },
@@ -696,6 +796,8 @@
     "webglError": "WebGL 2 n'est pas disponible : l'action sera résolue par le coach.",
     "prematch": {
       "title": "Avant-match",
+      "home": "Domicile (ton équipe)",
+      "away": "Extérieur",
       "rating": "note {rating}",
       "formation": "Formation",
       "style": "Style de jeu",
@@ -798,5 +900,88 @@
       "former-pro": "Ancien pro"
     },
     "label": "Carte de {name} : {rating}, {position}, {club}"
+  },
+  "packs": {
+    "types": {
+      "bronze": {
+        "name": "Pack Bronze",
+        "contents": "12 cartes bronze · 1 rare garantie"
+      },
+      "silver": {
+        "name": "Pack Argent",
+        "contents": "12 cartes argent · 1 rare garantie"
+      },
+      "gold": {
+        "name": "Pack Or",
+        "contents": "12 cartes · 3 or minimum"
+      },
+      "gold-premium": {
+        "name": "Pack Or Premium",
+        "contents": "12 cartes or · 3 rares garanties"
+      }
+    },
+    "classes": {
+      "bronze-common": "Bronze",
+      "bronze-rare": "Bronze rare",
+      "silver-common": "Argent",
+      "silver-rare": "Argent rare",
+      "gold-common": "Or",
+      "gold-rare": "Or rare",
+      "former-pro": "Ancien pro",
+      "weekend": "Onze du week-end"
+    },
+    "print": {
+      "tearHere": "Déchirer ici",
+      "odds": "Probabilités affichées avant chaque ouverture",
+      "legal": "Jeu non officiel · aucun achat avec de l'argent réel"
+    },
+    "price": "{price} crédits",
+    "odds": {
+      "title": "Probabilités",
+      "class": "Carte",
+      "expected": "Par pack",
+      "atLeastOne": "Au moins une",
+      "note": "Tirage au hasard parmi les joueurs générés du pilote. Dans le jeu, le tirage se fera sur le serveur."
+    }
+  },
+  "share": {
+    "brand": "Légendes du Dimanche",
+    "fictional": "Joueur fictif · football amateur des Hauts-de-France",
+    "clubFootnote": "Jeu non officiel · blason et sponsors fictifs",
+    "cardLine": "{rating} · {position} · N° {number}",
+    "clubLine": "{division} · {city}",
+    "clubPlace": "{city} · {stadium}",
+    "cardTitle": "{name} ({club}) — Légendes du Dimanche",
+    "cardDescription": "Carte {eyebrow} : {rating}, {position} à {club}. Joueur fictif du jeu de cartes du football amateur.",
+    "clubTitle": "{club} — Légendes du Dimanche",
+    "clubDescription": "{club}, {division} ({city}) : blason, maillots et effectif du club dans le jeu de cartes du football amateur. Sponsor maillot fictif : {sponsor}.",
+    "story": "Image pour une story",
+    "copy": "Copier le lien",
+    "copied": "Lien copié",
+    "native": "Partager",
+    "shareText": "Ma carte {name} dans Légendes du Dimanche"
+  },
+  "cardPage": {
+    "variants": "Versions de la carte",
+    "view3d": "Voir en 3D",
+    "view2d": "Revenir à la carte",
+    "facts": "Fiche",
+    "age": "{age} ans",
+    "height": "{height} cm",
+    "foot": "Pied faible {stars}/5 · gestes techniques {skills}/5",
+    "traits": "Traits",
+    "fictional": "Ce joueur est fictif : il est généré pour le jeu, comme tous les joueurs des clubs du pilote. Les vrais joueurs n'y entrent qu'avec leur accord."
+  },
+  "clubPage": {
+    "kits": "Maillots",
+    "squad": "Effectif {season}",
+    "sponsor": "Sponsor maillot (fictif)",
+    "check": "Fiche à vérifier : divisions, couleurs et stades viennent des données publiques de la saison ; le blason et les sponsors sont générés.",
+    "lines": {
+      "goalkeeper": "Gardiens",
+      "defence": "Défenseurs",
+      "midfield": "Milieux",
+      "attack": "Attaquants"
+    }
   }
 }

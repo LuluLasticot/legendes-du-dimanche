@@ -4,7 +4,7 @@
 
 import { Rng } from '@legendes/engine/rng';
 import type { Club, ShirtPattern } from '../schema.ts';
-import { contrast, darken, lighten, pickInk, readableOn } from './colour.ts';
+import { colourDistance, contrast, darken, lighten, pickInk, readableOn } from './colour.ts';
 import { crestContent, type CrestSpec } from './crest.ts';
 import { el, type SvgElement, type SvgNode } from './svg.ts';
 
@@ -134,6 +134,21 @@ export function kitsOf(club: Club): ClubKits {
     socksCuff: keeperBody,
   };
   return { home, away, keeper };
+}
+
+/** Two shirts that cannot be told apart on the pitch (main colours too close). */
+export function kitsClash(a: KitSpec, b: KitSpec): boolean {
+  return colourDistance(a.body, b.body) < 170;
+}
+
+/** The kits of a match: each club in its home kit, the visitors in their away kit on a clash. */
+export function matchKits(home: Club, away: Club): { home: KitSpec; away: KitSpec } {
+  const homeKit = kitsOf(home).home;
+  const visitors = kitsOf(away);
+  return {
+    home: homeKit,
+    away: kitsClash(homeKit, visitors.home) ? visitors.away : visitors.home,
+  };
 }
 
 // ─── Drawing ──────────────────────────────────────────────────────────────────────────────────
@@ -318,5 +333,90 @@ export function kitNode(kit: KitSpec, options: KitDrawOptions): SvgElement {
     ...shirtContent(kit, options),
     el('g', { transform: 'translate(0 102)' }, ...shortsContent(kit)),
     el('g', { transform: 'translate(0 146)' }, ...socksContent(kit)),
+  );
+}
+
+// ─── 3D prints ────────────────────────────────────────────────────────────────────────────────
+
+/** The print texture's layout, read by the 3D kit shader (`render3d/players/kit-material.ts`). */
+export const KIT_PRINT = {
+  width: 1024,
+  height: 512,
+  /** The chest print fills the left half: a square that covers `printSize` metres of chest. */
+  chest: 512,
+  /** Digits 0–9 on the right half, 5 columns × 2 rows. */
+  digitWidth: 102.4,
+  digitHeight: 256,
+} as const;
+
+/**
+ * What a team's shirts carry, as one texture for the 3D characters: the crest on the player's
+ * left chest (on the right as you face him) and the sponsor across the chest, then the digits of
+ * the numbers worn on the back. Inks are chosen to stand out on the shirt, like on the 2D kit.
+ */
+export function kitPrintNode(kit: KitSpec, options: KitDrawOptions): SvgElement {
+  const ink = pickInk([kit.body, kit.stripe], ['#ffffff', '#111111'], 3);
+  const halo = ink === '#ffffff' ? '#000000' : '#ffffff';
+  const text = { fill: ink, stroke: halo, 'stroke-opacity': 0.45, 'stroke-linejoin': 'round' };
+  const lines = sponsorLines(options.sponsor);
+  const sponsor = lines.map((line, i) =>
+    el(
+      'text',
+      {
+        x: 256,
+        y: 300 + i * 64 - (lines.length - 1) * 26,
+        'text-anchor': 'middle',
+        class: 'ld-font-display',
+        'font-family': FONT,
+        'font-weight': 800,
+        'font-size': 66,
+        'stroke-width': 7,
+        'paint-order': 'stroke',
+        textLength: Math.min(372, 40 * line.length),
+        lengthAdjust: 'spacingAndGlyphs',
+        ...text,
+      },
+      line,
+    ),
+  );
+  const crest =
+    options.crest === undefined
+      ? []
+      : [
+          el(
+            'g',
+            { transform: 'translate(334 92) scale(0.92)' },
+            ...crestContent(options.crest, `${options.uid}-crest`),
+          ),
+        ];
+  const digits = Array.from({ length: 10 }, (_, d) =>
+    el(
+      'text',
+      {
+        x: KIT_PRINT.chest + ((d % 5) + 0.5) * KIT_PRINT.digitWidth,
+        y: Math.floor(d / 5) * KIT_PRINT.digitHeight + 222,
+        'text-anchor': 'middle',
+        class: 'ld-font-display',
+        'font-family': FONT,
+        'font-weight': 900,
+        'font-size': 250,
+        'stroke-width': 9,
+        'paint-order': 'stroke',
+        textLength: 80,
+        lengthAdjust: 'spacingAndGlyphs',
+        ...text,
+      },
+      String(d),
+    ),
+  );
+  return el(
+    'svg',
+    {
+      xmlns: 'http://www.w3.org/2000/svg',
+      viewBox: `0 0 ${KIT_PRINT.width} ${KIT_PRINT.height}`,
+    },
+    ...crest,
+    ...sponsor,
+    ...digits,
   );
 }

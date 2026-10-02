@@ -30,6 +30,11 @@ export interface PostSettings {
   bars: number;
   zoomBlur: number;
   saturation: number;
+  /**
+   * Share of the filmic (ACES) curve, 0 to 1: 1 for scenes lit like a film (the pitch), less for
+   * flat artwork whose colours must stay true (the cards).
+   */
+  filmic: number;
   /** Shockwave: centre (x, y in UV), radius, strength. */
   readonly shock: THREE.Vector4;
 }
@@ -47,6 +52,7 @@ export function defaultPostSettings(): PostSettings {
     bars: 0,
     zoomBlur: 0,
     saturation: 1,
+    filmic: 1,
     shock: new THREE.Vector4(0.5, 0.5, 0, 0),
   };
 }
@@ -95,6 +101,7 @@ export class PostPipeline {
     uGrain: { value: 0.03 },
     uCA: { value: 0 },
     uFlash: { value: 0 },
+    uFilmic: { value: 1 },
     uFlashCol: { value: new THREE.Color() },
     uBars: { value: 0 },
     uZoomBlur: { value: 0 },
@@ -216,6 +223,7 @@ export class PostPipeline {
     set('uGrain', s.grain);
     set('uCA', s.chromatic);
     set('uFlash', s.flash);
+    set('uFilmic', s.filmic);
     ((u.uFlashCol as THREE.IUniform).value as THREE.Color).copy(s.flashColor);
     set('uBars', s.bars);
     set('uZoomBlur', s.zoomBlur);

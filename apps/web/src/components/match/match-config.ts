@@ -1,3 +1,4 @@
+import { generateSquad, matchKits, toMatchTeam, WORLD, type Club } from '@legendes/data';
 import { sim } from '@legendes/engine';
 
 /** What the player chooses before kick-off. */
@@ -10,6 +11,9 @@ export interface MatchConfig {
   readonly rain: boolean;
   /** Play the key moments in 3D (false: the coach resolves them). */
   readonly play: boolean;
+  /** Clubs of the pilot (the player's team plays at home). */
+  readonly home: string;
+  readonly away: string;
 }
 
 export const DEFAULT_CONFIG: MatchConfig = {
@@ -20,7 +24,15 @@ export const DEFAULT_CONFIG: MatchConfig = {
   surface: 'grass',
   rain: false,
   play: true,
+  // Two Régional 1 neighbours of the Escaut.
+  home: 'ac-cambrai-59122',
+  away: 'us-maubeuge-59392',
 };
+
+/** A club of the pilot by id (the first one if the id is unknown, e.g. an old URL). */
+export function clubOf(id: string): Club {
+  return WORLD.clubs.find((c) => c.id === id) ?? WORLD.clubs[0]!;
+}
 
 export const PLAY_STYLES: readonly sim.PlayStyle[] = [
   'balanced',
@@ -33,25 +45,23 @@ export const PLAY_STYLES: readonly sim.PlayStyle[] = [
 
 export const SIDE = 0 as const;
 
-/** The two demo squads for a config (the real ones come from the collection in Phase 4). */
+/**
+ * The two clubs' teams for a config: their generated squads (D-032), the player's formation and
+ * tactic at home, the visitors' own; kits that do not clash (`matchKits`). The collection
+ * replaces the home squad in Phase 4.
+ */
 export function buildSetup(config: MatchConfig): sim.MatchSetup {
+  const home = clubOf(config.home);
+  const away = clubOf(config.away);
+  const kits = matchKits(home, away);
   return {
     seed: config.seed,
-    home: sim.demoTeam(config.seed, {
-      id: 'fca',
-      name: 'FC Avesnes-le-Sec',
-      rating: 58,
+    home: toMatchTeam(home, generateSquad(home), {
       formation: config.formation,
       tactic: { ...sim.DEFAULT_TACTIC, style: config.style, mentality: config.mentality },
-      colours: { shirt: '#f4f1e8', shorts: '#0f5132', number: '#0f5132' },
+      kit: kits.home,
     }),
-    away: sim.demoTeam(config.seed + 1, {
-      id: 'uss',
-      name: 'US Saint-Amand',
-      rating: 56,
-      formation: '4-3-3',
-      colours: { shirt: '#c4302b', shorts: '#f2f2ee', number: '#f2f2ee' },
-    }),
+    away: toMatchTeam(away, generateSquad(away), { kit: kits.away }),
     conditions: {
       surface: config.surface,
       rain: config.rain,

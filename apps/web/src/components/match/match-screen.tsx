@@ -421,6 +421,7 @@ export function MatchScreen() {
       )}
       {stage === 'moment' && request && rt && (
         <MomentPlayer
+          setup={rt.setup}
           request={request}
           conditions={rt.setup.conditions}
           onDone={resolve}

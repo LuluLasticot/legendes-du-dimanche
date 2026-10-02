@@ -209,3 +209,79 @@ export const CARD_FONTS = {
   },
   sans: { family: 'Manrope,system-ui,sans-serif', className: 'ld-font-sans' },
 } as const;
+
+/** How the 3D card's shader treats each template (D-035). */
+export interface CardFinish {
+  /** Tint of the lights reflected by the metal frame. */
+  readonly metal: string;
+  /** Strength of the holographic rainbow on the background, 0 to 1. */
+  readonly foil: number;
+  /** Strength of the metal glitter, 0 to 1. */
+  readonly glitter: number;
+  /** Gold-toned holography (black-and-gold and night-blue promos) instead of a rainbow. */
+  readonly goldHolo: boolean;
+  /** Colour of the halo and of the light of a reveal. */
+  readonly glow: string;
+  /** 0 (bronze common) to 7 (promo): how big a reveal the card deserves. */
+  readonly rank: number;
+}
+
+export const CARD_FINISHES: Readonly<Record<CardLook, CardFinish>> = {
+  'bronze-common': {
+    metal: '#d8925a',
+    foil: 0.1,
+    glitter: 0,
+    goldHolo: false,
+    glow: '#e0a872',
+    rank: 0,
+  },
+  'bronze-rare': {
+    metal: '#f2a868',
+    foil: 0.75,
+    glitter: 0.25,
+    goldHolo: false,
+    glow: '#f0b27c',
+    rank: 1,
+  },
+  'silver-common': {
+    metal: '#e3eaf2',
+    foil: 0.12,
+    glitter: 0,
+    goldHolo: false,
+    glow: '#dfe8f5',
+    rank: 2,
+  },
+  'silver-rare': {
+    metal: '#ffffff',
+    foil: 0.85,
+    glitter: 0.3,
+    goldHolo: false,
+    glow: '#e8f1ff',
+    rank: 3,
+  },
+  'gold-common': {
+    metal: '#f4cc58',
+    foil: 0.18,
+    glitter: 0.5,
+    goldHolo: false,
+    glow: '#ffd166',
+    rank: 4,
+  },
+  'gold-rare': {
+    metal: '#ffd34d',
+    foil: 1,
+    glitter: 0.9,
+    goldHolo: false,
+    glow: '#ffd166',
+    rank: 5,
+  },
+  'former-pro': {
+    metal: '#f5e8c6',
+    foil: 0.8,
+    glitter: 0.45,
+    goldHolo: true,
+    glow: '#9dbcf0',
+    rank: 6,
+  },
+  weekend: { metal: '#f2c243', foil: 1, glitter: 1, goldHolo: true, glow: '#ffcf40', rank: 7 },
+};
