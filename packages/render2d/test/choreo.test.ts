@@ -75,18 +75,24 @@ describe('choreography', () => {
 
   it('tokens run at human speeds and stay on the pitch', () => {
     let maxSpeed = 0;
+    // Extremes over the whole run, checked once (an expect per token per frame took seconds).
+    const bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
     const prev = new Map<string, { x: number; y: number }>();
     run(90, (f, dt) => {
       for (const t of f.tokens) {
-        expect(t.x).toBeGreaterThan(-0.05);
-        expect(t.x).toBeLessThan(1.05);
-        expect(t.y).toBeGreaterThan(-0.05);
-        expect(t.y).toBeLessThan(1.05);
+        bounds.minX = Math.min(bounds.minX, t.x);
+        bounds.maxX = Math.max(bounds.maxX, t.x);
+        bounds.minY = Math.min(bounds.minY, t.y);
+        bounds.maxY = Math.max(bounds.maxY, t.y);
         const p = prev.get(t.id);
         if (p) maxSpeed = Math.max(maxSpeed, Math.hypot((t.x - p.x) * 68, (t.y - p.y) * 105) / dt);
         prev.set(t.id, { x: t.x, y: t.y });
       }
     });
+    expect(bounds.minX).toBeGreaterThan(-0.05);
+    expect(bounds.maxX).toBeLessThan(1.05);
+    expect(bounds.minY).toBeGreaterThan(-0.05);
+    expect(bounds.maxY).toBeLessThan(1.05);
     // A fast-forward: sprints are quick, but nobody teleports.
     expect(maxSpeed).toBeLessThan(50);
   });
