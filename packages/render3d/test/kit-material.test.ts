@@ -104,3 +104,19 @@ describe('kit materials', () => {
     expect(joint(materials.joints)).toBe(1);
   });
 });
+
+describe('a dressed character', () => {
+  it('keeps its size and its skeleton (the rig is read, never posed)', async () => {
+    const { Character } = await import('../src/players/character.ts');
+    const hips = asset.scene.getObjectByName('mixamorigHips')!;
+    const before = hips.matrix.clone();
+    const character = new Character(asset, look(8));
+    character.update(0);
+    expect(hips.matrix.equals(before)).toBe(true);
+    // Feet on the ground, head at a man's height (1.8 m mannequin).
+    expect(character.part('head').y).toBeGreaterThan(1.4);
+    expect(character.part('head').y).toBeLessThan(1.9);
+    expect(character.part('hips').y).toBeGreaterThan(0.8);
+    character.dispose();
+  });
+});

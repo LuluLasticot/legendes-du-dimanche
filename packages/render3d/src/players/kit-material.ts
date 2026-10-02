@@ -145,22 +145,28 @@ const ARM_BONE = /(Left|Right)(Arm|ForeArm|Hand)/;
 
 const rigs = new WeakMap<THREE.Object3D, KitRig>();
 
-function boneY(
-  root: THREE.Object3D,
+/**
+ * Rest (bind) positions of the bones, model space. Read from the inverse bind matrices, never
+ * by posing the skeleton: `Skeleton.pose()` sets the root bone as if its parent were the world,
+ * and on the converted asset (bones in centimetres under a node scaled to metres) it shrank
+ * every character a hundredfold.
+ */
+function bindPositions(
+  meshes: readonly THREE.SkinnedMesh[],
   rootInv: THREE.Matrix4,
-  names: readonly string[],
-  fallback: number,
-): THREE.Vector3 | null {
-  const out = new THREE.Vector3();
-  let count = 0;
-  for (const name of names) {
-    const bone = root.getObjectByName(`mixamorig${name}`);
-    if (!bone) continue;
-    out.add(bone.getWorldPosition(new THREE.Vector3()).applyMatrix4(rootInv));
-    count++;
+): Map<string, THREE.Vector3> {
+  const out = new Map<string, THREE.Vector3>();
+  const m = new THREE.Matrix4();
+  for (const mesh of meshes) {
+    mesh.skeleton.bones.forEach((bone, i) => {
+      const inverse = mesh.skeleton.boneInverses[i];
+      if (!inverse || out.has(bone.name)) return;
+      // Bone in bind space, back to the mesh, then to the model.
+      m.copy(inverse).invert().premultiply(mesh.bindMatrixInverse).premultiply(mesh.matrixWorld);
+      out.set(bone.name, new THREE.Vector3().setFromMatrixPosition(m).applyMatrix4(rootInv));
+    });
   }
-  if (count === 0) return fallback === 0 ? null : new THREE.Vector3(0, fallback, 0);
-  return out.divideScalar(count);
+  return out;
 }
 
 /**
@@ -176,9 +182,9 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
   template.traverse((object) => {
     if ((object as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(object as THREE.SkinnedMesh);
   });
-  for (const mesh of meshes) mesh.skeleton.pose();
   template.updateMatrixWorld(true);
   const rootInv = template.matrixWorld.clone().invert();
+  const bones = bindPositions(meshes, rootInv);
 
   // Height from the meshes, for missing bones (a rig without Mixamo names still renders).
   const box = new THREE.Box3();
@@ -190,8 +196,12 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
   const height = Math.max(0.5, box.max.y - box.min.y);
   const at = (k: number): number => box.min.y + height * k;
 
-  const pos = (names: readonly string[], k: number): THREE.Vector3 =>
-    boneY(template, rootInv, names, at(k)) ?? new THREE.Vector3(0, at(k), 0);
+  /** Mean rest position of the named bones, or a height guessed from the body. */
+  const pos = (names: readonly string[], k: number): THREE.Vector3 => {
+    const found = names.flatMap((name) => bones.get(`mixamorig${name}`) ?? []);
+    if (found.length === 0) return new THREE.Vector3(0, at(k), 0);
+    return found.reduce((sum, v) => sum.add(v), new THREE.Vector3()).divideScalar(found.length);
+  };
   const hips = pos(['Hips'], 0.55);
   const hip = pos(['LeftUpLeg', 'RightUpLeg'], 0.5);
   const ankle = pos(['LeftFoot', 'RightFoot'], 0.05);
@@ -201,7 +211,7 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
   const shoulders = [pos(['LeftArm'], 0.8), pos(['RightArm'], 0.8)];
   const wrists = [pos(['LeftHand'], 0.8), pos(['RightHand'], 0.8)];
   // Without arm bones, arms are guessed sideways (T pose).
-  if (!template.getObjectByName('mixamorigLeftArm')) {
+  if (!bones.has('mixamorigLeftArm')) {
     shoulders[0]!.x = 0.2;
     shoulders[1]!.x = -0.2;
     wrists[0]!.x = 0.75;
@@ -226,7 +236,8 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
   for (const mesh of meshes) {
     const geometry = mesh.geometry;
     if (geometry.getAttribute('kitRest')) continue;
-    const count = geometry.getAttribute('position').count;
+    const positions = geometry.getAttribute('position');
+    const count = positions.count;
     const normals = geometry.getAttribute('normal');
     const skinIndex = geometry.getAttribute('skinIndex');
     const skinWeight = geometry.getAttribute('skinWeight');
@@ -237,8 +248,9 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
     const restNormal = new Float32Array(count * 3);
     const limb = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      mesh.getVertexPosition(i, p);
-      p.applyMatrix4(toModel);
+      // In the bind pose every skinning matrix is the identity: the rest position is the raw
+      // vertex (no bone transform, whatever pose the template's bones are in).
+      p.fromBufferAttribute(positions, i).applyMatrix4(toModel);
       if (normals) n.fromBufferAttribute(normals, i).applyMatrix3(normalMatrix);
       // A degenerate normal (pole of a lathe, welded seam) would be NaN in the shader.
       if (!normals || n.lengthSq() < 1e-10) n.set(0, 1, 0);

@@ -233,18 +233,21 @@ function idleClip(): THREE.AnimationClip {
   ]);
 }
 
+const CM_PER_M = 100;
 let cached: CharacterAsset | null = null;
 
 /** The stand-in character (built once). */
 export function createMannequinAsset(): CharacterAsset {
   if (cached) return cached;
+  // Built like the converted asset (convert-mixamo.mjs): bones and mesh in centimetres, under a
+  // node scaled to metres. What reads the rig must not assume a skeleton in world units.
   const bones = new Map<string, THREE.Bone>();
   for (const [name, parent, position] of BONES) {
     const bone = new THREE.Bone();
     bone.name = `mixamorig${name}`;
     const p = new THREE.Vector3(...position);
     if (parent !== null) p.sub(new THREE.Vector3(...at(parent)));
-    bone.position.copy(p);
+    bone.position.copy(p).multiplyScalar(CM_PER_M);
     if (parent !== null) bones.get(parent)!.add(bone);
     bones.set(name, bone);
   }
@@ -252,14 +255,19 @@ export function createMannequinAsset(): CharacterAsset {
   const index = new Map([...bones.keys()].map((name, i) => [name, i] as const));
   const merged = mergeGeometries(pieces().map((piece) => capsule(piece, index)));
   if (!merged) throw new Error('mannequin: cannot merge geometry');
+  merged.scale(CM_PER_M, CM_PER_M, CM_PER_M);
   merged.computeVertexNormals();
 
   const scene = new THREE.Group();
   scene.name = 'mannequin';
+  const character = new THREE.Group();
+  character.name = 'player';
+  character.scale.setScalar(1 / CM_PER_M);
   const mesh = new THREE.SkinnedMesh(merged, new THREE.MeshStandardMaterial());
   mesh.name = 'Alpha_Surface';
   const hips = bones.get('Hips')!;
-  scene.add(hips, mesh);
+  character.add(hips, mesh);
+  scene.add(character);
   scene.updateMatrixWorld(true);
   mesh.bind(new THREE.Skeleton(list));
 
