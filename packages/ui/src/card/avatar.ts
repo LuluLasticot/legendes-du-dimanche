@@ -98,8 +98,6 @@ function collar(kit: KitSpec): SvgElement {
     'stroke-linejoin': 'round',
   };
   switch (kit.collarStyle) {
-    case 'v':
-      return el('path', { d: 'M66 125 L80 143 L94 125', 'stroke-width': 5, ...common });
     case 'polo':
       return el(
         'g',

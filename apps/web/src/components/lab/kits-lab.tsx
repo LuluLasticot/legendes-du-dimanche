@@ -37,7 +37,6 @@ const SLIDERS: readonly (readonly [keyof KitShape, number, number, number])[] = 
   ['trim', 0.3, 1, 0.01],
   ['collarWidth', 0, 0.08, 0.002],
   ['collarY', -0.1, 0.1, 0.002],
-  ['vDepth', 0, 0.2, 0.005],
   ['neckRadius', 0.03, 0.25, 0.005],
   ['stripeWidth', 0.02, 0.15, 0.002],
   ['hoopWidth', 0.02, 0.15, 0.002],

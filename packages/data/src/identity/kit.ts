@@ -8,7 +8,9 @@ import { colourDistance, contrast, darken, lighten, pickInk, readableOn } from '
 import { crestContent, type CrestSpec } from './crest.ts';
 import { el, type SvgElement, type SvgNode } from './svg.ts';
 
-export const COLLAR_STYLES = ['crew', 'v', 'polo'] as const;
+// No V neck: hardly worn any more, and on the 3D player it showed a round collar over the V
+// (D-039). The draw keeps its old odds, so every polo club keeps its polo.
+export const COLLAR_STYLES = ['crew', 'polo'] as const;
 export type CollarStyle = (typeof COLLAR_STYLES)[number];
 
 export interface KitSpec {
@@ -58,9 +60,7 @@ function trim(
   body: string,
   stripe: string,
 ): Omit<KitSpec, 'pattern' | 'body' | 'stripe'> {
-  const collarStyle = COLLAR_STYLES[
-    rng.fork('collar').weightedIndex([0.4, 0.35, 0.25])
-  ] as CollarStyle;
+  const collarStyle = COLLAR_STYLES[rng.fork('collar').weightedIndex([0.75, 0.25])] as CollarStyle;
   // Sleeves in the body colour most of the time, sometimes in the second colour.
   const sleeves = rng.fork('sleeves').chance(0.28) ? stripe : body;
   const collar = pickInk([body], [stripe, '#ffffff', NEUTRAL_DARK], 1.6);
@@ -178,8 +178,6 @@ export function sponsorLines(label: string | undefined): string[] {
 /** The neckline: torso outline and the collar band that follows it. */
 function neck(style: CollarStyle): { top: string; collar: string } {
   switch (style) {
-    case 'v':
-      return { top: 'L60 27 L84 6', collar: 'M36 6 L60 27 L84 6 L79 4 L60 20 L41 4 Z' };
     case 'polo':
       return { top: 'Q60 17 84 6', collar: 'M36 6 L45 0 L60 14 L75 0 L84 6 Q60 17 36 6 Z' };
     default:

@@ -14,7 +14,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export type KitPattern = 'plain' | 'stripes' | 'hoops' | 'sash' | 'checks';
-export type KitCollar = 'crew' | 'v' | 'polo';
+export type KitCollar = 'crew' | 'polo';
 
 /** Structurally the `KitSpec` of @legendes/data: colours are CSS hex strings. */
 export interface CharacterKitSpec {
@@ -71,8 +71,6 @@ export interface KitShape {
   collarWidth: number;
   /** Neckline relative to the neck bone, metres. */
   collarY: number;
-  /** Depth of a V neck at the front, metres. */
-  vDepth: number;
   /** How far from the neck's axis the neckline reaches (beyond, the shoulders stay shirt). */
   neckRadius: number;
   stripeWidth: number;
@@ -107,7 +105,6 @@ export const DEFAULT_KIT_SHAPE: Readonly<KitShape> = {
   trim: 0.72,
   collarWidth: 0.03,
   collarY: -0.02,
-  vDepth: 0.09,
   neckRadius: 0.1,
   stripeWidth: 0.055,
   hoopWidth: 0.075,
@@ -289,7 +286,7 @@ const PATTERN_INDEX: Readonly<Record<KitPattern, number>> = {
   sash: 3,
   checks: 4,
 };
-const COLLAR_INDEX: Readonly<Record<KitCollar, number>> = { crew: 0, v: 1, polo: 2 };
+const COLLAR_INDEX: Readonly<Record<KitCollar, number>> = { crew: 0, polo: 1 };
 
 const ARM_BONE = /(Left|Right)(Arm|ForeArm|Hand)/;
 
@@ -527,7 +524,7 @@ uniform vec3 kSkin;
 uniform vec3 kHair;
 uniform vec3 kBoots;
 uniform vec3 kHands;
-uniform vec4 kStyle;   // pattern, collar style, hair, long sleeves
+uniform vec4 kStyle;   // pattern, polo collar, hair, long sleeves
 uniform vec4 kNumber;  // tens (-1 none), units (-1 none), has prints, joint piece
 uniform vec4 kRig1;    // hips y, hip joint y, ankle y, neck y
 uniform vec4 kRig2;    // head y, chest y, neck z
@@ -536,7 +533,7 @@ uniform vec4 kShape2;  // waist, shorts hem, sock top, sock cuff
 uniform vec4 kShape3;  // boot top, trim, collar width, collar y
 uniform vec4 kShape4;  // stripe, hoop, sash, check
 uniform vec4 kShape5;  // print size, print y, number height, number y
-uniform vec4 kShape6;  // hair line, hair back, v depth, joint tint
+uniform vec4 kShape6;  // hair line, hair back, -, joint tint
 uniform vec4 kShape7;  // neck radius
 uniform vec4 kZones;   // zoned asset: sleeve end, forearm end (along the arm), collar bottom y
 uniform sampler2D kPrints;
@@ -626,19 +623,8 @@ vec3 kitColour(out float rough) {
   rough = 0.74;
   if (zone < 0.5) {
     col = kitShirt(p, n);
-    // The model's collar is round: a V neck is cut into the shirt's front below it (band, then
-    // skin), a polo's band runs a little lower.
-    int collarStyle = int(kStyle.y + 0.5);
-    float band = kShape3.z;
-    if (collarStyle == 1 && n.z > 0.15) {
-      float depth = kShape6.z * max(0.0, 1.0 - abs(p.x) / (kShape6.z * 0.8));
-      float line = kZones.z - depth;
-      float v = kitStep(1e-3, depth);
-      col = mix(col, kCollar, kitStep(line - band, p.y) * v);
-      col = mix(col, kSkin, kitStep(line, p.y) * v);
-    } else if (collarStyle == 2) {
-      col = mix(col, kCollar, kitStep(kZones.z - band * 0.7, p.y));
-    }
+    // A polo's band runs a little lower than the model's round collar.
+    if (kStyle.y > 0.5) col = mix(col, kCollar, kitStep(kZones.z - kShape3.z * 0.7, p.y));
   } else if (zone < 1.5) {
     col = mix(kSleeves, kCollar, kitStep(kZones.x - cuff, armT));
   } else if (zone < 2.5) {
@@ -685,11 +671,9 @@ vec3 kitColour(out float rough) {
   vec3 col = kitShirt(p, n);
   rough = 0.74;
 
-  // Neckline: the collar band, then skin. A V neck dips at the front; a polo's band is wider.
-  int collarStyle = int(kStyle.y + 0.5);
-  float band = kShape3.z * (collarStyle == 2 ? 1.7 : 1.0);
+  // Neckline: the collar band, then skin. A polo's band is wider.
+  float band = kShape3.z * (kStyle.y > 0.5 ? 1.7 : 1.0);
   float line = neckY;
-  if (collarStyle == 1 && n.z > 0.15) line -= kShape6.z * max(0.0, 1.0 - abs(p.x) / (kShape6.z * 0.8));
   // Only around the neck: further out, the top of the shoulders stays shirt (the head, above
   // them, is skin whatever its width).
   float around = max(
@@ -773,7 +757,7 @@ export function setKitShape(shape: Readonly<KitShape>): void {
     shape.checkSize,
   );
   shapeUniforms.kShape5.value.set(shape.printSize, shape.printY, shape.numberHeight, shape.numberY);
-  shapeUniforms.kShape6.value.set(shape.hairLine, shape.hairBack, shape.vDepth, shape.jointTint);
+  shapeUniforms.kShape6.value.set(shape.hairLine, shape.hairBack, 0, shape.jointTint);
   shapeUniforms.kShape7.value.set(shape.neckRadius, 0, 0, 0);
 }
 setKitShape(DEFAULT_KIT_SHAPE);
