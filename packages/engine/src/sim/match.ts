@@ -6,6 +6,7 @@
 // coordinates for the renderer.
 
 import { clamp, exp, hypot } from '../math/index.ts';
+import { PENALTY_AREA } from '../physics/constants.ts';
 import { Rng } from '../rng/index.ts';
 import { FORMATION_SLOTS } from './formations.ts';
 import type { MatchPlayer, MatchSetup, MatchTeam, PlayerAttributes, Tactic } from './model.ts';
@@ -217,6 +218,15 @@ const SKILL = 0.017;
 const HOME_BONUS = 4;
 const PITCH_W = 68;
 const PITCH_L = 105;
+/** Just outside the attacked penalty area (team frame), where a free kick is given at the latest. */
+const AREA_EDGE_Y = 1 - (PENALTY_AREA.depth + 1) / PITCH_L;
+
+/** True if `p` (team frame) is inside the attacked penalty area. */
+function inPenaltyArea(p: Point): boolean {
+  return (
+    p.y > 1 - PENALTY_AREA.depth / PITCH_L && Math.abs(p.x - 0.5) < PENALTY_AREA.width / 2 / PITCH_W
+  );
+}
 
 /** Expected goals of an open-play shot from `p` (team frame). */
 export function shotXg(p: Point, header = false): number {
@@ -845,6 +855,11 @@ export class MatchSim {
       this.record('foul', winner, false, this.possession, offender);
       const inBox = this.ball.y > 0.84 && Math.abs(this.ball.x - 0.5) < 0.2;
       this.restart = inBox && rng.chance(0.3) ? 'penalty' : 'free-kick';
+      // A free kick is never taken inside the area (that would be a penalty): the foul that was
+      // not one in the area is given on its edge.
+      if (this.restart === 'free-kick' && inPenaltyArea(this.ball)) {
+        this.ball = { x: this.ball.x, y: AREA_EDGE_Y };
+      }
       return false;
     }
     this.record(kind, null, false);

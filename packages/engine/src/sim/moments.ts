@@ -3,7 +3,7 @@
 // resolution of a moment by the same micro-simulation (skipped moments, accessibility).
 
 import { kickedBall } from '../physics/ball.ts';
-import { BALL, PITCH } from '../physics/constants.ts';
+import { BALL, PENALTY_AREA, PITCH } from '../physics/constants.ts';
 import { DEFAULT_PHYSICS, withWind, type PhysicsParams } from '../physics/params.ts';
 import { v3, type Vec3 } from '../physics/vec3.ts';
 import { clamp, cos, degToRad, sin, sqrt } from '../math/index.ts';
@@ -29,7 +29,9 @@ export function momentSpot(request: MomentRequest): Vec3 {
     return v3(p.x, BALL.radius, p.z);
   }
   // The 3D moment starts a little before the shot (12–30 m out): time to see it and play it.
-  const distance = clamp((1 - request.spot.y) * PITCH.length, 12, 30);
+  // A free kick stays outside the area (inside, it would be a penalty).
+  const closest = request.kind === 'free-kick' ? PENALTY_AREA.depth + 1 : 12;
+  const distance = clamp((1 - request.spot.y) * PITCH.length, closest, 30);
   return v3(
     PITCH.goalLineX - distance,
     BALL.radius,
