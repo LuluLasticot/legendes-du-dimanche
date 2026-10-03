@@ -85,8 +85,18 @@ function trim(
   };
 }
 
-/** Home, away and goalkeeper kits of a club. Deterministic. */
+const kitCache = new WeakMap<Club, ClubKits>();
+
+/** Home, away and goalkeeper kits of a club. Deterministic (and computed once per club). */
 export function kitsOf(club: Club): ClubKits {
+  const cached = kitCache.get(club);
+  if (cached) return cached;
+  const kits = drawKits(club);
+  kitCache.set(club, kits);
+  return kits;
+}
+
+function drawKits(club: Club): ClubKits {
   const rng = Rng.create(`kit:${club.id}`);
   const { primary, secondary } = club.colours;
   const home: KitSpec = {
@@ -141,14 +151,44 @@ export function kitsClash(a: KitSpec, b: KitSpec): boolean {
   return colourDistance(a.body, b.body) < 170;
 }
 
-/** The kits of a match: each club in its home kit, the visitors in their away kit on a clash. */
+/**
+ * A plain neutral kit (white or anthracite, whichever stands further from `avoid`) trimmed in
+ * the club's colours: what visitors wear when both their kits clash with the home shirt.
+ */
+function thirdKit(club: Club, avoid: string, collarStyle: CollarStyle): KitSpec {
+  const body =
+    colourDistance('#ffffff', avoid) >= colourDistance(NEUTRAL_DARK, avoid)
+      ? '#ffffff'
+      : NEUTRAL_DARK;
+  const trim = pickInk(
+    [body],
+    [club.colours.primary, club.colours.secondary, body === '#ffffff' ? NEUTRAL_DARK : '#ffffff'],
+    1.6,
+  );
+  return {
+    pattern: 'plain',
+    body,
+    stripe: body,
+    sleeves: body,
+    collar: trim,
+    collarStyle,
+    shorts: body,
+    shortsTrim: trim,
+    socks: body,
+    socksCuff: trim,
+  };
+}
+
+/**
+ * The kits of a match: each club in its home kit, the visitors in their away kit on a clash,
+ * and in a neutral third kit when that one clashes too (57 pairings of the pilot out of 41 820).
+ */
 export function matchKits(home: Club, away: Club): { home: KitSpec; away: KitSpec } {
   const homeKit = kitsOf(home).home;
   const visitors = kitsOf(away);
-  return {
-    home: homeKit,
-    away: kitsClash(homeKit, visitors.home) ? visitors.away : visitors.home,
-  };
+  if (!kitsClash(homeKit, visitors.home)) return { home: homeKit, away: visitors.home };
+  if (!kitsClash(homeKit, visitors.away)) return { home: homeKit, away: visitors.away };
+  return { home: homeKit, away: thirdKit(away, homeKit.body, visitors.away.collarStyle) };
 }
 
 // ─── Drawing ──────────────────────────────────────────────────────────────────────────────────
