@@ -9,7 +9,7 @@ import {
   type MomentRequest,
   type ShotOutcome,
 } from '../src/sim/index.ts';
-import { PITCH } from '../src/physics/index.ts';
+import { PENALTY_AREA, PITCH } from '../src/physics/index.ts';
 
 const GRASS: MatchConditions = { surface: 'grass', rain: false, windSpeed: 0, windDirection: 0 };
 const setup = (seed: number): MatchSetup => ({
@@ -64,6 +64,26 @@ describe('key moments in a match', () => {
         if (m.kind === 'penalty') expect(p.x).toBeCloseTo(PITCH.goalLineX - 11, 6);
       }
     }
+  });
+
+  it('never sets a free kick in the penalty area (that would be a penalty)', () => {
+    let freeKicks = 0;
+    for (let seed = 0; seed < 60; seed++) {
+      for (const m of play(seed, () => 'miss').requests) {
+        if (m.kind !== 'free-kick') continue;
+        freeKicks++;
+        // In the match (team frame)…
+        const deep = (1 - m.spot.y) * PITCH.length < PENALTY_AREA.depth;
+        const central = Math.abs(m.spot.x - 0.5) * PITCH.width < PENALTY_AREA.width / 2;
+        expect(deep && central).toBe(false);
+        // …and in the 3D moment.
+        const p = momentSpot(m);
+        const inArea =
+          p.x > PITCH.goalLineX - PENALTY_AREA.depth && Math.abs(p.z) < PENALTY_AREA.width / 2;
+        expect(inArea).toBe(false);
+      }
+    }
+    expect(freeKicks).toBeGreaterThan(5);
   });
 
   it('auto-resolution is plausible and deterministic', () => {

@@ -16,6 +16,13 @@ export const PITCH = {
   goalLineX: 52.5,
 } as const;
 
+/** Penalty area: a foul by the defence inside it is a penalty, never a free kick. */
+export const PENALTY_AREA = {
+  /** From the goal line. */
+  depth: 16.5,
+  width: 40.32,
+} as const;
+
 export const GOAL = {
   /** Inner width between posts. */
   width: 7.32,
