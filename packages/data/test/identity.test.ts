@@ -190,6 +190,24 @@ describe('match kits', () => {
     expect(swaps).toBeLessThan(50 * 50 * 0.5);
   });
 
+  it('every pairing of the pilot can be told apart (a third kit when the away kit clashes too)', () => {
+    let thirds = 0;
+    for (const home of clubs) {
+      for (const away of clubs) {
+        if (home === away) continue;
+        const kits = matchKits(home, away);
+        expect(kitsClash(kits.home, kits.away), `${home.id} v ${away.id}`).toBe(false);
+        const own = kitsOf(away);
+        if (kits.away !== own.home && kits.away !== own.away) {
+          thirds++;
+          expect(['#ffffff', '#15181c']).toContain(kits.away.body);
+        }
+      }
+    }
+    expect(thirds).toBeGreaterThan(0);
+    expect(thirds).toBeLessThan(200);
+  });
+
   it('a club against itself plays in its away kit', () => {
     const club = clubs[0]!;
     expect(matchKits(club, club).away).toEqual(kitsOf(club).away);

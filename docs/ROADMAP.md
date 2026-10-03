@@ -90,6 +90,15 @@ Si le ressenti n'y est pas : itérer sur la caméra, le timing et les animations
 
 **Critère de fin :** chaque club du pilote a un effectif crédible et des maillots aux bonnes couleurs, les cartes sont belles en 2D et en 3D, et une URL de carte produit un bon aperçu sur les réseaux.
 
+✅ **Terminée le 03/10/2026** — bilan :
+- **Univers** : 205 clubs (9 de National 1 et 2, 22 de Régional 1 à 3, 174 du district de l'Escaut de D1 à D6), divisions de la saison 2026-27 toutes tirées de sources publiques, couleurs réelles pour 187 clubs (18 devinées), stades et surfaces ; seed `supabase/seed/10_universe.sql`. Aucune fiche n'est encore vérifiée par une personne.
+- **Effectifs crédibles** : 4 839 joueurs fictifs et majeurs (18 à 40 ans), 22 à 25 par club dont 2 ou 3 gardiens. Le onze type suit la division : 51 en D4–D6, 60 en D1–D3, 65 en R3, 68 en R2, 71 en R1, 75 en N2, 78 en N1. 89 % de cartes bronze, 8,5 % d'argent, 2,5 % d'or.
+- **Maillots aux bonnes couleurs** : les 205 tenues domicile reprennent les couleurs du club ; extérieur et gardien sont tirés pour s'en distinguer. Sur les 41 820 affiches possibles, aucune ne met face à face deux maillots indiscernables (tenue extérieure, ou troisième tenue neutre pour 57 d'entre elles).
+- **Belles en 2D et en 3D** : huit gabarits dont deux promos, 9 749 cartes (base et promos) chacune retrouvée par son URL ; cartes 3D holographiques avec révélation ; joueurs 3D modélisés par nous (D-039) aux couleurs de leur club : 62 appels de dessin et 151 000 triangles sur un coup franc (budgets : 150 et 300 000).
+- **Aperçu sur les réseaux** : `/carte/…` et `/club/…` ont un aperçu de lien 1200 × 630 (JPEG, ~70 Ko) et la carte une story 1080 × 1920, dessinés à partir de la carte du jeu (D-038).
+- **Au-delà du plan** : l'ouverture de pack, avancée de la Phase 4 (D-036) ; `/lab/match` entre vrais clubs ; notre propre footballeur modélisé dans Blender à la place du Y Bot (D-039).
+- **Reste ouvert** : faire vérifier les fiches du pilote (couleurs devinées, stades) ; mesurer cartes 3D, ouverture de pack et actions clés sur un vrai téléphone (`?stats`) ; vérifier les aperçus sur WhatsApp, Instagram et TikTok avec le vrai domaine ; captures Playwright de référence des cartes ; régler `DEFAULT_KIT_SHAPE` sur le footballeur ; la sortie du tunnel d'un vrai joueur dans l'ouverture de pack ; les autres districts.
+
 ---
 
 ## Phase 4 — Boucle méta et mise en production de la tranche verticale (≈ 3-4 semaines)
