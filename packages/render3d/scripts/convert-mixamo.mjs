@@ -1,6 +1,9 @@
 // Converts the Mixamo sources (assets-src/mixamo/*.fbx, not in git) into the runtime character
-// asset: one GLB (simplified mesh, shared skeleton, every clip in place) + a metadata JSON with
-// the timings the game needs (strike contact, dive extension…).
+// asset: one GLB (mesh, shared skeleton, every clip in place) + a metadata JSON with the timings
+// the game needs (strike contact, dive extension…).
+//
+// The character is our modelled footballer rigged by Mixamo (character_footballer.fbx, D-039),
+// whose kit zones are named materials; without it, the Mixamo Y Bot (character_ybot.fbx).
 //
 //   pnpm --filter @legendes/render3d convert:mixamo
 //
@@ -29,6 +32,10 @@ const OUT = new URL('../../../apps/web/public/assets/characters/', import.meta.u
 const CM = 0.01;
 /** Target share of the original triangles (≈ 10–12k triangles per player). */
 const SIMPLIFY_RATIO = Number(process.env.SIMPLIFY_RATIO ?? 0.15);
+/** A character already within budget (the modelled footballer: ~4.6k) is not simplified. */
+const SIMPLIFY_ABOVE = 12_000;
+/** Preferred character first. */
+const CHARACTERS = ['character_footballer', 'character_ybot'];
 
 // GLTFExporter needs FileReader (browser API) for binary output.
 globalThis.FileReader = class {
@@ -92,15 +99,75 @@ function loadFbx(file) {
 const files = readdirSync(SOURCE).filter((f) => f.toLowerCase().endsWith('.fbx'));
 const fileFor = (name) => files.find((f) => f.replace(/(\.fbx)+$/i, '') === name);
 
-console.log('Loading character…');
-const character = loadFbx(fileFor('character_ybot'));
+const characterFile = CHARACTERS.map(fileFor).find(Boolean);
+if (!characterFile) throw new Error(`no character in assets-src/mixamo (${CHARACTERS.join(', ')})`);
+console.log(`Loading character ${characterFile}…`);
+const character = loadFbx(characterFile);
 character.name = 'player';
+// The footballer's second UV map backs up its zones in case Mixamo renamed the materials; it
+// kept them, so the map is dead weight.
+character.traverse((object) => {
+  if (object.isMesh) object.geometry.deleteAttribute('uv1');
+});
+
+// The clips were downloaded on the Y Bot: their hips move on the Y Bot's legs. When the
+// character's skeleton differs (Mixamo's auto-rig places the joints from the markers), the hips
+// track is rescaled to its leg length so the feet stay on the ground.
+const restOf = (root, name) => {
+  root.updateMatrixWorld(true);
+  return root.getObjectByName(`mixamorig${name}`)?.getWorldPosition(new THREE.Vector3()) ?? null;
+};
+const JOINTS = [
+  'Hips',
+  'LeftUpLeg',
+  'LeftLeg',
+  'LeftFoot',
+  'Spine2',
+  'Neck',
+  'Head',
+  'LeftArm',
+  'LeftForeArm',
+  'LeftHand',
+];
+const referenceFile = fileFor('character_ybot');
+const reference = referenceFile && referenceFile !== characterFile ? loadFbx(referenceFile) : null;
+let legScale = 1;
+if (reference) {
+  console.log("Skeleton against the clips' (Y Bot), rest pose, metres:");
+  let worst = 0;
+  for (const joint of JOINTS) {
+    const a = restOf(character, joint);
+    const b = restOf(reference, joint);
+    if (!a || !b) continue;
+    const gap = a.distanceTo(b) * CM;
+    worst = Math.max(worst, gap);
+    console.log(
+      `  ${joint.padEnd(12)} ${(a.y * CM).toFixed(3)} vs ${(b.y * CM).toFixed(3)}  gap ${gap.toFixed(3)}`,
+    );
+  }
+  const leg = (root) => restOf(root, 'Hips').y - restOf(root, 'LeftFoot').y;
+  legScale = leg(character) / leg(reference);
+  console.log(`  hips track scaled ×${legScale.toFixed(3)}`);
+  if (worst > 0.04) {
+    console.warn(
+      `  ⚠ joints up to ${(worst * 100).toFixed(0)} cm away from the clips' skeleton: knees or hips will bend in the wrong place — redo the Mixamo markers (docs/DECISIONS.md D-039)`,
+    );
+  }
+}
+const footRest = reference ? restOf(reference, 'LeftFoot').y : 0;
+const characterFootRest = reference ? restOf(character, 'LeftFoot').y : 0;
 
 /** Removes horizontal root motion (hips x/z); keeps height. Returns the original hips path. */
 function stripRootMotion(clip) {
   const hips = clip.tracks.find((t) => t.name === 'mixamorigHips.position');
   if (!hips) return null;
   const v = hips.values;
+  // Retarget onto the character's legs: heights measured from the ankles, travel scaled alike.
+  for (let i = 0; i < v.length; i += 3) {
+    v[i] *= legScale;
+    v[i + 1] = characterFootRest + (v[i + 1] - footRest) * legScale;
+    v[i + 2] *= legScale;
+  }
   const path = { times: Array.from(hips.times), x: [], z: [] };
   const x0 = v[0];
   const z0 = v[2];
@@ -259,9 +326,12 @@ const document = await io.readBinary(new Uint8Array(glb));
 const trianglesBefore = countTriangles(document);
 await document.transform(
   weld(),
-  simplify({ simplifier: MeshoptSimplifier, ratio: SIMPLIFY_RATIO, error: 0.004 }),
+  ...(trianglesBefore > SIMPLIFY_ABOVE
+    ? [simplify({ simplifier: MeshoptSimplifier, ratio: SIMPLIFY_RATIO, error: 0.004 })]
+    : []),
   resample({ tolerance: 1e-4 }),
-  dedup(),
+  // Zone materials that look alike (shirt and sleeves of the preview kit) keep their names.
+  dedup({ keepUniqueNames: true }),
   prune(),
   quantize(),
   meshopt({ encoder: MeshoptEncoder, level: 'medium' }),

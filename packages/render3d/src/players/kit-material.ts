@@ -1,16 +1,20 @@
 // The club kit on a 3D character (Phase 3, step 6): one parametric material for the whole body,
-// driven by the same `KitSpec` as the 2D kit drawing and the card (D-033). The asset has no
-// clothing UVs: regions are worked out once per asset from the skeleton in its rest pose —
-// position and normal of every vertex, how much it follows the arm bones, and how far it lies
-// along the arm (shoulder → wrist) and the leg (hip → ankle). The shader then cuts the shirt,
-// the sleeves, the collar, the shorts and their side trim, the socks and their cuff, the boots,
-// skin and hair, draws the shirt's pattern, and prints the crest and sponsor on the chest and
-// the number on the back from one texture per team (`kitPrintNode` in @legendes/data).
+// driven by the same `KitSpec` as the 2D kit drawing and the card (D-033).
+//
+// Our modelled footballer (D-039) carries its zones — shirt, sleeves, collar, shorts, socks and
+// their cuff, boots, skin, forearms, hands, hair — as named materials; they are merged into one
+// mesh with a `kitZone` attribute (one draw call per player) and the shader colours each zone.
+// Assets without zones (the Y Bot, the code mannequin) fall back to regions worked out once per
+// asset from the skeleton in its rest pose — position and normal of every vertex, how much it
+// follows the arm bones, and how far it lies along the arm (shoulder → wrist) and the leg
+// (hip → ankle). Either way the shader draws the shirt's pattern and prints the crest and sponsor
+// on the chest and the number on the back from one texture per team (`kitPrintNode`).
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export type KitPattern = 'plain' | 'stripes' | 'hoops' | 'sash' | 'checks';
-export type KitCollar = 'crew' | 'v' | 'polo';
+export type KitCollar = 'crew' | 'polo';
 
 /** Structurally the `KitSpec` of @legendes/data: colours are CSS hex strings. */
 export interface CharacterKitSpec {
@@ -67,8 +71,6 @@ export interface KitShape {
   collarWidth: number;
   /** Neckline relative to the neck bone, metres. */
   collarY: number;
-  /** Depth of a V neck at the front, metres. */
-  vDepth: number;
   /** How far from the neck's axis the neckline reaches (beyond, the shoulders stay shirt). */
   neckRadius: number;
   stripeWidth: number;
@@ -103,7 +105,6 @@ export const DEFAULT_KIT_SHAPE: Readonly<KitShape> = {
   trim: 0.72,
   collarWidth: 0.03,
   collarY: -0.02,
-  vDepth: 0.09,
   neckRadius: 0.1,
   stripeWidth: 0.055,
   hoopWidth: 0.075,
@@ -132,6 +133,150 @@ export interface KitRig {
   readonly height: number;
   /** False when the bones did not fit the body and the usual proportions were used. */
   readonly fromBones: boolean;
+  /** True when the asset carries its zones (materials of the modelled footballer). */
+  readonly zones: boolean;
+  /** Zoned asset: where the sleeve's hem lies along the arm (0 shoulder → 1 wrist). */
+  readonly sleeveEnd: number;
+  /** Zoned asset: where the forearm ends along the arm (the keeper's long sleeve cuff). */
+  readonly forearmEnd: number;
+  /** Zoned asset: bottom of the collar, model y. */
+  readonly collarBottom: number;
+}
+
+/**
+ * Material slots of the modelled footballer, in the order of `assets-src/blender`
+ * (build_footballer.py): the index is the `kitZone` attribute.
+ */
+export const KIT_ZONES = [
+  'kit_shirt',
+  'kit_sleeves',
+  'kit_collar',
+  'kit_shorts',
+  'kit_socks',
+  'kit_socks_cuff',
+  'kit_boots',
+  'skin',
+  'skin_forearms',
+  'hands',
+  'hair',
+] as const;
+export type KitZone = (typeof KIT_ZONES)[number];
+
+const zoneIndex = (material: THREE.Material): number => KIT_ZONES.indexOf(material.name as KitZone);
+
+/** Plain (non-normalised, non-interleaved) copy of the given vertices of an attribute. */
+function plainAttribute(
+  attribute: THREE.BufferAttribute | THREE.InterleavedBufferAttribute,
+  vertices: readonly number[],
+): THREE.BufferAttribute {
+  const { itemSize } = attribute;
+  const integer = !attribute.normalized && !(attribute.array instanceof Float32Array);
+  const size = vertices.length * itemSize;
+  const array = integer ? new Uint16Array(size) : new Float32Array(size);
+  vertices.forEach((vertex, i) => {
+    for (let k = 0; k < itemSize; k++) array[i * itemSize + k] = attribute.getComponent(vertex, k);
+  });
+  return new THREE.BufferAttribute(array, itemSize);
+}
+
+/**
+ * One zone's triangles (`start`, `count`: a range of the index, or of the vertices) as a compact
+ * geometry: only the vertices they use, each tagged with the zone. A vertex shared with another
+ * zone is duplicated, so every triangle carries a single zone.
+ */
+function zonePiece(
+  source: THREE.BufferGeometry,
+  names: readonly string[],
+  start: number,
+  count: number,
+  zone: number,
+): THREE.BufferGeometry {
+  const remap = new Map<number, number>();
+  const vertices: number[] = [];
+  const index: number[] = [];
+  for (let k = start; k < start + count; k++) {
+    const vertex = source.index ? source.index.getX(k) : k;
+    let local = remap.get(vertex);
+    if (local === undefined) {
+      local = vertices.length;
+      remap.set(vertex, local);
+      vertices.push(vertex);
+    }
+    index.push(local);
+  }
+  const piece = new THREE.BufferGeometry();
+  for (const name of names)
+    piece.setAttribute(name, plainAttribute(source.getAttribute(name), vertices));
+  piece.setAttribute(
+    'kitZone',
+    new THREE.BufferAttribute(new Float32Array(vertices.length).fill(zone), 1),
+  );
+  piece.setIndex(index);
+  return piece;
+}
+
+/**
+ * Puts the zones of a modelled asset into one skinned mesh with a `kitZone` attribute, so that a
+ * player stays a single draw call. Handles both forms the zones arrive in: one skinned mesh per
+ * material (a glTF mesh with one primitive per material, possibly sharing one vertex buffer) and
+ * one mesh with geometry groups. Returns false, leaving the template untouched, when a skinned
+ * mesh has a material that is not a zone (Y Bot, code mannequin).
+ */
+export function mergeKitZones(template: THREE.Object3D): boolean {
+  const meshes: THREE.SkinnedMesh[] = [];
+  template.traverse((object) => {
+    if ((object as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(object as THREE.SkinnedMesh);
+  });
+  if (meshes.length === 0) return false;
+  if (meshes.length === 1 && meshes[0]!.geometry.getAttribute('kitZone')) return true;
+  const materialsOf = (mesh: THREE.SkinnedMesh): THREE.Material[] =>
+    Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  if (!meshes.every((mesh) => materialsOf(mesh).every((m) => zoneIndex(m) >= 0))) return false;
+
+  template.updateMatrixWorld(true);
+  const first = meshes[0]!;
+  const sameSpace = meshes.every(
+    (mesh) => mesh.skeleton === first.skeleton && mesh.matrixWorld.equals(first.matrixWorld),
+  );
+  if (!sameSpace) {
+    console.warn('[kit] zone meshes do not share a skeleton and a space: not merged');
+    return false;
+  }
+
+  const names = ['position', 'normal', 'skinIndex', 'skinWeight'].filter((name) =>
+    meshes.every((mesh) => mesh.geometry.getAttribute(name)),
+  );
+  const pieces = meshes.flatMap((mesh) => {
+    const source = mesh.geometry;
+    const materials = materialsOf(mesh);
+    const total = source.index ? source.index.count : source.getAttribute('position').count;
+    const groups =
+      Array.isArray(mesh.material) && source.groups.length > 0
+        ? source.groups
+        : [{ start: 0, count: total, materialIndex: 0 }];
+    return groups.map((group) =>
+      zonePiece(
+        source,
+        names,
+        group.start,
+        Math.min(group.count, total - group.start),
+        zoneIndex(materials[group.materialIndex ?? 0]!),
+      ),
+    );
+  });
+  const merged = mergeGeometries(pieces);
+  if (!merged) throw new Error('[kit] cannot merge the zone meshes');
+
+  const body = new THREE.SkinnedMesh(merged, materialsOf(first)[0]);
+  body.name = first.name;
+  body.position.copy(first.position);
+  body.quaternion.copy(first.quaternion);
+  body.scale.copy(first.scale);
+  first.parent!.add(body);
+  body.bindMode = first.bindMode;
+  body.bind(first.skeleton, first.bindMatrix.clone());
+  for (const mesh of meshes) mesh.removeFromParent();
+  return true;
 }
 
 const PATTERN_INDEX: Readonly<Record<KitPattern, number>> = {
@@ -141,7 +286,7 @@ const PATTERN_INDEX: Readonly<Record<KitPattern, number>> = {
   sash: 3,
   checks: 4,
 };
-const COLLAR_INDEX: Readonly<Record<KitCollar, number>> = { crew: 0, v: 1, polo: 2 };
+const COLLAR_INDEX: Readonly<Record<KitCollar, number>> = { crew: 0, polo: 1 };
 
 const ARM_BONE = /(Left|Right)(Arm|ForeArm|Hand)/;
 
@@ -174,6 +319,7 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
   const cached = rigs.get(template);
   if (cached) return cached;
 
+  const zones = mergeKitZones(template);
   const meshes: THREE.SkinnedMesh[] = [];
   template.traverse((object) => {
     if ((object as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(object as THREE.SkinnedMesh);
@@ -283,23 +429,15 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
     ? [read.wrists[0]!, read.wrists[1]!]
     : [guess(0.39 * w, 0.795), guess(-0.39 * w, 0.795)];
 
-  const rig: KitRig = {
-    hipsY: hips.y,
-    hipY: hip.y,
-    ankleY: ankle.y,
-    neckY: neck.y,
-    headY: head.y,
-    chestY: chest.y,
-    neckZ: neck.z,
-    height,
-    fromBones: fits,
-  };
+  // Zoned asset: the kit's edges are measured on the model itself.
+  const measured = { sleeveEnd: 0, forearmEnd: 0, collarBottom: Infinity };
 
   const d = new THREE.Vector3();
   const legSpan = Math.max(1e-3, hip.y - ankle.y);
   for (const { mesh, rest, restNormal, count } of drawn) {
     const geometry = mesh.geometry;
     if (geometry.getAttribute('kitRest')) continue;
+    const zone = geometry.getAttribute('kitZone');
     const skinIndex = geometry.getAttribute('skinIndex');
     const skinWeight = geometry.getAttribute('skinWeight');
     const isArm = mesh.skeleton.bones.map((b) => ARM_BONE.test(b.name));
@@ -319,11 +457,32 @@ export function prepareKitRig(template: THREE.Object3D): KitRig {
       const armT = d.dot(v.clone().sub(shoulder)) / Math.max(1e-9, d.lengthSq());
       const legT = (hip.y - v.y) / legSpan;
       limb.set([arm, armT, legT], i * 3);
+      if (zone) {
+        const z = KIT_ZONES[Math.round(zone.getX(i))];
+        if (z === 'kit_sleeves') measured.sleeveEnd = Math.max(measured.sleeveEnd, armT);
+        if (z === 'skin_forearms') measured.forearmEnd = Math.max(measured.forearmEnd, armT);
+        if (z === 'kit_collar') measured.collarBottom = Math.min(measured.collarBottom, v.y);
+      }
     }
     geometry.setAttribute('kitRest', new THREE.BufferAttribute(rest, 3));
     geometry.setAttribute('kitNormal', new THREE.BufferAttribute(restNormal, 3));
     geometry.setAttribute('kitLimb', new THREE.BufferAttribute(limb, 3));
   }
+  const rig: KitRig = {
+    hipsY: hips.y,
+    hipY: hip.y,
+    ankleY: ankle.y,
+    neckY: neck.y,
+    headY: head.y,
+    chestY: chest.y,
+    neckZ: neck.z,
+    height,
+    fromBones: fits,
+    zones,
+    sleeveEnd: measured.sleeveEnd,
+    forearmEnd: measured.forearmEnd,
+    collarBottom: Number.isFinite(measured.collarBottom) ? measured.collarBottom : neck.y,
+  };
   rigs.set(template, rig);
   return rig;
 }
@@ -337,12 +496,19 @@ attribute vec3 kitLimb;
 varying vec3 vKitRest;
 varying vec3 vKitNormal;
 varying vec3 vKitLimb;
+#ifdef KIT_ZONES
+attribute float kitZone;
+varying float vKitZone;
+#endif
 `;
 
 const VERTEX_BODY = /* glsl */ `
 vKitRest = kitRest;
 vKitNormal = kitNormal;
 vKitLimb = kitLimb;
+#ifdef KIT_ZONES
+vKitZone = kitZone;
+#endif
 `;
 
 const FRAGMENT_HEAD = /* glsl */ `
@@ -358,7 +524,7 @@ uniform vec3 kSkin;
 uniform vec3 kHair;
 uniform vec3 kBoots;
 uniform vec3 kHands;
-uniform vec4 kStyle;   // pattern, collar style, hair, long sleeves
+uniform vec4 kStyle;   // pattern, polo collar, hair, long sleeves
 uniform vec4 kNumber;  // tens (-1 none), units (-1 none), has prints, joint piece
 uniform vec4 kRig1;    // hips y, hip joint y, ankle y, neck y
 uniform vec4 kRig2;    // head y, chest y, neck z
@@ -367,12 +533,16 @@ uniform vec4 kShape2;  // waist, shorts hem, sock top, sock cuff
 uniform vec4 kShape3;  // boot top, trim, collar width, collar y
 uniform vec4 kShape4;  // stripe, hoop, sash, check
 uniform vec4 kShape5;  // print size, print y, number height, number y
-uniform vec4 kShape6;  // hair line, hair back, v depth, joint tint
+uniform vec4 kShape6;  // hair line, hair back, -, joint tint
 uniform vec4 kShape7;  // neck radius
+uniform vec4 kZones;   // zoned asset: sleeve end, forearm end (along the arm), collar bottom y
 uniform sampler2D kPrints;
 varying vec3 vKitRest;
 varying vec3 vKitNormal;
 varying vec3 vKitLimb;
+#ifdef KIT_ZONES
+varying float vKitZone;
+#endif
 
 // 1 above the edge, 0 below, antialiased over one pixel.
 float kitStep(float edge, float x) {
@@ -406,20 +576,10 @@ vec4 kitDigit(float digit, vec2 uv) {
   return texture2D(kPrints, at);
 }
 
-// Colour and roughness of the kit at this point of the body.
-vec3 kitColour(out float rough) {
-  vec3 p = vKitRest;
-  vec3 n = normalize(vKitNormal);
-  float arm = kitStep(0.5, vKitLimb.x);
-  float armT = vKitLimb.y;
-  float legT = vKitLimb.z;
-  float neckY = kRig1.w + kShape3.w;
-
-  // Shirt: body and pattern.
+// The shirt at this point: body colour, pattern, and the prints (crest and sponsor on the chest,
+// number on the back).
+vec3 kitShirt(vec3 p, vec3 n) {
   vec3 col = mix(kBody, kStripe, kitPattern(p));
-  rough = 0.74;
-
-  // Prints: crest and sponsor on the chest, number on the back.
   if (kNumber.z > 0.5) {
     float size = kShape5.x;
     vec2 front = vec2(p.x / size + 0.5, (p.y - kRig2.y - kShape5.y) / size + 0.5);
@@ -447,12 +607,73 @@ vec3 kitColour(out float rough) {
       }
     }
   }
+  return col;
+}
 
-  // Neckline: the collar band, then skin. A V neck dips at the front; a polo's band is wider.
-  int collarStyle = int(kStyle.y + 0.5);
-  float band = kShape3.z * (collarStyle == 2 ? 1.7 : 1.0);
+#ifdef KIT_ZONES
+// Colour and roughness of the kit on a modelled asset: each vertex knows its zone.
+vec3 kitColour(out float rough) {
+  vec3 p = vKitRest;
+  vec3 n = normalize(vKitNormal);
+  float zone = floor(vKitZone + 0.5);
+  float armT = vKitLimb.y;
+  float cuff = kShape1.z;
+  bool longSleeves = kStyle.w > 0.5;
+  vec3 col;
+  rough = 0.74;
+  if (zone < 0.5) {
+    col = kitShirt(p, n);
+    // A polo's band runs a little lower than the model's round collar.
+    if (kStyle.y > 0.5) col = mix(col, kCollar, kitStep(kZones.z - kShape3.z * 0.7, p.y));
+  } else if (zone < 1.5) {
+    col = mix(kSleeves, kCollar, kitStep(kZones.x - cuff, armT));
+  } else if (zone < 2.5) {
+    col = kCollar;
+  } else if (zone < 3.5) {
+    col = mix(kShorts, kTrim, step(0.0, p.x * n.x) * kitStep(kShape3.y, abs(n.x)));
+    rough = 0.6;
+  } else if (zone < 4.5) {
+    col = kSocks;
+    rough = 0.88;
+  } else if (zone < 5.5) {
+    col = kCuff;
+    rough = 0.88;
+  } else if (zone < 6.5) {
+    col = kBoots;
+    rough = 0.32;
+  } else if (zone < 7.5) {
+    col = kSkin;
+    rough = 0.55;
+  } else if (zone < 8.5) {
+    // Bare arm, or the keeper's long sleeve with its cuff at the wrist.
+    col = longSleeves ? mix(kSleeves, kCollar, kitStep(kZones.y - cuff, armT)) : kSkin;
+    rough = longSleeves ? 0.74 : 0.55;
+  } else if (zone < 9.5) {
+    col = kHands;
+    rough = longSleeves ? 0.62 : 0.55;
+  } else {
+    // Hair (a shaved head takes the skin colour, see setLook).
+    col = kHair;
+    rough = kStyle.z > 0.5 ? 0.85 : 0.55;
+  }
+  return col * mix(1.0, kShape6.w, kNumber.w);
+}
+#else
+// Colour and roughness of the kit at this point of the body, cut from the skeleton.
+vec3 kitColour(out float rough) {
+  vec3 p = vKitRest;
+  vec3 n = normalize(vKitNormal);
+  float arm = kitStep(0.5, vKitLimb.x);
+  float armT = vKitLimb.y;
+  float legT = vKitLimb.z;
+  float neckY = kRig1.w + kShape3.w;
+
+  vec3 col = kitShirt(p, n);
+  rough = 0.74;
+
+  // Neckline: the collar band, then skin. A polo's band is wider.
+  float band = kShape3.z * (kStyle.y > 0.5 ? 1.7 : 1.0);
   float line = neckY;
-  if (collarStyle == 1 && n.z > 0.15) line -= kShape6.z * max(0.0, 1.0 - abs(p.x) / (kShape6.z * 0.8));
   // Only around the neck: further out, the top of the shoulders stays shirt (the head, above
   // them, is skin whatever its width).
   float around = max(
@@ -503,6 +724,7 @@ vec3 kitColour(out float rough) {
 
   return col * mix(1.0, kShape6.w, kNumber.w);
 }
+#endif
 `;
 
 // ─── Uniforms ─────────────────────────────────────────────────────────────────────────────────
@@ -535,7 +757,7 @@ export function setKitShape(shape: Readonly<KitShape>): void {
     shape.checkSize,
   );
   shapeUniforms.kShape5.value.set(shape.printSize, shape.printY, shape.numberHeight, shape.numberY);
-  shapeUniforms.kShape6.value.set(shape.hairLine, shape.hairBack, shape.vDepth, shape.jointTint);
+  shapeUniforms.kShape6.value.set(shape.hairLine, shape.hairBack, 0, shape.jointTint);
   shapeUniforms.kShape7.value.set(shape.neckRadius, 0, 0, 0);
 }
 setKitShape(DEFAULT_KIT_SHAPE);
@@ -577,6 +799,7 @@ function lookUniforms() {
     kStyle: { value: new THREE.Vector4() },
     kRig1: { value: new THREE.Vector4() },
     kRig2: { value: new THREE.Vector4() },
+    kZones: { value: new THREE.Vector4() },
     kPrints: { value: blank as THREE.Texture },
   };
 }
@@ -589,10 +812,13 @@ export class KitMaterials {
   readonly body: THREE.MeshStandardMaterial;
   readonly joints: THREE.MeshStandardMaterial;
   private readonly uniforms: LookUniforms = lookUniforms();
+  private readonly zones: boolean;
 
   constructor(rig: KitRig, look: CharacterLook) {
     this.uniforms.kRig1.value.set(rig.hipsY, rig.hipY, rig.ankleY, rig.neckY);
     this.uniforms.kRig2.value.set(rig.headY, rig.chestY, rig.neckZ, 0);
+    this.uniforms.kZones.value.set(rig.sleeveEnd, rig.forearmEnd, rig.collarBottom, 0);
+    this.zones = rig.zones;
     this.body = this.material(0);
     this.joints = this.material(1);
     this.setLook(look);
@@ -600,6 +826,7 @@ export class KitMaterials {
 
   private material(joint: number): THREE.MeshStandardMaterial {
     const material = new THREE.MeshStandardMaterial({ roughness: 0.7, metalness: 0.02 });
+    if (this.zones) material.defines = { KIT_ZONES: '' };
     const number = { value: new THREE.Vector4() };
     material.onBeforeCompile = (shader) => {
       Object.assign(shader.uniforms, this.uniforms, shapeUniforms, { kNumber: number });
@@ -617,7 +844,9 @@ export class KitMaterials {
           '#include <roughnessmap_fragment>\nroughnessFactor = kitRough;',
         );
     };
-    material.customProgramCacheKey = () => 'ld-kit-1';
+    // One program per kind of asset (zoned or cut from the skeleton), shared by every player.
+    const key = this.zones ? 'ld-kit-zones-1' : 'ld-kit-1';
+    material.customProgramCacheKey = () => key;
     // Each material keeps its own kNumber (the joint flag lives in .w), sharing x–z.
     material.userData['kNumber'] = number;
     number.value.w = joint;

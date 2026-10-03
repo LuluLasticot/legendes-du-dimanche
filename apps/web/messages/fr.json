@@ -542,7 +542,6 @@
         "trim": "Liseré du short (côté)",
         "collarWidth": "Largeur du col (m)",
         "collarY": "Hauteur de l'encolure (m)",
-        "vDepth": "Profondeur du col en V (m)",
         "neckRadius": "Rayon de l'encolure (m)",
         "stripeWidth": "Largeur des rayures (m)",
         "hoopWidth": "Largeur des cerceaux (m)",
@@ -559,7 +558,9 @@
       },
       "rig": {
         "bones": "Repères lus sur le squelette : taille {height} m, hanches {hip} m, cou {neck} m.",
-        "guessed": "Squelette incohérent, proportions par défaut : taille {height} m, hanches {hip} m, cou {neck} m."
+        "guessed": "Squelette incohérent, proportions par défaut : taille {height} m, hanches {hip} m, cou {neck} m.",
+        "zones": "Zones lues sur les matériaux du modèle (bout des manches à {sleeve} du bras, bas du col à {collar} m) : les coupes (manches, short, chaussettes, cheveux) viennent du modèle ; motifs, flocage, revers, liseré et col en V suivent les curseurs.",
+        "cut": "Zones découpées sur le squelette : tous les curseurs s'appliquent."
       }
     }
   },

@@ -31,7 +31,7 @@ import {
 
 const clubs = WORLD.clubs;
 /** Hash of the identity of every club of the pilot (see the test that uses it). */
-const IDENTITY_GOLDEN = '709bea5';
+const IDENTITY_GOLDEN = 'a35b8df';
 
 /** Elements opened and closed in order, no stray text: what a parser needs to accept the string. */
 function wellFormed(svg: string): boolean {
