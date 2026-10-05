@@ -8,7 +8,8 @@
 // asset from the skeleton in its rest pose — position and normal of every vertex, how much it
 // follows the arm bones, and how far it lies along the arm (shoulder → wrist) and the leg
 // (hip → ankle). Either way the shader draws the shirt's pattern and prints the crest and sponsor
-// on the chest and the number on the back from one texture per team (`kitPrintNode`).
+// on the chest and the number on the back from one texture per team (`kitPrintNode`), and, when
+// the look has one, the player's name above the number (`kitNameNode`).
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -43,6 +44,11 @@ export interface CharacterLook {
    * right half (5 × 2 cells). Shared by the whole team; null = no print.
    */
   readonly prints: HTMLCanvasElement | null;
+  /**
+   * The player's name above his number (`kitNameNode`), for the walkout of a pack's best card;
+   * absent or null = no name (amateur shirts rarely carry one).
+   */
+  readonly backName?: HTMLCanvasElement | null;
   /** Goalkeeper: long sleeves and gloves of this colour. */
   readonly gloves: string | null;
   readonly boots: string;
@@ -84,6 +90,10 @@ export interface KitShape {
   numberHeight: number;
   /** Back number centre relative to the upper spine bone, metres. */
   numberY: number;
+  /** Letter height of the name on the back, metres. */
+  nameHeight: number;
+  /** Gap between the top of the number and the name, metres. */
+  nameGap: number;
   /** Hairline above the head bone (top of the head), metres. */
   hairLine: number;
   /** Hairline at the back of the head, above the head bone, metres. */
@@ -114,6 +124,8 @@ export const DEFAULT_KIT_SHAPE: Readonly<KitShape> = {
   printY: -0.04,
   numberHeight: 0.2,
   numberY: -0.02,
+  nameHeight: 0.055,
+  nameGap: 0.015,
   hairLine: 0.12,
   hairBack: 0.04,
   jointTint: 0.86,
@@ -534,9 +546,11 @@ uniform vec4 kShape3;  // boot top, trim, collar width, collar y
 uniform vec4 kShape4;  // stripe, hoop, sash, check
 uniform vec4 kShape5;  // print size, print y, number height, number y
 uniform vec4 kShape6;  // hair line, hair back, -, joint tint
-uniform vec4 kShape7;  // neck radius
+uniform vec4 kShape7;  // neck radius, name height, name gap
+uniform vec4 kNameBox; // has a name, its width / height
 uniform vec4 kZones;   // zoned asset: sleeve end, forearm end (along the arm), collar bottom y
 uniform sampler2D kPrints;
+uniform sampler2D kName;
 varying vec3 vKitRest;
 varying vec3 vKitNormal;
 varying vec3 vKitLimb;
@@ -577,7 +591,7 @@ vec4 kitDigit(float digit, vec2 uv) {
 }
 
 // The shirt at this point: body colour, pattern, and the prints (crest and sponsor on the chest,
-// number on the back).
+// number and name on the back).
 vec3 kitShirt(vec3 p, vec3 n) {
   vec3 col = mix(kBody, kStripe, kitPattern(p));
   if (kNumber.z > 0.5) {
@@ -605,6 +619,16 @@ vec3 kitShirt(vec3 p, vec3 n) {
         vec4 print = kitDigit(digit, vec2(u, v));
         col = mix(col, print.rgb, print.a * smoothstep(0.05, 0.35, -n.z));
       }
+    }
+  }
+  if (kNameBox.x > 0.5 && n.z < 0.0) {
+    // Seen from behind, the character's left (+x) is on the left: u runs from +x to -x.
+    float nh = kShape7.y;
+    float bottom = kRig2.y + kShape5.w + 0.5 * kShape5.z + kShape7.z;
+    vec2 at = vec2(0.5 - p.x / (nh * kNameBox.y), (p.y - bottom) / nh);
+    if (all(greaterThan(at, vec2(0.0))) && all(lessThan(at, vec2(1.0)))) {
+      vec4 print = texture2D(kName, at);
+      col = mix(col, print.rgb, print.a * smoothstep(0.05, 0.35, -n.z));
     }
   }
   return col;
@@ -758,14 +782,14 @@ export function setKitShape(shape: Readonly<KitShape>): void {
   );
   shapeUniforms.kShape5.value.set(shape.printSize, shape.printY, shape.numberHeight, shape.numberY);
   shapeUniforms.kShape6.value.set(shape.hairLine, shape.hairBack, 0, shape.jointTint);
-  shapeUniforms.kShape7.value.set(shape.neckRadius, 0, 0, 0);
+  shapeUniforms.kShape7.value.set(shape.neckRadius, shape.nameHeight, shape.nameGap, 0);
 }
 setKitShape(DEFAULT_KIT_SHAPE);
 
 const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1);
 blank.needsUpdate = true;
 
-/** One texture per print canvas (a team shares its canvas). */
+/** One texture per print canvas (a team shares its canvas; a name canvas is one player's). */
 const printTextures = new WeakMap<HTMLCanvasElement, THREE.CanvasTexture>();
 
 function printTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
@@ -800,7 +824,9 @@ function lookUniforms() {
     kRig1: { value: new THREE.Vector4() },
     kRig2: { value: new THREE.Vector4() },
     kZones: { value: new THREE.Vector4() },
+    kNameBox: { value: new THREE.Vector4() },
     kPrints: { value: blank as THREE.Texture },
+    kName: { value: blank as THREE.Texture },
   };
 }
 
@@ -883,6 +909,9 @@ export class KitMaterials {
       value.set(tens, units, prints, value.w);
     }
     u.kPrints.value = look.prints === null ? blank : printTexture(look.prints);
+    const name = look.backName ?? null;
+    u.kNameBox.value.set(name ? 1 : 0, name ? name.width / Math.max(1, name.height) : 1, 0, 0);
+    u.kName.value = name ? printTexture(name) : blank;
   }
 
   dispose(): void {

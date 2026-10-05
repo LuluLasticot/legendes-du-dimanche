@@ -110,6 +110,24 @@ describe('kit materials', () => {
     expect(digits(null)).toEqual([-1, -1]);
   });
 
+  it('print the name above the number only when the look has one', () => {
+    const nameBox = (backName: CharacterLook['backName']): number[] => {
+      const materials = new KitMaterials(rig, { ...look(9), backName });
+      const shader = {
+        uniforms: {},
+        vertexShader: THREE.ShaderLib.standard.vertexShader,
+        fragmentShader: THREE.ShaderLib.standard.fragmentShader,
+      } as unknown as THREE.WebGLProgramParametersWithUniforms;
+      materials.body.onBeforeCompile(shader, undefined as unknown as THREE.WebGLRenderer);
+      return (shader.uniforms['kNameBox']?.value as THREE.Vector4).toArray();
+    };
+    // A canvas as three reads it (the tests have no DOM).
+    const canvas = { width: 512, height: 96 } as HTMLCanvasElement;
+    expect(nameBox(canvas).slice(0, 2)).toEqual([1, 512 / 96]);
+    expect(nameBox(null)[0]).toBe(0);
+    expect(nameBox(undefined)[0]).toBe(0);
+  });
+
   it('tint only the joint pieces', () => {
     const materials = new KitMaterials(rig, look(4));
     const joint = (m: THREE.MeshStandardMaterial): number =>

@@ -11,8 +11,10 @@ import {
   crestSvg,
   identityOf,
   colourDistance,
+  KIT_NAME,
   KIT_PRINT,
   kitNode,
+  kitNameNode,
   kitPrintNode,
   kitsClash,
   kitsOf,
@@ -169,6 +171,18 @@ describe('3D kit prints', () => {
       expect(svg).toContain(`viewBox="0 0 ${KIT_PRINT.width} ${KIT_PRINT.height}"`);
       for (let d = 0; d < 10; d++) expect(svg).toContain(`>${d}</text>`);
     }
+  });
+
+  it('print the name in capitals, squeezing only the long ones', () => {
+    const kit = identityOf(clubs[0]!).kits.home;
+    const short = toSvgString(kitNameNode(kit, 'Petit'));
+    expect(wellFormed(short)).toBe(true);
+    expect(short).toContain(`viewBox="0 0 ${KIT_NAME.width} ${KIT_NAME.height}"`);
+    expect(short).toContain('>PETIT</text>');
+    expect(short).not.toContain('textLength');
+    const long = toSvgString(kitNameNode(kit, "D'Almeida-Vasconcelos"));
+    expect(wellFormed(long)).toBe(true);
+    expect(long).toContain('textLength');
   });
 });
 

@@ -5,6 +5,11 @@
 // eleven others are dealt face down and turned over one by one. It all happens at night, on the
 // pitch of the best card's club. Every duration and intensity is a setting.
 //
+// In a full walkout, the player himself comes out before his card (D-040): the camera drops to
+// the grass, he walks into the floodlights in his club's kit, his name and number on his back,
+// and ends on one of three poses drawn at random — arms crossed, a hand on the crest, or turned
+// round, thumbs at his name (clips made in Blender, assets-src/blender/build_walkout.py).
+//
 // Imperative scene (mount → handle → dispose). What the player reads (the clues, the buttons)
 // is drawn by React from the steps this scene announces.
 
@@ -22,6 +27,9 @@ import { Flare, Particles, Rays } from '../cards/fx.ts';
 import { Pack3D, PACK3D_HEIGHT, PACK3D_WIDTH, type Pack3DSources } from '../cards/pack3d.ts';
 import { HALO_FS, HALO_VS } from '../cards/shaders.ts';
 import { prefersReducedMotion } from '../core/device.ts';
+import { loadCharacterAsset } from '../players/character-asset.ts';
+import { Character } from '../players/character.ts';
+import type { CharacterLook } from '../players/kit-material.ts';
 import { clamp01, ease, Spring, type Ease } from '../core/easing.ts';
 import { Stage, type StageOptions, type StageStats } from '../core/stage.ts';
 import { FloodlightMasts } from '../stadium/masts.ts';
@@ -42,6 +50,18 @@ export interface PackOpeningAssets {
   readonly clubColours: readonly [string, string];
   /** The club's pitch (default grass). */
   readonly surface?: physics.PhysicsSurface;
+  /** The best card's player in his club's kit, for his walkout (none: the card comes alone). */
+  readonly player?: CharacterLook;
+}
+
+/** How the player ends his walkout. */
+export const WALKOUT_VARIANTS = ['arms_crossed', 'crest', 'thumbs_back'] as const;
+export type WalkoutVariant = (typeof WALKOUT_VARIANTS)[number];
+
+/** One of the walkout's endings, drawn from `random` (cosmetic: a value in [0, 1)). */
+export function pickWalkoutVariant(random: () => number): WalkoutVariant {
+  const i = Math.floor(random() * WALKOUT_VARIANTS.length);
+  return WALKOUT_VARIANTS[Math.min(WALKOUT_VARIANTS.length - 1, Math.max(0, i))] as WalkoutVariant;
 }
 
 /** Settings of the feel, exposed in /lab/pack. */
@@ -62,6 +82,15 @@ export interface PackTuning {
   particles: number;
   /** Global speed (1 = normal). */
   speed: number;
+  /** Lowest rank whose player walks out before his card (within a full walkout). */
+  playerRank: number;
+  /** Seconds the player holds his final pose before his card comes. */
+  playerHold: number;
+  /** Camera distance from where the player stops, and height above the grass (metres). */
+  playerDistance: number;
+  playerEye: number;
+  /** Strength of the follow spot that lights him from the front (the floodlights are behind). */
+  playerLight: number;
 }
 
 export const DEFAULT_PACK_TUNING: PackTuning = {
@@ -74,6 +103,11 @@ export const DEFAULT_PACK_TUNING: PackTuning = {
   shake: 1,
   particles: 1,
   speed: 1,
+  playerRank: 4,
+  playerHold: 0.7,
+  playerDistance: 4.4,
+  playerEye: 1.05,
+  playerLight: 1,
 };
 
 export type PackStep =
@@ -85,6 +119,7 @@ export type PackStep =
   | 'pause'
   | 'club'
   | 'position'
+  | 'player'
   | 'tension'
   | 'impact'
   | 'hero'
@@ -97,8 +132,12 @@ export interface PackOpeningOptions extends StageOptions {
   readonly onStep?: (step: PackStep) => void;
   /** A card of the grid has been turned over (its index in the pack). */
   readonly onReveal?: (index: number) => void;
-  /** Random source of the effects (cosmetic only). */
+  /** Random source of the effects and of the walkout's ending (cosmetic only). */
   readonly random?: () => number;
+  /** Where the character asset is served (default "/assets/characters/"). */
+  readonly characterAssetsUrl?: string;
+  /** Forces the walkout's ending (the lab); by default it is drawn at random. */
+  readonly walkoutVariant?: WalkoutVariant;
 }
 
 export interface PackOpeningHandle {
@@ -178,6 +217,12 @@ const TEAR_ZONE = 0.12;
 const STADIUM_EYE = 4;
 /** Distance behind the cards of the halo plane. */
 const HALO_DEPTH = 22;
+/** Where the player stops on the grass, in front of the card's camera (scene z). */
+const PLAYER_SPOT_Z = 5;
+/** Height of the camera's aim above the grass while it follows the player (metres). */
+const PLAYER_AIM = 1.02;
+/** Candela of the follow spot at `playerLight` 1 (about the floodlights' light, 9 m away). */
+const SPOT_CANDELA = 170;
 /** Where the four floodlights shine, in shares of the view (x, then y on a wide / tall screen). */
 const SPOTS = [-0.42, 0.42, -0.15, 0.15] as const;
 /** How far behind the cards each mast stands (the inner two are further away). */
@@ -213,6 +258,12 @@ export function mountPackOpening(
   post.vignette = 0.55;
   camera.position.set(0, 0, 11);
   camera.lookAt(0, 0, 0);
+  /** The camera of the cards, and the one that follows the player (`shot.blend` goes between). */
+  const cardEye = camera.position.clone();
+  const cardAim = camera.quaternion.clone();
+  // A camera (not a plain object): lookAt turns its -Z towards the target.
+  const shotCamera = new THREE.PerspectiveCamera();
+  const shot = { blend: 0 };
 
   // ─── Scene objects ────────────────────────────────────────────────────────────────────────
   const best = assets.cards[assets.cards.length - 1];
@@ -229,7 +280,7 @@ export function mountPackOpening(
   });
   const CAMERA_SPOT = { x: 22, z: -5 };
   stadium.root.rotation.y = Math.PI;
-  stadium.root.position.set(CAMERA_SPOT.x, -STADIUM_EYE, camera.position.z + CAMERA_SPOT.z);
+  stadium.root.position.set(CAMERA_SPOT.x, -STADIUM_EYE, cardEye.z + CAMERA_SPOT.z);
   const masts = new FloodlightMasts(4);
   scene.add(masts.group);
   /** How bright the ground is compared with a match night (it dims while the card rises). */
@@ -300,6 +351,40 @@ export function mountPackOpening(
   crest.renderOrder = 15;
   scene.add(crest);
 
+  // The best card's player, if the character asset loads in time (else the card comes alone).
+  const variant = options.walkoutVariant ?? pickWalkoutVariant(random);
+  const clipName = `walkout_${variant}`;
+  let figure: Character | null = null;
+  /** Where the player's hips start and end on his walk, relative to his feet's spot. */
+  const walkStart = new THREE.Vector3();
+  const walkEnd = new THREE.Vector3();
+  const focus = new THREE.Vector3();
+  const hipsNow = new THREE.Vector3();
+  // A follow spot from the stand behind the camera, on only while he walks out.
+  const followSpot = new THREE.SpotLight(0xfff1dc, 0, 0, 0.42, 0.65, 2);
+  followSpot.position.set(0, -STADIUM_EYE + 7.5, PLAYER_SPOT_Z + 5);
+  followSpot.target.position.set(0, -STADIUM_EYE, PLAYER_SPOT_Z - 1.2);
+  scene.add(followSpot, followSpot.target);
+  const spotLevel = { value: 0 };
+  if (assets.player) {
+    const look = assets.player;
+    void loadCharacterAsset(options.characterAssetsUrl ?? '/assets/characters/').then((asset) => {
+      if (!asset || disposed || !asset.clips.has(clipName)) return;
+      const character = new Character(asset, look);
+      character.setShadows(false);
+      // Where the walk ends: the clip's last frame, read once.
+      const duration = asset.clips.get(clipName)?.duration ?? 0;
+      character.play(clipName, { fade: 0 });
+      character.update(0);
+      character.part('hips', walkStart);
+      character.update(Math.max(0, duration - 1 / 60));
+      character.part('hips', walkEnd);
+      character.root.visible = false;
+      scene.add(character.root);
+      figure = character;
+    });
+  }
+
   // ─── Time: tweens and waits on the scene's clock (speed and skip scale it) ────────────────
   let now = 0;
   let boost = 1;
@@ -367,12 +452,12 @@ export function mountPackOpening(
   const mastHead = new THREE.Vector3();
   const mastTarget = new THREE.Vector3(0, -STADIUM_EYE, -10);
   const layout = (): void => {
-    view.h = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    view.h = 2 * cardEye.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     view.w = view.h * camera.aspect;
     // Each mast's head sits on the line from the eye through its spot, far behind the cards.
     for (let i = 0; i < masts.levels.length; i++) {
       const depth = MAST_DEPTH[i] ?? 60;
-      const k = (camera.position.z + depth) / camera.position.z;
+      const k = (cardEye.z + depth) / cardEye.z;
       const { x, y } = spotOf(i);
       mastHead.set(x * k, y * k, -depth);
       masts.place(
@@ -383,7 +468,7 @@ export function mountPackOpening(
         Math.min(1, Math.max(0.42, camera.aspect)),
       );
     }
-    const k = (camera.position.z + HALO_DEPTH) / camera.position.z;
+    const k = (cardEye.z + HALO_DEPTH) / cardEye.z;
     halo.scale.set(view.w * k, view.h * k, 1);
     haloUniforms.uAspect.value = camera.aspect;
   };
@@ -754,7 +839,7 @@ export function mountPackOpening(
     for (let i = 0; i < count; i++) {
       const { light, beam } = floodlights[i] as { light: Flare; beam: Rays };
       const { x, y } = spotOf(i);
-      const k = (camera.position.z + 0.5) / camera.position.z;
+      const k = (cardEye.z + 0.5) / cardEye.z;
       light.mesh.position.set(x * k, y * k, -0.5);
       light.colour.setRGB(1, 0.95, 0.85);
       beam.mesh.position.set(x, y, -1.5);
@@ -971,6 +1056,35 @@ export function mountPackOpening(
     }
   };
 
+  /**
+   * The player walks out (D-040): the camera drops to the grass and follows him into the
+   * floodlights; he stops in front of it, ends on his pose, holds it, and the camera rises back
+   * to where his card is about to come up.
+   */
+  const playerWalkout = async (character: Character): Promise<void> => {
+    announce('player');
+    lightsOff();
+    const power = haloUniforms.uPower.value;
+    void to(haloUniforms.uPower, { value: 0.03 }, 0.5);
+    const ground = -STADIUM_EYE;
+    // Feet placed so that the walk ends on the spot.
+    character.place({ x: -walkEnd.x, y: ground, z: PLAYER_SPOT_Z - walkEnd.z }, 0);
+    character.play(clipName, { fade: 0 });
+    character.update(0);
+    character.root.visible = true;
+    focus.set(0, ground + PLAYER_AIM, PLAYER_SPOT_Z - walkEnd.z + walkStart.z);
+    sound(() => audio.whoosh(0.8, 1600, 260, 0.14));
+    void to(spotLevel, { value: 1 }, 0.9, ease.quadOut, 0.2);
+    await to(shot, { blend: 1 }, 1.1, ease.cubicInOut);
+    const duration = character.asset.clips.get(clipName)?.duration ?? 0;
+    await wait(Math.max(0, duration - 1.1 - 0.15) + tuning.playerHold);
+    sound(() => audio.whoosh(0.7, 300, 1900, 0.16));
+    void to(haloUniforms.uPower, { value: power }, 0.8);
+    void to(spotLevel, { value: 0 }, 0.6);
+    await to(shot, { blend: 0 }, 0.85, ease.cubicInOut);
+    character.root.visible = false;
+  };
+
   const walkout = async (full: boolean): Promise<void> => {
     const strength = clamp01((best.rank - 1) / 6);
     await darken(full ? 1 : 0.6);
@@ -994,6 +1108,11 @@ export function mountPackOpening(
       announce('position');
       sound(() => audio.bell(739.99, 0.12, 1.8));
       await wait(tuning.clueHold * 0.9);
+      if (figure && best.rank >= tuning.playerRank) {
+        announce('pause');
+        await wait(tuning.clueGap);
+        await playerWalkout(figure);
+      }
     }
     lightsOff();
     await tension(full ? tuning.tension : tuning.tension * 0.55, strength);
@@ -1110,6 +1229,30 @@ export function mountPackOpening(
       }
     }
     if (step === 'idle' || step === 'tearing') tearFrame(dt);
+
+    // The player, and the camera that follows him (it eases its aim, not every sway of his hips).
+    const walker = figure;
+    if (walker?.root.visible) {
+      walker.update(dt);
+      walker.part('hips', hipsNow);
+      const k = 1 - Math.exp(-3 * dt);
+      focus.x += (hipsNow.x * 0.5 - focus.x) * k;
+      focus.z += (hipsNow.z - focus.z) * k;
+    }
+    followSpot.intensity = spotLevel.value * tuning.playerLight * SPOT_CANDELA;
+    if (shot.blend > 0) {
+      shotCamera.position.set(
+        0,
+        -STADIUM_EYE + tuning.playerEye,
+        PLAYER_SPOT_Z + tuning.playerDistance,
+      );
+      shotCamera.lookAt(focus);
+      camera.position.lerpVectors(cardEye, shotCamera.position, shot.blend);
+      camera.quaternion.slerpQuaternions(cardAim, shotCamera.quaternion, shot.blend);
+    } else {
+      camera.position.copy(cardEye);
+      camera.quaternion.copy(cardAim);
+    }
 
     // Pack pose: idle float and the tilt of the tear.
     packTilt.x.step(dt);
@@ -1235,6 +1378,7 @@ export function mountPackOpening(
         beam.dispose();
       }
       crestTexture.dispose();
+      figure?.dispose();
       masts.dispose();
       stadium.dispose();
       stage.dispose();

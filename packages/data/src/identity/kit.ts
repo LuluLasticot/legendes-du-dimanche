@@ -458,3 +458,43 @@ export function kitPrintNode(kit: KitSpec, options: KitDrawOptions): SvgElement 
     ...digits,
   );
 }
+
+/** The name texture's size: as wide as the back's print, in the ink of the digits. */
+export const KIT_NAME = { width: 512, height: 96 } as const;
+
+/**
+ * A player's name for the back of his shirt, above the number (the walkout of a pack's best
+ * card: the player points at it with his thumbs). Capitals, squeezed when long.
+ */
+export function kitNameNode(kit: KitSpec, name: string): SvgElement {
+  const ink = pickInk([kit.body, kit.stripe], ['#ffffff', '#111111'], 3);
+  const halo = ink === '#ffffff' ? '#000000' : '#ffffff';
+  const label = name.trim().toLocaleUpperCase('fr');
+  const room = KIT_NAME.width - 16;
+  return el(
+    'svg',
+    { xmlns: 'http://www.w3.org/2000/svg', viewBox: `0 0 ${KIT_NAME.width} ${KIT_NAME.height}` },
+    el(
+      'text',
+      {
+        x: KIT_NAME.width / 2,
+        y: 80,
+        'text-anchor': 'middle',
+        class: 'ld-font-display',
+        'font-family': FONT,
+        'font-weight': 800,
+        'font-size': 92,
+        'letter-spacing': 3,
+        'stroke-width': 6,
+        'paint-order': 'stroke',
+        fill: ink,
+        stroke: halo,
+        'stroke-opacity': 0.45,
+        'stroke-linejoin': 'round',
+        // Condensed capitals take about 40 units each: only long names are squeezed.
+        ...(label.length * 40 > room ? { textLength: room, lengthAdjust: 'spacingAndGlyphs' } : {}),
+      },
+      label,
+    ),
+  );
+}

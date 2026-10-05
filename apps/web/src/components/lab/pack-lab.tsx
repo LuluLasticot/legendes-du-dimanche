@@ -5,6 +5,9 @@ import {
   crestNode,
   crestOf,
   getDivision,
+  identityOf,
+  kitNameNode,
+  kitPrintNode,
   openPack,
   PACK_TYPES,
   PACKS,
@@ -19,8 +22,16 @@ import type {
   PackOpeningHandle,
   PackStep,
   PackTuning,
+  WalkoutVariant,
 } from '@legendes/render3d';
-import { CARD_FINISHES, PACK_LOOKS, PACK_TEAR_V, packMaskNode, packNode } from '@legendes/ui/card';
+import {
+  CARD_FINISHES,
+  PACK_LOOKS,
+  PACK_TEAR_V,
+  packMaskNode,
+  packNode,
+  playerLook,
+} from '@legendes/ui/card';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { z } from 'zod';
@@ -30,11 +41,14 @@ import {
   useFaceTranslators,
   type FaceTranslators,
 } from '@/components/card/player-card';
+import { publicEnv } from '@/env';
 
 const TUNING_KEY = 'ld.lab.pack.tuning';
 /** A club's pitch as the 3D stadium paints it. */
 const SURFACE_KEY = { grass: 'grass', artificial: 'artificial', stabilized: 'dirt' } as const;
 const MUTED_KEY = 'ld.lab.pack.muted';
+/** Endings of the player's walkout, in the order of the lab's menu (render3d's list). */
+const VARIANTS: readonly WalkoutVariant[] = ['arms_crossed', 'crest', 'thumbs_back'];
 
 const tuningSchema = z.object({
   walkoutRank: z.number().int().min(0).max(8),
@@ -46,6 +60,11 @@ const tuningSchema = z.object({
   shake: z.number().min(0).max(2),
   particles: z.number().min(0).max(2),
   speed: z.number().min(0.25).max(3),
+  playerRank: z.number().int().min(0).max(8),
+  playerHold: z.number().min(0).max(3),
+  playerDistance: z.number().min(2.5).max(8),
+  playerEye: z.number().min(0.3).max(2.5),
+  playerLight: z.number().min(0).max(3),
 });
 
 const SLIDERS: readonly (readonly [keyof PackTuning, number, number, number])[] = [
@@ -58,6 +77,11 @@ const SLIDERS: readonly (readonly [keyof PackTuning, number, number, number])[] 
   ['shake', 0, 2, 0.05],
   ['particles', 0, 2, 0.05],
   ['speed', 0.25, 3, 0.05],
+  ['playerRank', 0, 8, 1],
+  ['playerHold', 0, 3, 0.05],
+  ['playerDistance', 2.5, 8, 0.05],
+  ['playerEye', 0.3, 2.5, 0.05],
+  ['playerLight', 0, 3, 0.05],
 ];
 
 function loadTuning(defaults: PackTuning): PackTuning {
@@ -123,12 +147,29 @@ async function buildAssets(
   if (!bestClub) throw new Error('Empty pack');
   const type = opened.type;
   const look = PACK_LOOKS[type];
-  const [front, frontMask, back, backMask, crest] = await Promise.all([
+  // The best card's player walks out in his club's home kit (his keeper's kit for a keeper),
+  // with its prints and his name above his number.
+  const player = opened.cards[last]?.card.player;
+  const identity = identityOf(bestClub);
+  const keeper = player?.positions[0] === 'GK';
+  const kit = keeper ? identity.kits.keeper : identity.kits.home;
+  const [front, frontMask, back, backMask, crest, prints, backName] = await Promise.all([
     rasterize(render3d, packNode(type, labels, 'pack'), 580, css),
     rasterize(render3d, packMaskNode(type, labels, 'pack'), 290, css),
     rasterize(render3d, packNode(type, labels, 'pack-back', true), 580, css),
     rasterize(render3d, packMaskNode(type, labels, 'pack-back', true), 290, css),
     rasterize(render3d, crestNode(crestOf(bestClub), 'crest-best'), 400, css),
+    rasterize(
+      render3d,
+      kitPrintNode(kit, {
+        uid: `${bestClub.id}-walkout-print`,
+        crest: identity.crest,
+        sponsor: keeper ? undefined : identity.sponsors[0]?.label,
+      }),
+      1024,
+      css,
+    ),
+    player ? rasterize(render3d, kitNameNode(kit, player.lastName), 512, css) : null,
   ]);
   return {
     pack: {
@@ -144,6 +185,7 @@ async function buildAssets(
     crest,
     clubColours: [bestClub.colours.primary, bestClub.colours.secondary],
     surface: SURFACE_KEY[bestClub.stadium.surface],
+    player: player ? { ...playerLook(player, kit, keeper), prints, backName } : undefined,
   };
 }
 
@@ -156,6 +198,7 @@ export function PackLab() {
   const handleRef = useRef<PackOpeningHandle | null>(null);
   const [type, setType] = useState<PackType>('gold');
   const [force, setForce] = useState<CardClass | null>(null);
+  const [variant, setVariant] = useState<WalkoutVariant | null>(null);
   const [seed, setSeed] = useState(randomSeed);
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [step, setStep] = useState<PackStep>('idle');
@@ -205,6 +248,9 @@ export function PackLab() {
         setTuning(initial);
         handle = render3d.mountPackOpening(canvas, assets, {
           tuning: initial,
+          characterAssetsUrl:
+            publicEnv.NEXT_PUBLIC_CHARACTER_ASSETS_URL ?? '/api/assets/characters/',
+          walkoutVariant: variant ?? undefined,
           quality: render3d.qualityFromQuery(window.location.search) ?? 'auto',
           onStep: setStep,
         });
@@ -222,7 +268,7 @@ export function PackLab() {
       handle?.dispose();
       handleRef.current = null;
     };
-  }, [opened, tr, labels]);
+  }, [opened, tr, labels, variant]);
 
   const newPack = (next: PackType = type): void => {
     setState('loading');
@@ -251,6 +297,7 @@ export function PackLab() {
     'pause',
     'club',
     'position',
+    'player',
     'tension',
   ];
   const heroPlayer = best?.card.player;
@@ -313,6 +360,24 @@ export function PackLab() {
                 {possible.map((c) => (
                   <option key={c} value={c}>
                     {t('force')} : {tp(`classes.${c}`)}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label={t('variant')}
+                value={variant ?? ''}
+                onChange={(e) => {
+                  setState('loading');
+                  setVariant((e.target.value || null) as WalkoutVariant | null);
+                }}
+                className="rounded-md border border-chalk/20 bg-pitch-900/85 px-2 py-1.5 text-sm text-chalk backdrop-blur"
+              >
+                <option value="">
+                  {t('variant')} : {t('variants.random')}
+                </option>
+                {VARIANTS.map((v) => (
+                  <option key={v} value={v}>
+                    {t('variant')} : {t(`variants.${v}`)}
                   </option>
                 ))}
               </select>

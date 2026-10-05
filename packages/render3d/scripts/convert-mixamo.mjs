@@ -55,7 +55,11 @@ globalThis.FileReader = class {
   }
 };
 
-/** Clips to keep, with optional trimming (seconds) of very long takes. */
+/**
+ * Clips to keep, with optional trimming (seconds) of very long takes. `walk`: the clip was made
+ * on our footballer (assets-src/blender/build_walkout.py), not downloaded on the Y Bot — its
+ * hips are not retargeted, and it keeps its root motion (the walk forward is part of the show).
+ */
 const CLIPS = {
   player_idle: {},
   player_run: {},
@@ -85,6 +89,9 @@ const CLIPS = {
   celebration_dance: { end: 6 },
   celebration_phone: { end: 6 },
   reaction_disappointed: {},
+  walkout_arms_crossed: { walk: true },
+  walkout_crest: { walk: true },
+  walkout_thumbs_back: { walk: true },
 };
 
 const loader = new FBXLoader();
@@ -157,6 +164,18 @@ if (reference) {
 const footRest = reference ? restOf(reference, 'LeftFoot').y : 0;
 const characterFootRest = reference ? restOf(character, 'LeftFoot').y : 0;
 
+/**
+ * Clips made in Blender carry the rig object's own tracks and every bone's position and scale;
+ * like Mixamo's, they keep the bones' rotations and the hips' position.
+ */
+function boneTracksOnly(clip) {
+  clip.tracks = clip.tracks.filter(
+    (t) =>
+      t.name.startsWith('mixamorig') &&
+      (t.name.endsWith('.quaternion') || t.name === 'mixamorigHips.position'),
+  );
+}
+
 /** Removes horizontal root motion (hips x/z); keeps height. Returns the original hips path. */
 function stripRootMotion(clip) {
   const hips = clip.tracks.find((t) => t.name === 'mixamorigHips.position');
@@ -183,7 +202,7 @@ function stripRootMotion(clip) {
 const clips = [];
 const meta = { version: 1, unitsPerMetre: 1, facing: '+Z', clips: {} };
 
-// Pose sampler on the character (root motion already stripped from the clips).
+// Pose sampler on the character (root motion already stripped from the clips, but the walks).
 const mixer = new THREE.AnimationMixer(character);
 const bone = (name) => character.getObjectByName(`mixamorig${name}`);
 const bones = {
@@ -288,7 +307,8 @@ for (const [name, options] of Object.entries(CLIPS)) {
   if (options.end !== undefined && clip.duration > options.end) {
     clip = THREE.AnimationUtils.subclip(clip, name, 0, Math.round(options.end * 30), 30);
   }
-  const rootPath = stripRootMotion(clip);
+  if (options.walk) boneTracksOnly(clip);
+  const rootPath = options.walk ? null : stripRootMotion(clip);
   const frames = sample(clip);
   const entry = {
     duration: round(clip.duration),

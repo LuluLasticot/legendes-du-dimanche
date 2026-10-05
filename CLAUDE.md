@@ -13,7 +13,7 @@ Jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe, f
 
 ## Phase en cours
 
-**Phase 4 — Boucle méta et mise en production de la tranche verticale** (Phase 3 terminée le 03/10/2026, bilan dans `docs/ROADMAP.md`). Découpage à proposer en mode plan et à faire valider avant de commencer. Déjà en place : univers du pilote (205 clubs, saison 2026-27), effectifs générés, blasons, maillots et sponsors, cartes 2D et 3D, ouverture de pack (tirages simulés, `/lab/pack`), joueurs 3D modélisés aux couleurs du club, pages publiques et images de partage.
+**Phase 4 — Boucle méta et mise en production de la tranche verticale** (Phase 3 terminée le 03/10/2026, bilan dans `docs/ROADMAP.md`). Découpage à proposer en mode plan et à faire valider avant de commencer. Déjà en place : univers du pilote (205 clubs, saison 2026-27), effectifs générés, blasons, maillots et sponsors, cartes 2D et 3D, ouverture de pack (tirages simulés, `/lab/pack`) où le joueur de la meilleure carte sort en personne, joueurs 3D modélisés aux couleurs du club, pages publiques et images de partage.
 Mettre à jour cette ligne à chaque changement de phase.
 
 ## Stack
