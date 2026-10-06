@@ -103,8 +103,11 @@ Si le ressenti n'y est pas : itérer sur la caméra, le timing et les animations
 
 ## Phase 4 — Boucle méta et mise en production de la tranche verticale (≈ 3-4 semaines)
 
-- Authentification (e-mail magique + Google), profil, pseudo
-- **Onboarding** : choix du club de départ (District 5, Hauts-de-France), pack de bienvenue, premier match guidé avec une action clé scénarisée (**premier but en moins de 3 minutes**)
+> **Construction : tranche fine de bout en bout d'abord** (conception dans `docs/superpowers/specs/2026-10-06-phase-4-tranche-fine-design.md`) : arrivée en invité → choix du club → pack de départ → effectif auto-composé → premier match guidé → récompense validée par le serveur → boutique → nouveau pack. On élargit ensuite chaque maillon. Interface : coque à 7 onglets (La Une, Solo, En ligne, Équipes, Transferts, Boutique, Mon club) inspirée du parcours d'un joueur du mode « équipe ultime » (GDD §3.5).
+
+- Authentification : **invité d'abord**, rattaché ensuite à un e-mail magique (Google plus tard), profil, pseudo
+- **Onboarding** : « Choisis ton club » (District 5, Hauts-de-France), **pack de départ** (majorité du club choisi, sans grosse rare), effectif auto-composé, **Les Fondations** (chaîne d'objectifs qui font toucher chaque mode), premier match guidé avec une action clé scénarisée (**premier but en moins de 3 minutes**)
+- **Navigation** : coque à 7 onglets avec tuiles ; objectifs quotidiens et hebdomadaires, Match de la semaine, première montée de division, défi de composition simple
 - **Ouverture de pack** branchée sur le tirage côté serveur, les crédits et la collection (la scène est faite en Phase 3, D-036)
 - **Collection** (filtres, tri, détails de carte), **création d'équipe** (glisser-déposer, formations, collectifs, note d'équipe, tactiques)
 - Parcours de match complet (avant-match, match, mi-temps, fin de match, notes, homme du match)
