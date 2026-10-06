@@ -4,12 +4,13 @@
 // exactly the odds it draws with (rule 5).
 
 import { Rng } from '@legendes/engine/rng';
+import { POSITION_LINE, type PositionLine } from '@legendes/engine/sim/positions';
 import type { CardTier, Rarity } from '@legendes/shared';
 import { cardOf, type Card } from './squad/cards.ts';
 import { generateSquad } from './squad/generate.ts';
 import type { Player } from './squad/player.ts';
 import type { Club } from './schema.ts';
-import { WORLD } from './world.ts';
+import { clubsOf, WORLD } from './world.ts';
 
 /** Every kind of card a pack can hold, from the most common to the rarest. */
 export const CARD_CLASSES = [
@@ -216,4 +217,90 @@ export function openPack(type: PackType, seed: string): OpenedPack {
   }
   cards.sort((a, b) => cardValue(a.card) - cardValue(b.card) || a.card.id.localeCompare(b.card.id));
   return { type, seed, cards };
+}
+
+// ─── Starter pack ────────────────────────────────────────────────────────────────────────────
+// What a new player opens first (GDD §3.5): random players, most of them from the club he chose,
+// bronze and a couple of silver at most — no big rare, like the first pack of the genre.
+
+export const STARTER_PACK_SIZE = 18;
+/** Cards from the chosen club; the rest comes from the other clubs of its district. */
+export const STARTER_CLUB_CARDS = 11;
+export const STARTER_MAX_SILVER = 2;
+
+/** Per line: how many cards from the club, how many from the others (2 + 6 + 6 + 4 in all). */
+const STARTER_SLOTS: readonly { line: PositionLine; own: number; others: number }[] = [
+  { line: 'goalkeeper', own: 1, others: 1 },
+  { line: 'defence', own: 4, others: 2 },
+  { line: 'midfield', own: 4, others: 2 },
+  { line: 'attack', own: 2, others: 2 },
+];
+
+const STARTER_CLASSES: ReadonlySet<CardClass> = new Set([
+  'bronze-common',
+  'bronze-rare',
+  'silver-common',
+  'silver-rare',
+]);
+
+export interface StarterPack {
+  readonly type: 'starter';
+  readonly seed: string;
+  readonly clubId: string;
+  /** Eighteen cards, the least valuable first. */
+  readonly cards: readonly PackCard[];
+}
+
+interface StarterEntry extends Entry {
+  readonly cardClass: CardClass;
+}
+
+const starterPools = new Map<string, readonly StarterEntry[]>();
+
+/** The district's players whose base card is bronze or silver, in a stable order. */
+function starterEntries(districtId: string): readonly StarterEntry[] {
+  const cached = starterPools.get(districtId);
+  if (cached) return cached;
+  const entries: StarterEntry[] = [];
+  for (const club of [...clubsOf({ districtId })].sort((a, b) => a.id.localeCompare(b.id))) {
+    for (const player of generateSquad(club).players) {
+      const cardClass = cardClassOf(cardOf(player));
+      if (STARTER_CLASSES.has(cardClass)) entries.push({ player, club, cardClass });
+    }
+  }
+  starterPools.set(districtId, entries);
+  return entries;
+}
+
+/** Draws the starter pack of a club. Deterministic: the same club and seed give the same cards. */
+export function openStarterPack(club: Club, seed: string): StarterPack {
+  const rng = Rng.create(`starter:${club.id}:${seed}`);
+  const entries = starterEntries(club.districtId);
+  const taken = new Set<string>();
+  const cards: PackCard[] = [];
+  let silver = 0;
+  let slot = 0;
+
+  const draw = (line: PositionLine, fromClub: boolean): void => {
+    const fits = (e: StarterEntry): boolean =>
+      POSITION_LINE[e.player.positions[0] ?? 'CM'] === line &&
+      !taken.has(e.player.id) &&
+      !(silver >= STARTER_MAX_SILVER && e.cardClass.startsWith('silver'));
+    const preferred = entries.filter((e) => fits(e) && (e.club.id === club.id) === fromClub);
+    // A club short of a profile is completed from the rest of the district (and back).
+    const pool = preferred.length > 0 ? preferred : entries.filter(fits);
+    if (pool.length === 0)
+      throw new Error(`No ${line} card left for the starter pack of ${club.id}`);
+    const entry = rng.fork('slot', slot++).pick(pool);
+    taken.add(entry.player.id);
+    if (entry.cardClass.startsWith('silver')) silver++;
+    cards.push({ card: cardOf(entry.player), club: entry.club });
+  };
+
+  for (const { line, own, others } of STARTER_SLOTS) {
+    for (let i = 0; i < own; i++) draw(line, true);
+    for (let i = 0; i < others; i++) draw(line, false);
+  }
+  cards.sort((a, b) => cardValue(a.card) - cardValue(b.card) || a.card.id.localeCompare(b.card.id));
+  return { type: 'starter', seed, clubId: club.id, cards };
 }
