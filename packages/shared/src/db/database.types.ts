@@ -23,6 +23,100 @@ export type Database = {
   };
   public: {
     Tables: {
+      card_defs: {
+        Row: {
+          class: string;
+          club_id: string;
+          id: string;
+          player_id: string;
+          position: string;
+          rating: number;
+          variant: string;
+        };
+        Insert: {
+          class: string;
+          club_id: string;
+          id: string;
+          player_id: string;
+          position: string;
+          rating: number;
+          variant: string;
+        };
+        Update: {
+          class?: string;
+          club_id?: string;
+          id?: string;
+          player_id?: string;
+          position?: string;
+          rating?: number;
+          variant?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'card_defs_club_id_fkey';
+            columns: ['club_id'];
+            isOneToOne: false;
+            referencedRelation: 'clubs';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      card_items: {
+        Row: {
+          card_id: string;
+          created_at: string;
+          id: string;
+          opening_id: string | null;
+          source: string;
+          user_id: string;
+        };
+        Insert: {
+          card_id: string;
+          created_at?: string;
+          id?: string;
+          opening_id?: string | null;
+          source: string;
+          user_id: string;
+        };
+        Update: {
+          card_id?: string;
+          created_at?: string;
+          id?: string;
+          opening_id?: string | null;
+          source?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'card_items_card_id_fkey';
+            columns: ['card_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_defs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'card_items_opening_id_fkey';
+            columns: ['opening_id'];
+            isOneToOne: false;
+            referencedRelation: 'pack_openings';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'card_items_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'card_items_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'wallet_balances';
+            referencedColumns: ['user_id'];
+          },
+        ];
+      };
       club_seasons: {
         Row: {
           club_id: string;
@@ -268,6 +362,61 @@ export type Database = {
         };
         Relationships: [];
       };
+      pack_openings: {
+        Row: {
+          cards: string[];
+          created_at: string;
+          id: string;
+          pack_id: string;
+          request_id: string;
+          seed: string;
+          type: string;
+          user_id: string;
+        };
+        Insert: {
+          cards: string[];
+          created_at?: string;
+          id?: string;
+          pack_id: string;
+          request_id: string;
+          seed: string;
+          type: string;
+          user_id: string;
+        };
+        Update: {
+          cards?: string[];
+          created_at?: string;
+          id?: string;
+          pack_id?: string;
+          request_id?: string;
+          seed?: string;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'pack_openings_pack_id_fkey';
+            columns: ['pack_id'];
+            isOneToOne: true;
+            referencedRelation: 'user_packs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'pack_openings_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'pack_openings_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'wallet_balances';
+            referencedColumns: ['user_id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           club_id: string | null;
@@ -364,6 +513,16 @@ export type Database = {
           p_user: string;
         };
         Returns: string;
+      };
+      open_pack: {
+        Args: {
+          p_cards: string[];
+          p_pack: string;
+          p_request: string;
+          p_seed: string;
+          p_user: string;
+        };
+        Returns: string[];
       };
     };
     Enums: {
