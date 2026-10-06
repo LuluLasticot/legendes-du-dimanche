@@ -4,10 +4,10 @@
 import { SEASON, type Club } from './schema.ts';
 import type { Universe } from './universe.ts';
 
-const q = (value: string): string => `'${value.replace(/'/g, "''")}'`;
+export const q = (value: string): string => `'${value.replace(/'/g, "''")}'`;
 const n = (value: number | null): string => (value === null ? 'null' : String(value));
 
-function insert(
+export function insert(
   table: string,
   columns: readonly string[],
   rows: readonly string[][],
