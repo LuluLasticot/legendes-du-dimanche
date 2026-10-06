@@ -101,26 +101,34 @@ begin
   return paid * p_amount;
 end $$;
 
--- The club a new player starts with: a District 5 club, chosen once (asking again for the same
--- club, after a lost answer, is not an error).
-create function public.choose_club(p_user uuid, p_club text) returns void
+-- The club a new player starts with: a District 5 club, chosen once, and the starter pack that
+-- goes with it in the same transaction (a player with a club and no pack cannot exist). Asking
+-- again for the same club, after a lost answer, returns the same pack. Returns the pack's id.
+create function public.choose_club(p_user uuid, p_club text) returns uuid
 language plpgsql security definer set search_path = '' as $$
 declare
   chosen text;
+  pack uuid;
 begin
   select club_id into chosen from public.profiles where id = p_user for update;
   if not found then raise exception 'profile_not_found'; end if;
   if chosen is not null then
-    if chosen = p_club then return; end if;
-    raise exception 'club_already_chosen';
+    if chosen <> p_club then raise exception 'club_already_chosen'; end if;
+  else
+    if not exists (
+      select 1 from public.clubs c join public.divisions d on d.id = c.division_id
+      where c.id = p_club and d.scope = 'district' and d.rank = 5
+    ) then
+      raise exception 'club_not_eligible';
+    end if;
+    update public.profiles set club_id = p_club where id = p_user;
   end if;
-  if not exists (
-    select 1 from public.clubs c join public.divisions d on d.id = c.division_id
-    where c.id = p_club and d.scope = 'district' and d.rank = 5
-  ) then
-    raise exception 'club_not_eligible';
+  select id into pack from public.user_packs where user_id = p_user and source = 'starter';
+  if not found then
+    insert into public.user_packs (user_id, type, source) values (p_user, 'starter', 'starter')
+    returning id into pack;
   end if;
-  update public.profiles set club_id = p_club where id = p_user;
+  return pack;
 end $$;
 
 -- Gives a closed pack to a player, paying for it from his credits when it has a price. One
@@ -139,7 +147,7 @@ begin
   select club_id into chosen from public.profiles where id = p_user for update;
   if not found then raise exception 'profile_not_found'; end if;
   if (p_source = 'starter') <> (p_type = 'starter') then raise exception 'invalid_pack'; end if;
-  if p_price < 0 then raise exception 'invalid_price'; end if;
+  if p_price is null or p_price < 0 then raise exception 'invalid_price'; end if;
   if p_request is not null then
     select id into existing from public.user_packs where user_id = p_user and request_id = p_request;
     if found then return existing; end if;

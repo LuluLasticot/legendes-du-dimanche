@@ -11,18 +11,11 @@ import type { GameDb } from './wallet.ts';
 const uuid = z.string().uuid();
 const cardIds = z.array(z.string().min(1));
 
-/** Chooses the starting club and gives the starter pack. Safe to repeat: same club, same pack. */
+/** Chooses the starting club and gives the starter pack, in one step. Safe to repeat. */
 export async function chooseClub(db: GameDb, userId: string, clubId: string): Promise<string> {
-  const chosen = await db.rpc('choose_club', { p_user: userId, p_club: clubId });
-  if (chosen.error) throw gameErrorFrom(chosen.error);
-  const granted = await db.rpc('grant_pack', {
-    p_user: userId,
-    p_type: 'starter',
-    p_source: 'starter',
-    p_price: 0,
-  });
-  if (granted.error) throw gameErrorFrom(granted.error);
-  return uuid.parse(granted.data);
+  const { data, error } = await db.rpc('choose_club', { p_user: userId, p_club: clubId });
+  if (error) throw gameErrorFrom(error);
+  return uuid.parse(data);
 }
 
 /** Buys a pack with credits. The price is the game's, never the client's. */

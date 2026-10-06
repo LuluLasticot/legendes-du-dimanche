@@ -130,3 +130,30 @@ describe('choosing a club and the starter pack', () => {
     );
   });
 });
+
+describe('review fixes', () => {
+  it('gives the starter pack in the same step as the club: a club without a pack cannot exist', async () => {
+    const { id } = await newGuest();
+    const chosen = await admin.rpc('choose_club', { p_user: id, p_club: starterClub });
+    expect(chosen.error).toBeNull();
+    const { data: packs } = await admin
+      .from('user_packs')
+      .select('id, type, source')
+      .eq('user_id', id);
+    expect(packs).toEqual([{ id: chosen.data, type: 'starter', source: 'starter' }]);
+    const again = await admin.rpc('choose_club', { p_user: id, p_club: starterClub });
+    expect(again.data).toBe(chosen.data);
+  });
+
+  it('refuses a missing price instead of giving the pack for free', async () => {
+    const { id } = await newGuest();
+    const free = await admin.rpc('grant_pack', {
+      p_user: id,
+      p_type: 'gold-premium',
+      p_source: 'shop',
+      p_price: null as unknown as number,
+    });
+    expect(free.error?.message).toBe('invalid_price');
+    expect((await admin.from('user_packs').select('id').eq('user_id', id)).data).toEqual([]);
+  });
+});

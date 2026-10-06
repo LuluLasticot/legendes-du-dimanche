@@ -502,7 +502,7 @@ export type Database = {
       };
     };
     Functions: {
-      choose_club: { Args: { p_club: string; p_user: string }; Returns: undefined };
+      choose_club: { Args: { p_club: string; p_user: string }; Returns: string };
       claim_welcome: { Args: { p_amount: number; p_user: string }; Returns: number };
       grant_pack: {
         Args: {
