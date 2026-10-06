@@ -105,6 +105,8 @@ Si le ressenti n'y est pas : itérer sur la caméra, le timing et les animations
 
 > **Construction : tranche fine de bout en bout d'abord** (conception dans `docs/superpowers/specs/2026-10-06-phase-4-tranche-fine-design.md`) : arrivée en invité → choix du club → pack de départ → effectif auto-composé → premier match guidé → récompense validée par le serveur → boutique → nouveau pack. On élargit ensuite chaque maillon. Interface : coque à 7 onglets (La Une, Solo, En ligne, Équipes, Transferts, Boutique, Mon club) inspirée du parcours d'un joueur du mode « équipe ultime » (GDD §3.5).
 
+> Avancement : ✅ plan A — socle serveur (profils, grand livre, packs et cartes en base ; modules serveur, D-041). À venir : plan B (coque, accueil, pack de départ à l'écran), plan C (match, objectifs, boutique, bout en bout).
+
 - Authentification : **invité d'abord**, rattaché ensuite à un e-mail magique (Google plus tard), profil, pseudo
 - **Onboarding** : « Choisis ton club » (District 5, Hauts-de-France), **pack de départ** (majorité du club choisi, sans grosse rare), effectif auto-composé, **Les Fondations** (chaîne d'objectifs qui font toucher chaque mode), premier match guidé avec une action clé scénarisée (**premier but en moins de 3 minutes**)
 - **Navigation** : coque à 7 onglets avec tuiles ; objectifs quotidiens et hebdomadaires, Match de la semaine, première montée de division, défi de composition simple
