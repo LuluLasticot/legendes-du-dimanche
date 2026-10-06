@@ -46,6 +46,8 @@ const SLIDERS: readonly (readonly [keyof KitShape, number, number, number])[] = 
   ['printY', -0.2, 0.2, 0.005],
   ['numberHeight', 0.08, 0.35, 0.005],
   ['numberY', -0.25, 0.2, 0.005],
+  ['nameHeight', 0.02, 0.12, 0.002],
+  ['nameGap', -0.02, 0.08, 0.002],
   ['hairLine', 0, 0.25, 0.005],
   ['hairBack', -0.05, 0.2, 0.005],
   ['jointTint', 0.5, 1.2, 0.01],

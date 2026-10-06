@@ -480,6 +480,13 @@
       "choose": "Type de pack",
       "force": "Meilleure carte",
       "forceAny": "Au hasard",
+      "variant": "Fin de la sortie du joueur",
+      "variants": {
+        "random": "Au hasard",
+        "arms_crossed": "Bras croisés",
+        "crest": "Main sur l'écusson",
+        "thumbs_back": "Pouces vers le nom"
+      },
       "hint": "Glisse le doigt le long du pointillé pour déchirer le pack",
       "open": "Ouvrir le pack",
       "skip": "Passer",
@@ -510,6 +517,11 @@
         "shake": "Secousse",
         "particles": "Particules",
         "speed": "Vitesse",
+        "playerRank": "Le joueur sort dès le rang",
+        "playerHold": "Pose finale du joueur (s)",
+        "playerDistance": "Caméra : distance au joueur (m)",
+        "playerEye": "Caméra : hauteur (m)",
+        "playerLight": "Poursuite sur le joueur",
         "reset": "Valeurs par défaut"
       }
     },
@@ -551,6 +563,8 @@
         "printY": "Hauteur du flocage poitrine (m)",
         "numberHeight": "Hauteur du numéro (m)",
         "numberY": "Hauteur du numéro (m, dos)",
+        "nameHeight": "Hauteur du nom au dos (m)",
+        "nameGap": "Écart entre le numéro et le nom (m)",
         "hairLine": "Ligne des cheveux (m)",
         "hairBack": "Cheveux à l'arrière (m)",
         "jointTint": "Teinte des articulations",
