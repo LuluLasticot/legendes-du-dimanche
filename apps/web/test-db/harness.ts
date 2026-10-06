@@ -1,6 +1,7 @@
 // Clients of the local Supabase stack for the database tests: the service role (what the server
 // uses) and guests (what a visitor is: an anonymous account with the public key only).
 
+import type { Database } from '@legendes/shared';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 function env(name: string): string {
@@ -16,19 +17,16 @@ function env(name: string): string {
 
 const options = { auth: { persistSession: false, autoRefreshToken: false } } as const;
 
-export type Db = SupabaseClient;
+export type Db = SupabaseClient<Database>;
 
-// The clients are typed with the generated `Database` once the first migration exists (Task 3).
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-export const admin: Db = createClient(
+export const admin: Db = createClient<Database>(
   env('NEXT_PUBLIC_SUPABASE_URL'),
   env('SUPABASE_SECRET_KEY'),
   options,
 );
 
 export function anonymousClient(): Db {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return createClient(
+  return createClient<Database>(
     env('NEXT_PUBLIC_SUPABASE_URL'),
     env('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'),
     options,

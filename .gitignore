@@ -48,3 +48,6 @@ apps/web/public/assets/characters/
 # Mixamo is exported from them, and Blender's backups are noise
 assets-src/blender/*.fbx
 assets-src/blender/*.blend1
+
+# Scratch workspace of plan execution (ledger, briefs)
+.superpowers/

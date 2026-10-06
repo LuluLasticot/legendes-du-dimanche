@@ -21,7 +21,7 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:new": "supabase migration new",
-    "db:types": "supabase gen types typescript --local > packages/shared/src/db/database.types.ts"
+    "db:types": "mkdir -p packages/shared/src/db && supabase gen types typescript --local > packages/shared/src/db/database.types.ts && prettier --write packages/shared/src/db/database.types.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
