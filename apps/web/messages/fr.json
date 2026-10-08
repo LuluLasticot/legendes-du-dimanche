@@ -998,5 +998,95 @@
       "midfield": "Milieux",
       "attack": "Attaquants"
     }
+  },
+  "game": {
+    "tabs": {
+      "home": "La Une",
+      "solo": "Solo",
+      "online": "En ligne",
+      "squads": "Équipes",
+      "transfers": "Transferts",
+      "store": "Boutique",
+      "club": "Mon club",
+      "more": "Plus"
+    },
+    "bar": {
+      "founded": "Fondé en {year}",
+      "credits": "Crédits",
+      "creditsValue": "{value} CR",
+      "record": "Record",
+      "recordValue": "{wins} V · {draws} N · {losses} D",
+      "level": "Niv. {level}",
+      "xp": "{xp} / {next} XP de saison",
+      "store": "Boutique",
+      "packsWaiting": "{count, plural, one {# pack à ouvrir} other {# packs à ouvrir}}"
+    },
+    "home": {
+      "mockup": "Maquette de La Une — données fictives, rien n'est enregistré.",
+      "next": {
+        "kicker": "Les Fondations · match guidé",
+        "title": "Premier match",
+        "matchday": "Journée 1 · {division}",
+        "stadium": "{stadium}, {city}",
+        "home": "Domicile",
+        "play": "Jouer",
+        "reward": "Récompense : Pack Bronze"
+      },
+      "foundations": {
+        "kicker": "Objectifs",
+        "title": "Les Fondations",
+        "progress": "{done} sur {total}",
+        "steps": {
+          "club": "Choisir ton club",
+          "pack": "Ouvrir le pack de départ",
+          "match": "Jouer un match",
+          "squad": "Composer ton équipe",
+          "open": "Ouvrir un pack"
+        },
+        "rewardPack": "Pack Bronze",
+        "rewardCredits": "{value} CR",
+        "done": "Fait"
+      },
+      "packs": {
+        "kicker": "Inventaire",
+        "title": "Packs à ouvrir",
+        "open": "Ouvrir",
+        "from": "Gagné : Les Fondations"
+      },
+      "daily": {
+        "kicker": "Objectifs du jour",
+        "title": "Chaque jour",
+        "expires": "Expirent dans {hours} h {minutes}",
+        "items": {
+          "goals": "Marquer 3 buts",
+          "moment": "Réussir 2 actions clés",
+          "win": "Gagner un match"
+        },
+        "reward": "+{value} CR"
+      },
+      "squad": {
+        "kicker": "Équipes",
+        "title": "Ton onze",
+        "rating": "Note du onze",
+        "edit": "Composer"
+      },
+      "collective": {
+        "kicker": "Collectifs",
+        "title": "Jouer local",
+        "club": "Club",
+        "district": "District",
+        "players": "{count, plural, one {# joueur} other {# joueurs}}",
+        "bonus": "+{points}",
+        "rule": "Chaque joueur prend le meilleur des deux.",
+        "total": "{points} / 33 points de collectif"
+      },
+      "soon": {
+        "kicker": "En ligne",
+        "title": "Le Dimanche",
+        "body": "Ton onze contre celui d'un autre joueur, chaque week-end.",
+        "badge": "Bientôt"
+      }
+    },
+    "nav": "Menu du jeu"
   }
 }
