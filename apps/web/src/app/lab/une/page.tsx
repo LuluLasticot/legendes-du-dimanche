@@ -48,7 +48,7 @@ export default async function HomeMockupPage() {
   const elevenRating = Math.round(
     eleven.reduce((sum, { card }) => sum + card.player.rating, 0) / eleven.length,
   );
-  // Collectives (GDD §6.2): the starter eleven is all from one district.
+  // Collectives (GDD §6.2): the best of club and district counts (league left out of the mockup).
   const fromClub = eleven.filter((c) => c.club.id === club.id).length;
   const fromDistrict = eleven.filter((c) => c.club.districtId === club.districtId).length;
   const collective = [
