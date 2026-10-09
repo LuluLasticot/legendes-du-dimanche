@@ -99,13 +99,6 @@ export default async function HomeMockupPage() {
         >
           <div
             aria-hidden
-            className="absolute inset-0 -z-0"
-            style={{
-              background: `linear-gradient(115deg, ${club.colours.primary}55 0%, transparent 48%, transparent 52%, ${opponent.colours.primary}55 100%)`,
-            }}
-          />
-          <div
-            aria-hidden
             className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_115%,rgb(42_122_88/0.45),transparent_60%)]"
           />
           <div className="relative flex flex-1 flex-col justify-center px-4 py-4 sm:px-5">
