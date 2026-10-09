@@ -8,7 +8,8 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { adminClient } from '@/lib/supabase/admin';
 import { sessionClient } from '@/lib/supabase/session';
-import { GameError } from '@/server/game/errors';
+import { errorKey } from '@/lib/game-errors';
+import { GameError, type GameErrorCode } from '@/server/game/errors';
 import { chooseClub, openUserPack } from '@/server/game/packs';
 import { starterPackId } from '@/server/game/player';
 import { claimWelcome } from '@/server/game/wallet';
@@ -47,15 +48,26 @@ export async function pickClub(form: FormData): Promise<void> {
   redirect('/jouer/bienvenue/pack');
 }
 
+/** What the starter opening gets back: its cards, or the code of a message to show. */
+export type StarterResult =
+  | { readonly ok: true; readonly cardIds: readonly string[] }
+  | { readonly ok: false; readonly error: GameErrorCode };
+
 /**
  * Opens the starter pack. The pack's id is the request id: asked again (a reload, a lost answer),
- * even once the pack is open, it gives the same cards.
+ * even once the pack is open, it gives the same cards. Errors come back as codes: a Server
+ * Action's thrown error does not reach the browser.
  */
-export async function openStarter(): Promise<{ cardIds: string[] }> {
-  const userId = await sessionUser();
-  if (!userId) throw new GameError('profile_not_found');
-  const packId = await starterPackId(await sessionClient(), userId);
-  if (!packId) throw new GameError('club_not_chosen');
-  const opened = await openUserPack(adminClient(), userId, packId, packId);
-  return { cardIds: [...opened.cardIds] };
+export async function openStarter(): Promise<StarterResult> {
+  try {
+    const userId = await sessionUser();
+    if (!userId) throw new GameError('profile_not_found');
+    const packId = await starterPackId(await sessionClient(), userId);
+    if (!packId) throw new GameError('club_not_chosen');
+    const opened = await openUserPack(adminClient(), userId, packId, packId);
+    return { ok: true, cardIds: opened.cardIds };
+  } catch (error) {
+    console.error(error);
+    return { ok: false, error: errorKey(error) };
+  }
 }

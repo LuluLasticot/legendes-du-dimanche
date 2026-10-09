@@ -1092,7 +1092,39 @@
         "badge": "Bientôt"
       }
     },
-    "nav": "Menu du jeu"
+    "nav": "Menu du jeu",
+    "errors": {
+      "insufficient_funds": "Pas assez de crédits.",
+      "pack_not_found": "Ce pack n'existe pas ou n'est plus à toi.",
+      "pack_already_opened": "Ce pack est déjà ouvert.",
+      "club_already_chosen": "Ton club est déjà choisi.",
+      "club_not_eligible": "Ce club ne fait pas partie du jeu.",
+      "club_not_chosen": "Choisis d'abord ton club.",
+      "unknown_card": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "wrong_card_count": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "empty_pack": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "profile_not_found": "Ta session a expiré. Recommence depuis l'accueil.",
+      "invalid_amount": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "invalid_price": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "invalid_pack": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "unexpected": "Quelque chose s'est mal passé. Réessaie.",
+      "retry": "Réessayer"
+    },
+    "welcome": {
+      "title": "Légendes du Dimanche",
+      "pitch": "Ton club, tes cartes, ton dimanche. Choisis ton club, ouvre ton premier pack et compose ton onze.",
+      "start": "Commencer",
+      "guest": "Sans inscription : tu joues en invité, ta progression reste sur cet appareil.",
+      "clubTitle": "Choisis ton club",
+      "clubIntro": "Le club que tu soutiens, du District 5 au National 1. Ses joueurs seront le cœur de ton pack de départ.",
+      "search": "Chercher un club ou une ville",
+      "noMatch": "Aucun club ne correspond.",
+      "confirm": "Choisir {club}",
+      "final": "Choix définitif",
+      "cancel": "Changer",
+      "packTitle": "Ton pack de départ",
+      "continue": "Découvrir mon équipe"
+    }
   },
   "packOpening": {
     "title": "Ouverture de pack",

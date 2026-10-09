@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { Crest } from '@/components/club/crest';
 import { Icon, type IconName } from './icons';
+import { NightBackdrop } from './night-backdrop';
 
 export type GameTab = 'home' | 'solo' | 'online' | 'squads' | 'transfers' | 'store' | 'club';
 
@@ -46,12 +47,7 @@ export async function GameShell({
 
   return (
     <div className="relative min-h-dvh overflow-x-hidden bg-pitch-950 pb-24 md:pb-10">
-      {/* Night stadium: two floodlight glows and the faint stripes of a mown pitch. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full bg-floodlight-400/10 blur-3xl" />
-        <div className="absolute -top-48 right-[-8rem] h-[32rem] w-[32rem] rounded-full bg-floodlight-300/8 blur-3xl" />
-        <div className="absolute inset-x-0 top-0 h-[42rem] bg-[repeating-linear-gradient(90deg,rgb(255_255_255/0.018)_0_80px,transparent_80px_160px)] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
-      </div>
+      <NightBackdrop />
 
       <header className="relative z-10 border-b border-chalk/8 bg-pitch-950/70 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-5 sm:px-6">
