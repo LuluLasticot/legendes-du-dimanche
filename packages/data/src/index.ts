@@ -9,3 +9,4 @@ export * from './identity/index.ts';
 export { foldText } from './naming.ts';
 export * from './packs.ts';
 export * from './card-defs.ts';
+export * from './team/index.ts';
