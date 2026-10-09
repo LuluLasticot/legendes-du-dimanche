@@ -1027,7 +1027,6 @@
       "packsWaiting": "{count, plural, one {# pack à ouvrir} other {# packs à ouvrir}}"
     },
     "home": {
-      "mockup": "Maquette de La Une — données fictives, rien n'est enregistré.",
       "next": {
         "kicker": "Les Fondations · match guidé",
         "title": "Premier match",
@@ -1056,18 +1055,13 @@
         "kicker": "Inventaire",
         "title": "Packs à ouvrir",
         "open": "Ouvrir",
-        "from": "Gagné : Les Fondations"
+        "from": "Gagné : Les Fondations",
+        "none": "Aucun pack en attente. Les objectifs et la boutique en donnent."
       },
       "daily": {
         "kicker": "Objectifs du jour",
         "title": "Chaque jour",
-        "expires": "Expirent dans {hours} h {minutes}",
-        "items": {
-          "goals": "Marquer 3 buts",
-          "moment": "Réussir 2 actions clés",
-          "win": "Gagner un match"
-        },
-        "reward": "+{value} CR"
+        "soon": "Trois objectifs par jour, renouvelés toutes les 24 heures, avec des crédits à la clé."
       },
       "squad": {
         "kicker": "Équipes",
@@ -1145,6 +1139,16 @@
       "auto": "Composé automatiquement : le meilleur total des notes et des collectifs.",
       "intro": "Voici ton onze, composé automatiquement. Les joueurs d'un même club (2, 4 puis 7 joueurs) ou d'un même district (3, 5 puis 8) jouent mieux ensemble : jusqu'à +3 chacun, 33 pour l'équipe. Un joueur hors de son poste n'en apporte aucun.",
       "introCta": "Continuer vers La Une"
+    },
+    "collection": {
+      "count": "{count, plural, one {# carte} other {# cartes}}",
+      "title": "Ma collection",
+      "all": "Toutes",
+      "bronze": "Bronze",
+      "silver": "Argent",
+      "gold": "Or",
+      "copies": "×{count}",
+      "empty": "Aucune carte de ce niveau pour l'instant."
     }
   },
   "packOpening": {
