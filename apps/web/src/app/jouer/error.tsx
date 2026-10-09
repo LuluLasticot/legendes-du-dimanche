@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 /** Something failed while drawing a game page: a plain message and a way to try again. */
-export default function GameError({ reset }: { error: Error; reset: () => void }) {
+export default function GameError({ retry }: { error: Error; retry: () => void }) {
   const t = useTranslations('game.errors');
   return (
     <main className="grid min-h-dvh place-items-center bg-pitch-950 p-6 text-center">
@@ -11,7 +11,7 @@ export default function GameError({ reset }: { error: Error; reset: () => void }
         <p className="text-chalk">{t('unexpected')}</p>
         <button
           type="button"
-          onClick={reset}
+          onClick={() => retry()}
           className="rounded-md bg-floodlight-400 px-5 py-2 font-display text-lg font-extrabold text-pitch-950 uppercase hover:bg-floodlight-300"
         >
           {t('retry')}

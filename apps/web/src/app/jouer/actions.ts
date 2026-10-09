@@ -11,7 +11,8 @@ import { sessionClient } from '@/lib/supabase/session';
 import { errorKey } from '@/lib/game-errors';
 import { GameError, type GameErrorCode } from '@/server/game/errors';
 import { chooseClub, openUserPack } from '@/server/game/packs';
-import { starterPackId } from '@/server/game/player';
+import { loadPlayer, starterPackId } from '@/server/game/player';
+import { STAGE_PATH, stageOf } from '@/server/game/stage';
 import { claimWelcome } from '@/server/game/wallet';
 
 async function sessionUser(): Promise<string | null> {
@@ -20,16 +21,19 @@ async function sessionUser(): Promise<string | null> {
   return data.user?.id ?? null;
 }
 
-/** "Commencer": an anonymous account (no form), and the welcome credits. */
-export async function startAsGuest(): Promise<void> {
-  let userId = await sessionUser();
-  if (!userId) {
-    const db = await sessionClient();
-    const { data, error } = await db.auth.signInAnonymously();
-    if (error || !data.user) throw new GameError('unexpected', error?.message);
-    userId = data.user.id;
+/**
+ * After "Commencer": the browser has signed in anonymously (so Supabase sees the visitor's
+ * address, for its limits on new accounts), the server pays the welcome credits.
+ */
+export async function startAsGuest(): Promise<{ readonly error: GameErrorCode }> {
+  const userId = await sessionUser();
+  if (!userId) return { error: 'profile_not_found' };
+  try {
+    await claimWelcome(adminClient(), userId);
+  } catch (error) {
+    console.error(error);
+    return { error: errorKey(error) };
   }
-  await claimWelcome(adminClient(), userId);
   redirect('/jouer/bienvenue/club');
 }
 
@@ -44,7 +48,14 @@ export async function pickClub(form: FormData): Promise<void> {
   const userId = await sessionUser();
   if (!userId) redirect('/jouer/bienvenue');
   const { clubId } = clubForm.parse({ clubId: form.get('clubId') });
-  await chooseClub(adminClient(), userId, clubId);
+  try {
+    await chooseClub(adminClient(), userId, clubId);
+  } catch (error) {
+    // A club already chosen (another tab, a picker kept by the back button): go where he is.
+    if (!(error instanceof GameError)) throw error;
+    const db = await sessionClient();
+    redirect(STAGE_PATH[stageOf(await loadPlayer(db, userId))]);
+  }
   redirect('/jouer/bienvenue/pack');
 }
 

@@ -1,8 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import { PackArt } from '@/components/shell/pack-art';
+import { StartButton } from '@/components/welcome/start-button';
 import { STAGE_PATH, stageOf } from '@/server/game/stage';
-import { startAsGuest } from '../actions';
 import { currentPlayer } from '../current';
 
 export default async function WelcomePage() {
@@ -28,14 +28,7 @@ export default async function WelcomePage() {
           {t('title')}
         </h1>
         <p className="text-lg text-chalk-muted">{t('pitch')}</p>
-        <form action={startAsGuest}>
-          <button
-            type="submit"
-            className="rounded-md bg-floodlight-400 px-6 py-3 font-display text-2xl leading-none font-extrabold tracking-wide text-pitch-950 uppercase shadow-floodlight hover:bg-floodlight-300"
-          >
-            {t('start')}
-          </button>
-        </form>
+        <StartButton />
         <p className="text-xs text-chalk-faint">{t('guest')}</p>
       </div>
     </main>
