@@ -1131,6 +1131,20 @@
       "online": "Le Championnat en ligne et Le Dimanche : affronte d'autres joueurs (Phases 7 et 8).",
       "transfers": "Le marché des transferts : achète et vends des cartes (Phase 6).",
       "store": "Les packs à acheter avec tes crédits, probabilités affichées."
+    },
+    "squads": {
+      "kicker": "Équipes",
+      "title": "Ton onze",
+      "rating": "Note du onze",
+      "collective": "Collectif",
+      "collectiveValue": "{points} / 33",
+      "formation": "Formation",
+      "bench": "Remplaçants",
+      "points": "{points, plural, =0 {Aucun point} one {# point} other {# points}} de collectif",
+      "offPosition": "Hors poste",
+      "auto": "Composé automatiquement : le meilleur total des notes et des collectifs.",
+      "intro": "Voici ton onze, composé automatiquement. Les joueurs d'un même club (2, 4 puis 7 joueurs) ou d'un même district (3, 5 puis 8) jouent mieux ensemble : jusqu'à +3 chacun, 33 pour l'équipe. Un joueur hors de son poste n'en apporte aucun.",
+      "introCta": "Continuer vers La Une"
     }
   },
   "packOpening": {

@@ -57,7 +57,11 @@ export function StarterOpening() {
   if (!cards) return <div className="flex-1" aria-busy />;
   return (
     <div className="relative flex min-h-[70dvh] flex-1 flex-col">
-      <PackOpening type="starter" cards={cards} onDone={() => router.push('/jouer')} />
+      <PackOpening
+        type="starter"
+        cards={cards}
+        onDone={() => router.push('/jouer/equipes?accueil=1')}
+      />
     </div>
   );
 }
