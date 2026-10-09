@@ -1,4 +1,4 @@
-import { clubsOf, findCard } from '@legendes/data';
+import { clubsOf, findCard, STARTER_CLUB_CARDS } from '@legendes/data';
 import { describe, expect, it } from 'vitest';
 import { GameError } from '@/server/game/errors.ts';
 import { buyPack, chooseClub, openUserPack } from '@/server/game/packs.ts';
@@ -32,7 +32,9 @@ describe('the first minutes of a new player', () => {
     const starter = await openUserPack(admin, id, starterId, crypto.randomUUID());
     expect(starter.type).toBe('starter');
     expect(starter.cardIds).toHaveLength(18);
-    expect(starter.cardIds.filter((c) => c.startsWith(`${club.id}-`))).toHaveLength(11);
+    expect(starter.cardIds.filter((c) => c.startsWith(`${club.id}-`))).toHaveLength(
+      STARTER_CLUB_CARDS,
+    );
     for (const cardId of starter.cardIds) expect(findCard(cardId), cardId).not.toBeNull();
     expect(await itemCount(id)).toBe(18);
 

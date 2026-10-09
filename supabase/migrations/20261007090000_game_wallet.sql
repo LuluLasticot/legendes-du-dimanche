@@ -101,7 +101,7 @@ begin
   return paid * p_amount;
 end $$;
 
--- The club a new player starts with: a District 5 club, chosen once, and the starter pack that
+-- The club a new player starts with: any club of the pilot, chosen once, and the starter pack that
 -- goes with it in the same transaction (a player with a club and no pack cannot exist). Asking
 -- again for the same club, after a lost answer, returns the same pack. Returns the pack's id.
 create function public.choose_club(p_user uuid, p_club text) returns uuid
@@ -115,10 +115,7 @@ begin
   if chosen is not null then
     if chosen <> p_club then raise exception 'club_already_chosen'; end if;
   else
-    if not exists (
-      select 1 from public.clubs c join public.divisions d on d.id = c.division_id
-      where c.id = p_club and d.scope = 'district' and d.rank = 5
-    ) then
+    if not exists (select 1 from public.clubs where id = p_club) then
       raise exception 'club_not_eligible';
     end if;
     update public.profiles set club_id = p_club where id = p_user;

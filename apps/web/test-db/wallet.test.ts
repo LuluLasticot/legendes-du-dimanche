@@ -1,11 +1,11 @@
-import { clubsOf } from '@legendes/data';
+import { clubsOf, WORLD } from '@legendes/data';
 import { describe, expect, it } from 'vitest';
 import { admin, newGuest } from './harness.ts';
 
 const request = (): string => crypto.randomUUID();
 const starterClub = clubsOf({ divisionId: 'escaut-d5' })[0]!.id;
 const otherClub = clubsOf({ divisionId: 'escaut-d5' })[1]!.id;
-const topClub = clubsOf({ divisionId: 'escaut-d1' })[0]!.id;
+const topClub = WORLD.clubs.find((c) => c.divisionId.startsWith('n2'))!.id;
 
 async function balance(userId: string): Promise<number> {
   const { data, error } = await admin
@@ -100,14 +100,14 @@ describe('buying a pack', () => {
 });
 
 describe('choosing a club and the starter pack', () => {
-  it('needs a District 5 club', async () => {
+  it('takes any club of the pilot, National 2 included, and refuses an unknown one', async () => {
     const { id } = await newGuest();
-    expect((await admin.rpc('choose_club', { p_user: id, p_club: topClub })).error?.message).toBe(
-      'club_not_eligible',
-    );
     expect(
       (await admin.rpc('choose_club', { p_user: id, p_club: 'no-such-club' })).error?.message,
     ).toBe('club_not_eligible');
+    const { data, error } = await admin.rpc('choose_club', { p_user: id, p_club: topClub });
+    expect(error).toBeNull();
+    expect(data).toBeTruthy();
   });
 
   it('gives the starter pack only after a club is chosen, and only once', async () => {
