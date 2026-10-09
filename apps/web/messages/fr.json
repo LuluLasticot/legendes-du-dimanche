@@ -1093,5 +1093,20 @@
       }
     },
     "nav": "Menu du jeu"
+  },
+  "packOpening": {
+    "title": "Ouverture de pack",
+    "loading": "Préparation du pack…",
+    "failed": "La 3D n'est pas disponible sur cet appareil ou ce navigateur.",
+    "hint": "Glisse le doigt le long du pointillé pour déchirer le pack",
+    "open": "Ouvrir le pack",
+    "skip": "Passer",
+    "mute": "Couper le son",
+    "unmute": "Remettre le son",
+    "heroNext": "Touche pour voir le reste du pack",
+    "gridHint": "Touche une carte pour la retourner",
+    "gridAll": "Tout retourner",
+    "summary": "Ton pack",
+    "continue": "Continuer"
   }
 }
