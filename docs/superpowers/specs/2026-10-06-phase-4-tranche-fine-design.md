@@ -29,7 +29,7 @@ Cible d'expérience : **premier but en moins de 3 minutes** (GDD §10).
 **Première session**
 
 1. Arrivée → compte invité créé automatiquement (profil, bonus de bienvenue idempotent).
-2. **« Choisis ton club »** (équivalent de « Choisis ta ligue ») : **n'importe quel club du pilote**, du District 5 au National 2 (révisé le 09/10/2026 : un joueur de N2 doit pouvoir débuter avec son club).
+2. **« Choisis ton club »** (équivalent de « Choisis ta ligue ») : **n'importe quel club du pilote**, du District 5 au National 1 (révisé le 09/10/2026 : un joueur de N2 doit pouvoir débuter avec son club).
 3. **Pack de départ** ouvert sur l'écran du pack (la scène d'ouverture existante).
 4. **Effectif auto-composé** (meilleur onze selon la formation), **collectifs expliqués** : avoir 7 joueurs du même club donne +3.
 5. **« Les Fondations »** : chaîne d'objectifs où chacun fait toucher un mode et rapporte un pack ou des crédits. Dans la tranche : *jouer un match*, *composer l'équipe*, *ouvrir un pack*.
