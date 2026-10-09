@@ -8,7 +8,7 @@ import { POSITION_LINE, type Position } from '@legendes/engine/sim/positions';
 import type { PackCard } from '../packs.ts';
 import { collectiveOf, type CollectiveMember } from './collective.ts';
 
-export interface SquadSlot {
+export interface TeamSlot {
   readonly position: Position;
   /** Anchor on the pitch, from the team's point of view: x across, y from own goal (0) to attack (1). */
   readonly x: number;
@@ -18,9 +18,9 @@ export interface SquadSlot {
   readonly collective: number;
 }
 
-export interface Squad {
+export interface TeamSheet {
   readonly formation: Formation;
-  readonly slots: readonly SquadSlot[];
+  readonly slots: readonly TeamSlot[];
   readonly bench: readonly PackCard[];
   readonly collective: number;
   /** Mean of the eleven's ratings at their slots (0 for an empty slot), rounded. */
@@ -73,7 +73,7 @@ function distinct(cards: readonly PackCard[]): PackCard[] {
   return [...byPlayer.values()];
 }
 
-export function autoSquad(cards: readonly PackCard[], formation: Formation): Squad {
+export function autoSquad(cards: readonly PackCard[], formation: Formation): TeamSheet {
   const slots = FORMATION_SLOTS[formation];
   const positions = slots.map((s) => s.position);
   const pool = distinct(cards);
@@ -139,8 +139,8 @@ export function autoSquad(cards: readonly PackCard[], formation: Formation): Squ
 }
 
 /** The automatic squad in the formation that suits the cards best. */
-export function bestSquad(cards: readonly PackCard[]): Squad {
-  let best: Squad | null = null;
+export function bestSquad(cards: readonly PackCard[]): TeamSheet {
+  let best: TeamSheet | null = null;
   let bestScore = -1;
   for (const formation of FORMATIONS) {
     const squad = autoSquad(cards, formation);
