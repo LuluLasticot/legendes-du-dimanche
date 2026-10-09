@@ -1124,6 +1124,13 @@
       "cancel": "Changer",
       "packTitle": "Ton pack de départ",
       "continue": "Découvrir mon équipe"
+    },
+    "soon": {
+      "badge": "Bientôt",
+      "solo": "Carrière, Matchs de la semaine, défis de composition et Onze du week-end arrivent avec le premier match.",
+      "online": "Le Championnat en ligne et Le Dimanche : affronte d'autres joueurs (Phases 7 et 8).",
+      "transfers": "Le marché des transferts : achète et vends des cartes (Phase 6).",
+      "store": "Les packs à acheter avec tes crédits, probabilités affichées."
     }
   },
   "packOpening": {

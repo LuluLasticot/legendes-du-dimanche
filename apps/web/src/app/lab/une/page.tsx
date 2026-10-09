@@ -75,7 +75,7 @@ export default async function HomeMockupPage() {
   };
 
   return (
-    <GameShell player={player} active="home">
+    <GameShell player={player}>
       <p className="mb-4 rounded-md bg-floodlight-400/10 px-3 py-2 text-xs text-floodlight-300 ring-1 ring-floodlight-400/25">
         {t('mockup')}
       </p>

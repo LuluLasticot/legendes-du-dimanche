@@ -1,23 +1,11 @@
 import type { Club } from '@legendes/data';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Crest } from '@/components/club/crest';
-import { Icon, type IconName } from './icons';
+import { DesktopTabs, MobileTabs } from './game-nav';
+import { Icon } from './icons';
 import { NightBackdrop } from './night-backdrop';
-
-export type GameTab = 'home' | 'solo' | 'online' | 'squads' | 'transfers' | 'store' | 'club';
-
-const TABS: readonly { id: GameTab; icon: IconName }[] = [
-  { id: 'home', icon: 'home' },
-  { id: 'solo', icon: 'solo' },
-  { id: 'online', icon: 'online' },
-  { id: 'squads', icon: 'squads' },
-  { id: 'transfers', icon: 'transfers' },
-  { id: 'store', icon: 'store' },
-  { id: 'club', icon: 'club' },
-];
-/** On a phone: five tabs in the bottom bar, the others behind "Plus". */
-const MOBILE_TABS: readonly GameTab[] = ['home', 'solo', 'squads', 'store', 'club'];
 
 export interface ShellPlayer {
   readonly club: Club;
@@ -34,11 +22,9 @@ const number = new Intl.NumberFormat('fr-FR');
 /** The game's frame: the club bar, the tabs (top on a computer, bottom on a phone), the page. */
 export async function GameShell({
   player,
-  active,
   children,
 }: {
   player: ShellPlayer;
-  active: GameTab;
   children: ReactNode;
 }) {
   const t = await getTranslations('game');
@@ -94,8 +80,8 @@ export async function GameShell({
             </div>
           </dl>
 
-          <a
-            href="#boutique"
+          <Link
+            href="/jouer/boutique"
             className="relative hidden size-10 place-items-center rounded-full bg-pitch-800/80 text-chalk ring-1 ring-chalk/10 hover:ring-floodlight-400/60 md:grid"
             aria-label={`${t('bar.store')} · ${t('bar.packsWaiting', { count: player.packsWaiting })}`}
           >
@@ -105,62 +91,15 @@ export async function GameShell({
                 {player.packsWaiting}
               </span>
             )}
-          </a>
+          </Link>
         </div>
 
-        <nav className="mx-auto hidden max-w-7xl px-6 md:block" aria-label={t('nav')}>
-          <ul className="flex gap-1">
-            {TABS.map(({ id }) => {
-              const current = id === active;
-              return (
-                <li key={id}>
-                  <a
-                    href={`#${id}`}
-                    aria-current={current ? 'page' : undefined}
-                    className={`relative block px-4 pt-2 pb-3 font-display text-lg font-extrabold tracking-wider uppercase transition-colors ${
-                      current ? 'text-chalk' : 'text-chalk-faint hover:text-chalk-muted'
-                    }`}
-                  >
-                    {t(`tabs.${id}`)}
-                    {current && (
-                      <span className="absolute inset-x-3 bottom-0 h-1 rounded-t-sm bg-floodlight-400 shadow-floodlight" />
-                    )}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+        <DesktopTabs />
       </header>
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 pt-5 sm:px-6 md:pt-8">{children}</main>
 
-      <nav
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-chalk/10 bg-pitch-950/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
-        aria-label={t('nav')}
-      >
-        <ul className="grid grid-cols-6">
-          {[...MOBILE_TABS, 'more' as const].map((id) => {
-            const current = id === active;
-            const icon =
-              id === 'more' ? 'more' : (TABS.find((tab) => tab.id === id)?.icon ?? 'home');
-            return (
-              <li key={id}>
-                <a
-                  href={`#${id}`}
-                  aria-current={current ? 'page' : undefined}
-                  className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-bold tracking-wide uppercase ${
-                    current ? 'text-floodlight-400' : 'text-chalk-faint'
-                  }`}
-                >
-                  <Icon name={icon} className="size-6" />
-                  {t(`tabs.${id}`)}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <MobileTabs />
     </div>
   );
 }
