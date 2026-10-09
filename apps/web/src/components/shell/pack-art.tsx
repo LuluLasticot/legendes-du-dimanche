@@ -1,5 +1,4 @@
-import type { PackType } from '@legendes/data';
-import { packNode } from '@legendes/ui/card';
+import { packNode, type PackArtType } from '@legendes/ui/card';
 import { getTranslations } from 'next-intl/server';
 import { SvgTree } from '@/components/club/svg-tree';
 
@@ -9,7 +8,7 @@ export async function PackArt({
   uid,
   className,
 }: {
-  type: PackType;
+  type: PackArtType;
   uid: string;
   className?: string;
 }) {

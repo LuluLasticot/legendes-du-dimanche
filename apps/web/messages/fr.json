@@ -933,6 +933,10 @@
       "gold-premium": {
         "name": "Pack Or Premium",
         "contents": "12 cartes or · 3 rares garanties"
+      },
+      "starter": {
+        "name": "Pack de départ",
+        "contents": "18 cartes · 8 de ton club"
       }
     },
     "classes": {
@@ -957,7 +961,8 @@
       "expected": "Par pack",
       "atLeastOne": "Au moins une",
       "note": "Tirage au hasard parmi les joueurs générés du pilote. Dans le jeu, le tirage se fera sur le serveur."
-    }
+    },
+    "starterMix": "Composition : {club} cartes de ton club · {bronze} bronze, {silver} argent, {gold} or"
   },
   "share": {
     "brand": "Légendes du Dimanche",
