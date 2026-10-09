@@ -1,4 +1,4 @@
-import { STARTER_CLUB_CARDS, STARTER_MIX } from '@legendes/data';
+import { STARTER_COMPOSITION } from '@legendes/data';
 import { getTranslations } from 'next-intl/server';
 import { StarterOpening } from '@/components/welcome/starter-opening';
 import { requireStage } from '../../current';
@@ -15,9 +15,16 @@ export default async function PackPage() {
         <h1 className="font-display text-3xl leading-none font-extrabold text-chalk uppercase sm:text-4xl">
           {t('packTitle')}
         </h1>
-        {/* Rule 5: what the pack holds is shown before it is opened. */}
+        {/* Rule 5: what every starter pack holds, shown before it is opened. */}
         <p className="mt-2 text-sm text-chalk-muted">
-          {tp('starterMix', { club: STARTER_CLUB_CARDS, ...STARTER_MIX })}
+          {tp('starterMix', {
+            club: STARTER_COMPOSITION.club,
+            others: STARTER_COMPOSITION.others,
+            goalkeepers: STARTER_COMPOSITION.lines.goalkeeper,
+            defenders: STARTER_COMPOSITION.lines.defence,
+            midfielders: STARTER_COMPOSITION.lines.midfield,
+            forwards: STARTER_COMPOSITION.lines.attack,
+          })}
         </p>
       </header>
       <StarterOpening />

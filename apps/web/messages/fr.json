@@ -962,7 +962,7 @@
       "atLeastOne": "Au moins une",
       "note": "Tirage au hasard parmi les joueurs générés du pilote. Dans le jeu, le tirage se fera sur le serveur."
     },
-    "starterMix": "Composition : {club} cartes de ton club · {bronze} bronze, {silver} argent, {gold} or"
+    "starterMix": "Composition : {club} cartes de ton club et {others} d'autres clubs · {goalkeepers} gardiens, {defenders} défenseurs, {midfielders} milieux, {forwards} attaquants · bronze, argent et or, sans or rare ni promo"
   },
   "share": {
     "brand": "Légendes du Dimanche",

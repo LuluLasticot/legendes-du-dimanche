@@ -8,6 +8,7 @@ import {
   WORLD,
   type PackCard,
 } from '../src/index.ts';
+import { FORMATIONS } from '@legendes/engine/sim/formations';
 
 const d5 = WORLD.clubs.find((c) => c.divisionId === 'escaut-d5')!;
 const n2 = WORLD.clubs.find((c) => c.divisionId.startsWith('n2'))!;
@@ -50,5 +51,28 @@ describe('the automatic squad', () => {
   it('is deterministic', () => {
     const cards = openStarterPack(n2, 'det').cards;
     expect(bestSquad(cards)).toEqual(bestSquad(cards));
+  });
+
+  it('can always field a 4-3-3 entirely in position from a starter pack', () => {
+    for (const club of WORLD.clubs) {
+      const sheet = autoSquad(openStarterPack(club, 'shape').cards, '4-3-3');
+      expect(
+        sheet.slots.filter((s) => !s.inPosition).map((s) => s.position),
+        club.id,
+      ).toEqual([]);
+    }
+  });
+
+  it('picks the formation with the fewest players out of position, then the best exact score', () => {
+    for (const club of WORLD.clubs) {
+      const cards = openStarterPack(club, 'pick').cards;
+      const out = (s: ReturnType<typeof autoSquad>) => s.slots.filter((x) => !x.inPosition).length;
+      const best = bestSquad(cards);
+      for (const f of FORMATIONS) {
+        const other = autoSquad(cards, f);
+        expect(out(best), `${club.id} ${f}`).toBeLessThanOrEqual(out(other));
+        if (out(other) === out(best)) expect(best.score).toBeGreaterThanOrEqual(other.score);
+      }
+    }
   });
 });
