@@ -13,7 +13,7 @@ Jeu web (PWA, mobile d'abord) de collection de cartes et de gestion d'équipe, f
 
 ## Phase en cours
 
-**Phase 4 — Boucle méta et mise en production de la tranche verticale** (Phase 3 terminée le 03/10/2026, bilan dans `docs/ROADMAP.md`). Découpage à proposer en mode plan et à faire valider avant de commencer. Déjà en place : univers du pilote (205 clubs, saison 2026-27), effectifs générés, blasons, maillots et sponsors, cartes 2D et 3D, ouverture de pack (tirages simulés, `/lab/pack`) où le joueur de la meilleure carte sort en personne, joueurs 3D modélisés aux couleurs du club, pages publiques et images de partage.
+**Phase 4 — Boucle méta et mise en production de la tranche verticale** (Phase 3 terminée le 03/10/2026, bilan dans `docs/ROADMAP.md`). Découpage à proposer en mode plan et à faire valider avant de commencer. Déjà en place : univers du pilote (205 clubs, saison 2026-27), effectifs générés, blasons, maillots et sponsors, cartes 2D et 3D, ouverture de pack (tirages simulés, `/lab/pack`) où le joueur de la meilleure carte sort en personne, joueurs 3D modélisés aux couleurs du club, pages publiques et images de partage. Tranche fine validée (`docs/superpowers/specs/2026-10-06-phase-4-tranche-fine-design.md`) ; plan A (socle serveur) fait : profils, grand livre, packs et cartes en base, écrits par le serveur seul (D-041).
 Mettre à jour cette ligne à chaque changement de phase.
 
 ## Stack
@@ -54,6 +54,7 @@ pnpm + Turborepo · Next.js (App Router) + React + TypeScript strict · Tailwind
 - `pnpm --filter @legendes/web e2e` (Playwright : déterminisme Chromium/Firefox/WebKit + labo ; réutilise `pnpm dev`) · `pnpm test` (Vitest) · `pnpm test:deno` (déterminisme sous Deno) · `pnpm --filter @legendes/engine test:watch`
 - `pnpm determinism:update` : régénère l'empreinte de référence du moteur, **uniquement volontairement** (casse les replays)
 - `pnpm db:start|stop|reset` (Supabase local, Docker requis) · `pnpm db:new <nom>` (migration)
+- `pnpm --filter @legendes/web test:db` : tests de la base contre Supabase local (Docker requis ; lit `apps/web/.env.local`) · `pnpm --filter @legendes/data build:cards` : régénère `supabase/seed/20_cards.sql` · `pnpm db:types` : régénère les types de la base
 - `pnpm --filter @legendes/render3d convert:mixamo` : convertit `assets-src/mixamo/*.fbx` (hors git) en `apps/web/public/assets/characters/` (hors git)
 - Paquets internes livrés en sources `.ts` ; imports relatifs **avec l'extension `.ts`** dans `engine` et `shared` (compatibilité Deno).
 
