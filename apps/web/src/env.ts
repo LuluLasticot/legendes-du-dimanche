@@ -34,3 +34,22 @@ export function serverEnv(): z.infer<typeof serverSchema> {
     SUPABASE_SECRET_KEY: emptyToUndefined(process.env.SUPABASE_SECRET_KEY),
   });
 }
+
+/** The game needs Supabase: a clear error instead of a broken page when it is not configured. */
+export function gameEnv(): { url: string; publishableKey: string; secretKey: string } {
+  const env = serverEnv();
+  if (
+    !env.NEXT_PUBLIC_SUPABASE_URL ||
+    !env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    !env.SUPABASE_SECRET_KEY
+  ) {
+    throw new Error(
+      'Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY)',
+    );
+  }
+  return {
+    url: env.NEXT_PUBLIC_SUPABASE_URL,
+    publishableKey: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    secretKey: env.SUPABASE_SECRET_KEY,
+  };
+}

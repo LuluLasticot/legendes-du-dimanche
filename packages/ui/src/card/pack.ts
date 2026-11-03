@@ -21,7 +21,12 @@ export interface PackLook {
   readonly holo: number;
 }
 
-export const PACK_LOOKS: Readonly<Record<PackType, PackLook>> = {
+/** A pack's art: the shop's packs and the starter pack a new player opens first. */
+export type PackArtType = PackType | 'starter';
+
+export const PACK_LOOKS: Readonly<Record<PackArtType, PackLook>> = {
+  // A club's pitch at night: green foil, chalk ink.
+  starter: { metal: ['#9fe0b8', '#2a7a58', '#0a2a1c'], ink: '#f4f1e8', tint: '#bff0cf', holo: 0 },
   bronze: { metal: ['#f0c197', '#b0703a', '#5a3115'], ink: '#2a1608', tint: '#ffba80', holo: 0 },
   silver: { metal: ['#ffffff', '#b9c3cd', '#58626d'], ink: '#131b24', tint: '#e6eef8', holo: 0 },
   gold: { metal: ['#fff0b3', '#d6a93a', '#7a5a0c'], ink: '#271c02', tint: '#ffd166', holo: 0.25 },
@@ -87,7 +92,7 @@ export function titleLines(title: string): { text: string; y: number; size: numb
 
 const PANEL = { x: 18, y: 72, w: PACK_WIDTH - 36, h: 364, r: 14 };
 
-function parts(type: PackType, labels: PackLabels, uid: string, back: boolean): Parts {
+function parts(type: PackArtType, labels: PackLabels, uid: string, back: boolean): Parts {
   const look = PACK_LOOKS[type];
   const [hi, body, low] = look.metal;
   const id = (name: string): string => `${uid}-${name}`;
@@ -332,7 +337,7 @@ const root = (...children: SvgElement[]): SvgElement =>
 
 /** The front (or back) of a pack as a standalone `<svg>`. */
 export function packNode(
-  type: PackType,
+  type: PackArtType,
   labels: PackLabels,
   uid: string,
   back = false,
@@ -343,7 +348,7 @@ export function packNode(
 
 /** Its 3D mask: red = foil (metal that reflects), green = holographic film, black = the panel. */
 export function packMaskNode(
-  type: PackType,
+  type: PackArtType,
   labels: PackLabels,
   uid: string,
   back = false,

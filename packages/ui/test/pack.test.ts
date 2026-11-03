@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { PACK_TYPES, toSvgString } from '@legendes/data';
-import { PACK_HEIGHT, PACK_TEAR_V, packMaskNode, packNode, titleLines } from '../src/card/index.ts';
+import {
+  PACK_HEIGHT,
+  PACK_LOOKS,
+  PACK_TEAR_V,
+  packMaskNode,
+  packNode,
+  titleLines,
+} from '../src/card/index.ts';
 
 const labels = {
   title: 'Pack Or Premium',
@@ -56,5 +63,16 @@ describe('packs', () => {
         expect(text.length * size * 0.52).toBeLessThanOrEqual(220);
     }
     expect(titleLines('Pack Or Premium')).toHaveLength(2);
+  });
+});
+
+describe('the starter pack art', () => {
+  it('has its own foil and prints its name, front and back well formed', () => {
+    const starter = { ...labels, title: 'Pack de départ', contents: '18 cartes · 8 de ton club' };
+    expect(PACK_LOOKS.starter.metal).toHaveLength(3);
+    const front = toSvgString(packNode('starter', starter, 'starter'));
+    expect(front).toContain('DÉPART');
+    expect(wellFormed(front)).toBe(true);
+    expect(wellFormed(toSvgString(packMaskNode('starter', starter, 'starter', true)))).toBe(true);
   });
 });

@@ -2,50 +2,23 @@
 
 import {
   cardClassOf,
-  crestNode,
-  crestOf,
-  getDivision,
-  identityOf,
-  kitNameNode,
-  kitPrintNode,
   openPack,
   PACK_TYPES,
   PACKS,
   packOdds,
   type CardClass,
-  type OpenedPack,
   type PackType,
 } from '@legendes/data';
-import type * as Render3D from '@legendes/render3d';
-import type {
-  PackOpeningAssets,
-  PackOpeningHandle,
-  PackStep,
-  PackTuning,
-  WalkoutVariant,
-} from '@legendes/render3d';
-import {
-  CARD_FINISHES,
-  PACK_LOOKS,
-  PACK_TEAR_V,
-  packMaskNode,
-  packNode,
-  playerLook,
-} from '@legendes/ui/card';
+import type { PackOpeningHandle, PackStep, PackTuning, WalkoutVariant } from '@legendes/render3d';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { z } from 'zod';
-import { CARD_FONT_FILES, cardSources, rasterize } from '@/components/card/card-assets';
-import {
-  cardFaceOf,
-  useFaceTranslators,
-  type FaceTranslators,
-} from '@/components/card/player-card';
+import { useFaceTranslators } from '@/components/card/player-card';
+import { buildPackAssets } from '@/components/pack/pack-assets';
+import { PackClues, PackHeroCaption } from '@/components/pack/pack-clues';
 import { publicEnv } from '@/env';
 
 const TUNING_KEY = 'ld.lab.pack.tuning';
-/** A club's pitch as the 3D stadium paints it. */
-const SURFACE_KEY = { grass: 'grass', artificial: 'artificial', stabilized: 'dirt' } as const;
 const MUTED_KEY = 'ld.lab.pack.muted';
 /** Endings of the player's walkout, in the order of the lab's menu (render3d's list). */
 const VARIANTS: readonly WalkoutVariant[] = ['arms_crossed', 'crest', 'thumbs_back'];
@@ -121,78 +94,9 @@ function seedFor(type: PackType, force: CardClass | null, base: string): string 
   return base;
 }
 
-async function buildAssets(
-  render3d: typeof Render3D,
-  opened: OpenedPack,
-  tr: FaceTranslators,
-  labels: Parameters<typeof packNode>[1],
-): Promise<PackOpeningAssets> {
-  const css = await render3d.cardFontCss(CARD_FONT_FILES);
-  const backs = new Map<string, Promise<readonly [HTMLCanvasElement, HTMLCanvasElement]>>();
-  const last = opened.cards.length - 1;
-  const cards = await Promise.all(
-    opened.cards.map(async ({ card, club }, i) => {
-      const face = cardFaceOf(card, club, tr);
-      const sources = await cardSources(
-        render3d,
-        face,
-        i === last ? 1024 : 512,
-        css,
-        i === last ? undefined : backs,
-      );
-      return { ...sources, rank: CARD_FINISHES[face.look].rank };
-    }),
-  );
-  const bestClub = opened.cards[last]?.club;
-  if (!bestClub) throw new Error('Empty pack');
-  const type = opened.type;
-  const look = PACK_LOOKS[type];
-  // The best card's player walks out in his club's home kit (his keeper's kit for a keeper),
-  // with its prints and his name above his number.
-  const player = opened.cards[last]?.card.player;
-  const identity = identityOf(bestClub);
-  const keeper = player?.positions[0] === 'GK';
-  const kit = keeper ? identity.kits.keeper : identity.kits.home;
-  const [front, frontMask, back, backMask, crest, prints, backName] = await Promise.all([
-    rasterize(render3d, packNode(type, labels, 'pack'), 580, css),
-    rasterize(render3d, packMaskNode(type, labels, 'pack'), 290, css),
-    rasterize(render3d, packNode(type, labels, 'pack-back', true), 580, css),
-    rasterize(render3d, packMaskNode(type, labels, 'pack-back', true), 290, css),
-    rasterize(render3d, crestNode(crestOf(bestClub), 'crest-best'), 400, css),
-    rasterize(
-      render3d,
-      kitPrintNode(kit, {
-        uid: `${bestClub.id}-walkout-print`,
-        crest: identity.crest,
-        sponsor: keeper ? undefined : identity.sponsors[0]?.label,
-      }),
-      1024,
-      css,
-    ),
-    player ? rasterize(render3d, kitNameNode(kit, player.lastName), 512, css) : null,
-  ]);
-  return {
-    pack: {
-      front,
-      frontMask,
-      back,
-      backMask,
-      tint: look.tint,
-      holo: look.holo,
-      tearV: PACK_TEAR_V,
-    },
-    cards,
-    crest,
-    clubColours: [bestClub.colours.primary, bestClub.colours.secondary],
-    surface: SURFACE_KEY[bestClub.stadium.surface],
-    player: player ? { ...playerLook(player, kit, keeper), prints, backName } : undefined,
-  };
-}
-
 export function PackLab() {
   const t = useTranslations('lab.pack');
   const tp = useTranslations('packs');
-  const tPos = useTranslations('positions');
   const tr = useFaceTranslators();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const handleRef = useRef<PackOpeningHandle | null>(null);
@@ -241,7 +145,7 @@ export function PackLab() {
     let handle: PackOpeningHandle | null = null;
     import('@legendes/render3d')
       .then(async (render3d) => {
-        const assets = await buildAssets(render3d, opened, tr, labels);
+        const assets = await buildPackAssets(render3d, opened, tr, labels);
         if (cancelled) return;
         const initial = tuningRef.current ?? loadTuning(render3d.DEFAULT_PACK_TUNING);
         setDefaults(render3d.DEFAULT_PACK_TUNING);
@@ -300,8 +204,6 @@ export function PackLab() {
     'player',
     'tension',
   ];
-  const heroPlayer = best?.card.player;
-  const heroDivision = best ? getDivision(best.club.divisionId) : undefined;
   const summary = useMemo(() => {
     const counts = new Map<CardClass, number>();
     for (const { card } of opened.cards) {
@@ -506,36 +408,7 @@ export function PackLab() {
         </section>
       )}
 
-      {/* Clues of the walkout. */}
-      <div
-        className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center"
-        aria-live="polite"
-      >
-        {step === 'league' && heroDivision && (
-          <p
-            key="league"
-            className="font-display ld-slam text-5xl tracking-wide text-chalk drop-shadow-[0_4px_24px_rgb(0_0_0/0.8)] sm:text-7xl"
-          >
-            {heroDivision.name}
-          </p>
-        )}
-        {step === 'club' && best && (
-          <p
-            key="club"
-            className="font-display ld-rise absolute bottom-[18%] text-4xl text-chalk drop-shadow-[0_4px_24px_rgb(0_0_0/0.8)] sm:text-6xl"
-          >
-            {best.club.name}
-          </p>
-        )}
-        {step === 'position' && heroPlayer && (
-          <p
-            key="position"
-            className="font-display ld-slam text-5xl text-floodlight-300 drop-shadow-[0_4px_24px_rgb(0_0_0/0.8)] sm:text-7xl"
-          >
-            {tPos(`${heroPlayer.positions[0] ?? 'CM'}.long`)}
-          </p>
-        )}
-      </div>
+      <PackClues step={step} best={best} />
 
       {/* Bottom: hint and actions. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4 pb-6 text-center">
@@ -551,21 +424,7 @@ export function PackLab() {
             </button>
           </>
         )}
-        {step === 'hero' && best && heroPlayer && (
-          <div className="ld-rise">
-            {best.card.variant !== 'base' && (
-              <p className="text-xs font-bold tracking-[0.2em] text-floodlight-400 uppercase">
-                {tr.cards(`variants.${best.card.variant}`)}
-              </p>
-            )}
-            <p className="font-display text-3xl text-chalk">{heroPlayer.displayName}</p>
-            <p className="text-sm text-chalk-muted">
-              {heroPlayer.rating} · {tPos(`${heroPlayer.positions[0] ?? 'CM'}.long`)} ·{' '}
-              {best.club.name}
-            </p>
-            <p className="mt-2 text-xs text-chalk-faint">{t('hero.next')}</p>
-          </div>
-        )}
+        {step === 'hero' && best && <PackHeroCaption best={best} next={t('hero.next')} />}
         {step === 'grid' && (
           <>
             <p className="text-sm text-chalk-muted">{t('grid.hint')}</p>
