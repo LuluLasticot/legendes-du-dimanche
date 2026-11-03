@@ -1143,7 +1143,9 @@
       "offPosition": "Hors poste",
       "auto": "Composé automatiquement : le meilleur total des notes et des collectifs.",
       "intro": "Voici ton onze, composé automatiquement. Les joueurs d'un même club (2, 4 puis 7 joueurs) ou d'un même district (3, 5 puis 8) jouent mieux ensemble : jusqu'à +3 chacun, 33 pour l'équipe. Un joueur hors de son poste n'en apporte aucun.",
-      "introCta": "Continuer vers La Une"
+      "introCta": "Continuer vers La Une",
+      "save": "Valider ce onze",
+      "saved": "Onze enregistré"
     },
     "collection": {
       "count": "{count, plural, one {# carte} other {# cartes}}",

@@ -3,13 +3,20 @@
 // The game's writes after the welcome: matches, the saved eleven, packs. Each checks the session
 // and calls the server modules with the service role (rule 2); errors come back as codes.
 
+import { autoSquad } from '@legendes/data';
 import type { sim } from '@legendes/engine';
+import { FORMATIONS } from '@legendes/engine/sim/formations';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { errorKey } from '@/lib/game-errors';
 import { adminClient } from '@/lib/supabase/admin';
 import type { GameErrorCode } from '@/server/game/errors';
 import { GameError } from '@/server/game/errors';
+import { cardsOf } from '@/server/game/collection';
 import { finishMatch, startMatch, type MatchVerdict } from '@/server/game/matches';
+import { saveSquad } from '@/server/game/squads';
 import { stageOf } from '@/server/game/stage';
 import { currentPlayer } from './current';
 
@@ -43,4 +50,15 @@ export async function finishMyMatch(matchId: string, played: unknown) {
     const player = await playing();
     return { verdict: await finishMatch(adminClient(), player.userId, matchId, played) };
   });
+}
+
+const formationSchema = z.enum(FORMATIONS);
+
+/** "Valider ce onze": the automatic eleven of this formation becomes the player's own. */
+export async function saveMySquad(form: FormData): Promise<void> {
+  const player = await playing();
+  const formation = formationSchema.parse(form.get('formation'));
+  await saveSquad(adminClient(), player.userId, autoSquad(cardsOf(player.cardIds), formation));
+  revalidatePath('/jouer', 'layout');
+  redirect(`/jouer/equipes?formation=${formation}`);
 }

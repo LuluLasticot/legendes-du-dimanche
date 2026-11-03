@@ -18,6 +18,7 @@ import { PackArt } from '@/components/shell/pack-art';
 import { Tile, TileButton } from '@/components/shell/tile';
 import { cardsOf } from '@/server/game/collection';
 import { opponentOf } from '@/server/game/matches';
+import { listObjectives, type ObjectiveState } from '@/server/game/objectives';
 import { STAGE_PATH } from '@/server/game/stage';
 import { sessionClient } from '@/lib/supabase/session';
 import { requireStage } from '../current';
@@ -25,14 +26,12 @@ import { requireStage } from '../current';
 // La Une (spec §4): the next match, the Foundations, the packs to open, the eleven and its
 // collectives. The match, the objectives in the database and the shop come with plan C.
 
-/** The Foundations of the slice; the first two are done once the welcome is over. */
-const FOUNDATIONS = [
-  { id: 'club', done: true, reward: null },
-  { id: 'pack', done: true, reward: null },
-  { id: 'match', done: false, reward: { pack: 'bronze' } },
-  { id: 'squad', done: false, reward: { credits: 300 } },
-  { id: 'open', done: false, reward: { pack: 'bronze' } },
-] as const;
+/** The Foundations' steps: the welcome's two, then the objectives in the database. */
+const STEP_OF = {
+  'foundations-match': 'match',
+  'foundations-squad': 'squad',
+  'foundations-open': 'open',
+} as const;
 
 const tierOf = (count: number, steps: readonly number[]): number =>
   steps.filter((step) => count >= step).length;
@@ -73,6 +72,15 @@ export default async function HomePage() {
     .sort((a, b) => a.card.player.rating - b.card.player.rating)
     .slice(-3);
   const fan = [second, best, third].filter((c) => c !== undefined);
+  type Step = 'club' | 'pack' | (typeof STEP_OF)[keyof typeof STEP_OF];
+  const FOUNDATIONS: { id: Step; done: boolean; reward: ObjectiveState['reward'] | null }[] = [
+    { id: 'club', done: true, reward: null },
+    { id: 'pack', done: true, reward: null },
+    ...(await listObjectives(db, player.userId)).flatMap((o) => {
+      const id = STEP_OF[o.id as keyof typeof STEP_OF];
+      return id ? [{ id, done: o.done, reward: o.reward }] : [];
+    }),
+  ];
   const done = FOUNDATIONS.filter((step) => step.done).length;
   const packs = player.packs.length;
 
@@ -92,7 +100,9 @@ export default async function HomePage() {
                 {t('next.play')}
               </TileButton>
             </Link>
-            <span className="text-sm font-semibold text-chalk-muted">{t('next.reward')}</span>
+            {played === 0 && (
+              <span className="text-sm font-semibold text-chalk-muted">{t('next.reward')}</span>
+            )}
           </div>
         }
       >
