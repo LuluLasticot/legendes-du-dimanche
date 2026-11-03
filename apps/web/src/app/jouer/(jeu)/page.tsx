@@ -1,5 +1,6 @@
 import {
   COLLECTIVE_STEPS,
+  PACK_TYPES,
   bestSquad,
   crestOf,
   divisionLabel,
@@ -83,6 +84,9 @@ export default async function HomePage() {
   ];
   const done = FOUNDATIONS.filter((step) => step.done).length;
   const packs = player.packs.length;
+  const first = player.packs[0];
+  const firstType = PACK_TYPES.find((type) => type === first?.type);
+  const firstPack = first && firstType ? { id: first.id, type: firstType } : null;
 
   return (
     <div className="grid gap-4 md:grid-cols-4 md:grid-rows-[repeat(2,minmax(15rem,auto))_minmax(17rem,auto)]">
@@ -225,7 +229,13 @@ export default async function HomePage() {
       <Tile
         kicker={t('packs.kicker')}
         title={t('packs.title')}
-        action={packs > 0 ? <TileButton>{t('packs.open')}</TileButton> : undefined}
+        action={
+          firstPack ? (
+            <Link href={`/jouer/ouvrir/${firstPack.id}`}>
+              <TileButton>{t('packs.open')}</TileButton>
+            </Link>
+          ) : undefined
+        }
       >
         {packs > 0 ? (
           <div className="relative flex flex-1 items-center justify-center py-2">
@@ -234,7 +244,7 @@ export default async function HomePage() {
               className="absolute size-40 rounded-full bg-bronze/25 blur-2xl transition group-hover:bg-bronze/40"
             />
             <PackArt
-              type="bronze"
+              type={firstPack?.type ?? 'bronze'}
               uid="une-pack"
               className="relative h-36 w-auto -rotate-6 drop-shadow-[0_14px_20px_rgb(0_0_0/0.7)] transition duration-300 group-hover:rotate-0"
             />

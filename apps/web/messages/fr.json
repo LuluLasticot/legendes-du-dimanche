@@ -1163,6 +1163,12 @@
       "validated": "Match validé",
       "reward": "+{value} CR",
       "back": "Retour à La Une"
+    },
+    "store": {
+      "title": "Boutique",
+      "intro": "Des packs contre tes crédits. Les probabilités sont affichées pour chaque pack.",
+      "buy": "Acheter · {price} CR",
+      "legal": "Aucun achat avec de l'argent réel : les crédits se gagnent en jouant."
     }
   },
   "packOpening": {
