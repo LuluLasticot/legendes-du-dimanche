@@ -428,3 +428,20 @@ Retours du joueur après essai de `/lab/match` ; traités en PR séparées.
   - les issues des actions clés viennent du client (le geste 3D se joue dans le navigateur) : un client scripté peut gonfler ses gains. Ils sont plafonnés par match (le nombre d'actions clés), mais **pas en nombre de matchs** tant qu'il n'y a pas de limite de débit, et la graine figée peut être rejouée en local pour choisir les meilleurs changements ; à traiter avec les limites de débit, le captcha et, plus tard, la validation de la cadence (spec §12) ;
   - le moteur compte encore la ligue dans ses collectifs (sans effet dans le pilote : les deux équipes l'ont), à aligner en Phase 5 ;
   - le onze de départ, avec de l'or, écrase un club de District 5 (7-0 au premier essai) : la force de l'adversaire est à équilibrer.
+
+## D-044 — Mise en ligne de la tranche : garde-fous et projet hébergé (Phase 4)
+
+- **Captcha Cloudflare Turnstile** sur « Commencer », géré nativement par Supabase à la connexion anonyme.
+  - Côté jeu : la clé publique `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (sans elle, pas de widget).
+  - Côté Supabase : la clé secrète, dans Auth → Attack Protection.
+  - La connexion anonyme part du navigateur : Supabase voit l'adresse du visiteur (limites par adresse).
+- **Contre les clients scriptés** (limite de D-043) :
+  - au plus **20 matchs lancés par heure** et par joueur (`create_match`, `too_many_matches`) ;
+  - un match validé **moins de 60 s** après son lancement est rejeté (un vrai match dure au moins deux minutes à la vitesse maximale) ;
+  - le gain d'un compte reste borné, et la création de comptes passe par le captcha.
+  - La validation de la cadence des actions clés reste pour plus tard.
+- **Projet hébergé** `legendes-du-dimanche` (eu-west-2) :
+  - migrations et seed appliqués avec la CLI (`supabase db push --include-seed`), qui garde l'historique des migrations ;
+  - connexions anonymes activées ;
+  - variables de l'app sur Vercel : URL, clé publique, clé secrète, clé Turnstile ;
+  - domaine : l'adresse vercel.app d'abord.
