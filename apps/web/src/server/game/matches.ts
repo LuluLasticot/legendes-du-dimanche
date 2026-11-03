@@ -49,7 +49,7 @@ export const momentsWon = (played: readonly sim.PlayedMoment[]): number =>
   played.filter((m) => (m.kind === 'keeper' ? m.outcome !== 'goal' : m.outcome === 'goal')).length;
 
 /** Matchday N's opponent: the N-th other club of the division by id, round and round. */
-function opponentOf(club: Club, matchday: number): Club {
+export function opponentOf(club: Club, matchday: number): Club {
   const others = WORLD.clubs
     .filter((c) => c.divisionId === club.divisionId && c.id !== club.id)
     .sort((a, b) => a.id.localeCompare(b.id));

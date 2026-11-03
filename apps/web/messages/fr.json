@@ -1030,11 +1030,12 @@
       "next": {
         "kicker": "Les Fondations · match guidé",
         "title": "Premier match",
-        "matchday": "Journée 1 · {division}",
+        "matchday": "Journée {day} · {division}",
         "stadium": "{stadium}, {city}",
         "home": "Domicile",
         "play": "Jouer",
-        "reward": "Récompense : Pack Bronze"
+        "reward": "Récompense : Pack Bronze",
+        "titleNext": "Match suivant"
       },
       "foundations": {
         "kicker": "Objectifs",
@@ -1153,6 +1154,13 @@
       "gold": "Or",
       "copies": "×{count}",
       "empty": "Aucune carte de ce niveau pour l'instant."
+    },
+    "match": {
+      "kickOff": "Coup d'envoi",
+      "checking": "Vérification du match…",
+      "validated": "Match validé",
+      "reward": "+{value} CR",
+      "back": "Retour à La Une"
     }
   },
   "packOpening": {

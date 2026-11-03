@@ -1,6 +1,5 @@
 import {
   COLLECTIVE_STEPS,
-  WORLD,
   bestSquad,
   crestOf,
   divisionLabel,
@@ -18,7 +17,9 @@ import { Icon } from '@/components/shell/icons';
 import { PackArt } from '@/components/shell/pack-art';
 import { Tile, TileButton } from '@/components/shell/tile';
 import { cardsOf } from '@/server/game/collection';
+import { opponentOf } from '@/server/game/matches';
 import { STAGE_PATH } from '@/server/game/stage';
+import { sessionClient } from '@/lib/supabase/session';
 import { requireStage } from '../current';
 
 // La Une (spec §4): the next match, the Foundations, the packs to open, the eleven and its
@@ -42,11 +43,15 @@ export default async function HomePage() {
   if (!club) redirect(STAGE_PATH.club);
   const t = await getTranslations('game.home');
 
-  // Matchday 1 until the calendar exists (plan C): the first other club of the division.
-  const opponent =
-    WORLD.clubs
-      .filter((c) => c.divisionId === club.divisionId && c.id !== club.id)
-      .sort((a, b) => a.id.localeCompare(b.id))[0] ?? club;
+  // The next matchday's opponent, as the server will set the match (`opponentOf`).
+  const db = await sessionClient();
+  const { count } = await db
+    .from('matches')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', player.userId)
+    .neq('status', 'created');
+  const played = count ?? 0;
+  const opponent = opponentOf(club, played + 1);
   const division = getDivision(club.divisionId);
   const kits = matchKits(club, opponent);
 
@@ -77,17 +82,17 @@ export default async function HomePage() {
       <Tile
         tone="hero"
         kicker={t('next.kicker')}
-        title={t('next.title')}
+        title={played === 0 ? t('next.title') : t('next.titleNext')}
         className="min-h-[24rem] md:col-span-2 md:row-span-2"
         action={
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-md bg-chalk/10 px-4 py-2 font-display text-lg leading-none font-extrabold tracking-wide text-chalk-muted uppercase">
-              <Icon name="play" className="size-4 fill-current" />
-              {t('next.play')}
-            </span>
-            <span className="rounded-pill bg-chalk/10 px-3 py-1 text-xs font-bold tracking-widest text-chalk-muted uppercase">
-              {t('soon.badge')}
-            </span>
+            <Link href="/jouer/match">
+              <TileButton>
+                <Icon name="play" className="size-4 fill-current" />
+                {t('next.play')}
+              </TileButton>
+            </Link>
+            <span className="text-sm font-semibold text-chalk-muted">{t('next.reward')}</span>
           </div>
         }
       >
@@ -97,7 +102,10 @@ export default async function HomePage() {
         />
         <div className="relative flex flex-1 flex-col justify-center px-4 py-4 sm:px-5">
           <p className="text-sm font-semibold text-chalk-muted">
-            {t('next.matchday', { division: division ? divisionLabel(division) : '' })}
+            {t('next.matchday', {
+              day: played + 1,
+              division: division ? divisionLabel(division) : '',
+            })}
           </p>
           <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-start gap-2">
             {[

@@ -1,0 +1,46 @@
+'use server';
+
+// The game's writes after the welcome: matches, the saved eleven, packs. Each checks the session
+// and calls the server modules with the service role (rule 2); errors come back as codes.
+
+import type { sim } from '@legendes/engine';
+import { randomUUID } from 'node:crypto';
+import { errorKey } from '@/lib/game-errors';
+import { adminClient } from '@/lib/supabase/admin';
+import type { GameErrorCode } from '@/server/game/errors';
+import { GameError } from '@/server/game/errors';
+import { finishMatch, startMatch, type MatchVerdict } from '@/server/game/matches';
+import { stageOf } from '@/server/game/stage';
+import { currentPlayer } from './current';
+
+type Failure = { readonly ok: false; readonly error: GameErrorCode };
+
+async function playing() {
+  const player = await currentPlayer();
+  if (!player || stageOf(player) !== 'playing') throw new GameError('profile_not_found');
+  return player;
+}
+
+async function attempt<T>(run: () => Promise<T>): Promise<({ readonly ok: true } & T) | Failure> {
+  try {
+    return { ok: true, ...(await run()) };
+  } catch (error) {
+    console.error(error);
+    return { ok: false, error: errorKey(error) };
+  }
+}
+
+/** The player's next match (or the one he left unfinished), frozen by the server. */
+export async function startMyMatch() {
+  return attempt(async (): Promise<{ matchId: string; setup: sim.MatchSetup }> =>
+    startMatch(adminClient(), await playing(), randomUUID()),
+  );
+}
+
+/** Full time: the server replays the inputs, and pays on the replay. */
+export async function finishMyMatch(matchId: string, played: unknown) {
+  return attempt(async (): Promise<{ verdict: MatchVerdict }> => {
+    const player = await playing();
+    return { verdict: await finishMatch(adminClient(), player.userId, matchId, played) };
+  });
+}
