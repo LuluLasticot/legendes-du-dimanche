@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   autoSquad,
+  sheetOf,
   bestSquad,
   cardOf,
   generateSquad,
@@ -76,4 +77,20 @@ describe('the automatic squad', () => {
     }
     // 205 clubs × 11 formations: seconds on a CI runner.
   }, 60_000);
+});
+
+describe('a saved eleven', () => {
+  it('puts the saved cards back on their slots, the others on the bench', () => {
+    const cards = openStarterPack(d5, 'saved').cards;
+    const auto = autoSquad(cards, '4-3-3');
+    const ids = auto.slots.map((s) => s.card!.card.id);
+    const sheet = sheetOf(cards, '4-3-3', ids);
+    expect(sheet).toEqual(auto);
+  });
+
+  it('gives null when a saved card is no longer owned', () => {
+    const cards = openStarterPack(d5, 'saved').cards;
+    const ids = autoSquad(cards, '4-3-3').slots.map((s) => s.card!.card.id);
+    expect(sheetOf(cards.slice(1), '4-3-3', ['gone', ...ids.slice(1)])).toBeNull();
+  });
 });

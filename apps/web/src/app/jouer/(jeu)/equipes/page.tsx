@@ -1,4 +1,4 @@
-import { autoSquad, bestSquad } from '@legendes/data';
+import { autoSquad } from '@legendes/data';
 import { FORMATIONS } from '@legendes/engine/sim/formations';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
@@ -6,7 +6,10 @@ import { z } from 'zod';
 import { PlayerCard } from '@/components/card/player-card';
 import { Tile, TileButton } from '@/components/shell/tile';
 import { PitchView } from '@/components/team/pitch-view';
+import { sessionClient } from '@/lib/supabase/session';
 import { cardsOf } from '@/server/game/collection';
+import { savedSheet } from '@/server/game/squads';
+import { saveMySquad } from '../../game-actions';
 import { requireStage } from '../../current';
 
 const query = z.object({
@@ -23,7 +26,9 @@ export default async function SquadsPage({
   const { formation, accueil } = query.parse(await searchParams);
   const t = await getTranslations('game.squads');
   const cards = cardsOf(player.cardIds);
-  const sheet = formation ? autoSquad(cards, formation) : bestSquad(cards);
+  const saved = await savedSheet(await sessionClient(), player);
+  const sheet = formation && formation !== saved.formation ? autoSquad(cards, formation) : saved;
+  const isSaved = saved.saved && sheet === saved;
 
   return (
     <div className="flex flex-col gap-5">
@@ -57,6 +62,18 @@ export default async function SquadsPage({
                 </div>
               </dl>
               <p className="text-xs text-chalk-faint">{t('auto')}</p>
+              {isSaved ? (
+                <p className="self-start rounded-pill bg-success/20 px-3 py-1 text-xs font-bold tracking-widest text-success uppercase">
+                  {t('saved')}
+                </p>
+              ) : (
+                <form action={saveMySquad}>
+                  <input type="hidden" name="formation" value={sheet.formation} />
+                  <button type="submit">
+                    <TileButton>{t('save')}</TileButton>
+                  </button>
+                </form>
+              )}
               <div>
                 <p className="mb-2 text-xs font-bold tracking-[0.18em] text-floodlight-400 uppercase">
                   {t('formation')}

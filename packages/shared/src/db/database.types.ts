@@ -362,6 +362,93 @@ export type Database = {
         };
         Relationships: [];
       };
+      matches: {
+        Row: {
+          created_at: string;
+          finished_at: string | null;
+          id: string;
+          moments_won: number | null;
+          options: NonNullable<Json>;
+          request_id: string;
+          reward: number | null;
+          score: number[] | null;
+          seed: number;
+          setup: NonNullable<Json>;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          finished_at?: string | null;
+          id?: string;
+          moments_won?: number | null;
+          options: NonNullable<Json>;
+          request_id: string;
+          reward?: number | null;
+          score?: number[] | null;
+          seed: number;
+          setup: NonNullable<Json>;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          finished_at?: string | null;
+          id?: string;
+          moments_won?: number | null;
+          options?: NonNullable<Json>;
+          request_id?: string;
+          reward?: number | null;
+          score?: number[] | null;
+          seed?: number;
+          setup?: NonNullable<Json>;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'matches_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'matches_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'wallet_balances';
+            referencedColumns: ['user_id'];
+          },
+        ];
+      };
+      objective_defs: {
+        Row: {
+          chain: string;
+          condition: string;
+          id: string;
+          position: number;
+          reward_credits: number | null;
+          reward_pack: string | null;
+        };
+        Insert: {
+          chain: string;
+          condition: string;
+          id: string;
+          position: number;
+          reward_credits?: number | null;
+          reward_pack?: string | null;
+        };
+        Update: {
+          chain?: string;
+          condition?: string;
+          id?: string;
+          position?: number;
+          reward_credits?: number | null;
+          reward_pack?: string | null;
+        };
+        Relationships: [];
+      };
       pack_openings: {
         Row: {
           cards: string[];
@@ -446,6 +533,46 @@ export type Database = {
           },
         ];
       };
+      user_objectives: {
+        Row: {
+          completed_at: string;
+          objective_id: string;
+          user_id: string;
+        };
+        Insert: {
+          completed_at?: string;
+          objective_id: string;
+          user_id: string;
+        };
+        Update: {
+          completed_at?: string;
+          objective_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_objectives_objective_id_fkey';
+            columns: ['objective_id'];
+            isOneToOne: false;
+            referencedRelation: 'objective_defs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_objectives_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_objectives_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'wallet_balances';
+            referencedColumns: ['user_id'];
+          },
+        ];
+      };
       user_packs: {
         Row: {
           created_at: string;
@@ -491,6 +618,42 @@ export type Database = {
           },
         ];
       };
+      user_squads: {
+        Row: {
+          formation: string;
+          lineup: string[];
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          formation: string;
+          lineup: string[];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          formation?: string;
+          lineup?: string[];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_squads_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_squads_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'wallet_balances';
+            referencedColumns: ['user_id'];
+          },
+        ];
+      };
     };
     Views: {
       wallet_balances: {
@@ -502,8 +665,13 @@ export type Database = {
       };
     };
     Functions: {
+      advance_objective: { Args: { p_condition: string; p_user: string }; Returns: number };
       choose_club: { Args: { p_club: string; p_user: string }; Returns: string };
       claim_welcome: { Args: { p_amount: number; p_user: string }; Returns: number };
+      create_match: {
+        Args: { p_options: Json; p_request: string; p_seed: number; p_setup: Json; p_user: string };
+        Returns: string;
+      };
       grant_pack: {
         Args: {
           p_price: number;
@@ -523,6 +691,21 @@ export type Database = {
           p_user: string;
         };
         Returns: string[];
+      };
+      record_match: {
+        Args: {
+          p_match: string;
+          p_moments_won: number;
+          p_reward: number;
+          p_score: number[];
+          p_user: string;
+          p_valid: boolean;
+        };
+        Returns: number;
+      };
+      save_squad: {
+        Args: { p_formation: string; p_lineup: string[]; p_user: string };
+        Returns: undefined;
       };
     };
     Enums: {

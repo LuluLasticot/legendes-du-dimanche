@@ -1,7 +1,6 @@
 import {
   COLLECTIVE_STEPS,
-  WORLD,
-  bestSquad,
+  PACK_TYPES,
   crestOf,
   divisionLabel,
   getClub,
@@ -17,21 +16,22 @@ import { Kit } from '@/components/club/kit';
 import { Icon } from '@/components/shell/icons';
 import { PackArt } from '@/components/shell/pack-art';
 import { Tile, TileButton } from '@/components/shell/tile';
-import { cardsOf } from '@/server/game/collection';
+import { opponentOf } from '@/server/game/matches';
+import { savedSheet } from '@/server/game/squads';
+import { listObjectives, type ObjectiveState } from '@/server/game/objectives';
 import { STAGE_PATH } from '@/server/game/stage';
+import { sessionClient } from '@/lib/supabase/session';
 import { requireStage } from '../current';
 
 // La Une (spec §4): the next match, the Foundations, the packs to open, the eleven and its
 // collectives. The match, the objectives in the database and the shop come with plan C.
 
-/** The Foundations of the slice; the first two are done once the welcome is over. */
-const FOUNDATIONS = [
-  { id: 'club', done: true, reward: null },
-  { id: 'pack', done: true, reward: null },
-  { id: 'match', done: false, reward: { pack: 'bronze' } },
-  { id: 'squad', done: false, reward: { credits: 300 } },
-  { id: 'open', done: false, reward: { pack: 'bronze' } },
-] as const;
+/** The Foundations' steps: the welcome's two, then the objectives in the database. */
+const STEP_OF = {
+  'foundations-match': 'match',
+  'foundations-squad': 'squad',
+  'foundations-open': 'open',
+} as const;
 
 const tierOf = (count: number, steps: readonly number[]): number =>
   steps.filter((step) => count >= step).length;
@@ -42,15 +42,20 @@ export default async function HomePage() {
   if (!club) redirect(STAGE_PATH.club);
   const t = await getTranslations('game.home');
 
-  // Matchday 1 until the calendar exists (plan C): the first other club of the division.
-  const opponent =
-    WORLD.clubs
-      .filter((c) => c.divisionId === club.divisionId && c.id !== club.id)
-      .sort((a, b) => a.id.localeCompare(b.id))[0] ?? club;
+  // The next matchday's opponent, as the server will set the match (`opponentOf`).
+  const db = await sessionClient();
+  const { count } = await db
+    .from('matches')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', player.userId)
+    .neq('status', 'created');
+  const played = count ?? 0;
+  const opponent = opponentOf(club, played + 1);
   const division = getDivision(club.divisionId);
   const kits = matchKits(club, opponent);
 
-  const sheet = bestSquad(cardsOf(player.cardIds));
+  // The eleven the matches are played with: the saved one, else the automatic one.
+  const sheet = await savedSheet(db, player);
   const playing = sheet.slots.flatMap((s) => (s.card && s.inPosition ? [s.card] : []));
   const fromClub = playing.filter((c) => c.club.id === club.id).length;
   const fromDistrict = playing.filter((c) => c.club.districtId === club.districtId).length;
@@ -68,8 +73,20 @@ export default async function HomePage() {
     .sort((a, b) => a.card.player.rating - b.card.player.rating)
     .slice(-3);
   const fan = [second, best, third].filter((c) => c !== undefined);
+  type Step = 'club' | 'pack' | (typeof STEP_OF)[keyof typeof STEP_OF];
+  const FOUNDATIONS: { id: Step; done: boolean; reward: ObjectiveState['reward'] | null }[] = [
+    { id: 'club', done: true, reward: null },
+    { id: 'pack', done: true, reward: null },
+    ...(await listObjectives(db, player.userId)).flatMap((o) => {
+      const id = STEP_OF[o.id as keyof typeof STEP_OF];
+      return id ? [{ id, done: o.done, reward: o.reward }] : [];
+    }),
+  ];
   const done = FOUNDATIONS.filter((step) => step.done).length;
   const packs = player.packs.length;
+  const first = player.packs[0];
+  const firstType = PACK_TYPES.find((type) => type === first?.type);
+  const firstPack = first && firstType ? { id: first.id, type: firstType } : null;
 
   return (
     <div className="grid gap-4 md:grid-cols-4 md:grid-rows-[repeat(2,minmax(15rem,auto))_minmax(17rem,auto)]">
@@ -77,17 +94,19 @@ export default async function HomePage() {
       <Tile
         tone="hero"
         kicker={t('next.kicker')}
-        title={t('next.title')}
+        title={played === 0 ? t('next.title') : t('next.titleNext')}
         className="min-h-[24rem] md:col-span-2 md:row-span-2"
         action={
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-md bg-chalk/10 px-4 py-2 font-display text-lg leading-none font-extrabold tracking-wide text-chalk-muted uppercase">
-              <Icon name="play" className="size-4 fill-current" />
-              {t('next.play')}
-            </span>
-            <span className="rounded-pill bg-chalk/10 px-3 py-1 text-xs font-bold tracking-widest text-chalk-muted uppercase">
-              {t('soon.badge')}
-            </span>
+            <Link href="/jouer/match">
+              <TileButton>
+                <Icon name="play" className="size-4 fill-current" />
+                {t('next.play')}
+              </TileButton>
+            </Link>
+            {played === 0 && (
+              <span className="text-sm font-semibold text-chalk-muted">{t('next.reward')}</span>
+            )}
           </div>
         }
       >
@@ -97,7 +116,10 @@ export default async function HomePage() {
         />
         <div className="relative flex flex-1 flex-col justify-center px-4 py-4 sm:px-5">
           <p className="text-sm font-semibold text-chalk-muted">
-            {t('next.matchday', { division: division ? divisionLabel(division) : '' })}
+            {t('next.matchday', {
+              day: played + 1,
+              division: division ? divisionLabel(division) : '',
+            })}
           </p>
           <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-start gap-2">
             {[
@@ -207,7 +229,13 @@ export default async function HomePage() {
       <Tile
         kicker={t('packs.kicker')}
         title={t('packs.title')}
-        action={packs > 0 ? <TileButton>{t('packs.open')}</TileButton> : undefined}
+        action={
+          firstPack ? (
+            <Link href={`/jouer/ouvrir/${firstPack.id}`}>
+              <TileButton>{t('packs.open')}</TileButton>
+            </Link>
+          ) : undefined
+        }
       >
         {packs > 0 ? (
           <div className="relative flex flex-1 items-center justify-center py-2">
@@ -216,7 +244,7 @@ export default async function HomePage() {
               className="absolute size-40 rounded-full bg-bronze/25 blur-2xl transition group-hover:bg-bronze/40"
             />
             <PackArt
-              type="bronze"
+              type={firstPack?.type ?? 'bronze'}
               uid="une-pack"
               className="relative h-36 w-auto -rotate-6 drop-shadow-[0_14px_20px_rgb(0_0_0/0.7)] transition duration-300 group-hover:rotate-0"
             />

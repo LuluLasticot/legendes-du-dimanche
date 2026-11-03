@@ -1030,11 +1030,12 @@
       "next": {
         "kicker": "Les Fondations · match guidé",
         "title": "Premier match",
-        "matchday": "Journée 1 · {division}",
+        "matchday": "Journée {day} · {division}",
         "stadium": "{stadium}, {city}",
         "home": "Domicile",
         "play": "Jouer",
-        "reward": "Récompense : Pack Bronze"
+        "reward": "Récompense : Pack Bronze",
+        "titleNext": "Match suivant"
       },
       "foundations": {
         "kicker": "Objectifs",
@@ -1102,7 +1103,11 @@
       "invalid_price": "Le tirage n'a pas pu être enregistré. Réessaie.",
       "invalid_pack": "Le tirage n'a pas pu être enregistré. Réessaie.",
       "unexpected": "Quelque chose s'est mal passé. Réessaie.",
-      "retry": "Réessayer"
+      "retry": "Réessayer",
+      "match_not_found": "Ce match n'existe pas ou n'est plus à toi.",
+      "match_rejected": "Ce résultat n'a pas pu être vérifié. Aucune récompense.",
+      "squad_incomplete": "Ton onze doit compter onze joueurs.",
+      "card_not_owned": "Ce onze contient une carte qui n'est pas à toi."
     },
     "welcome": {
       "title": "Légendes du Dimanche",
@@ -1138,7 +1143,9 @@
       "offPosition": "Hors poste",
       "auto": "Composé automatiquement : le meilleur total des notes et des collectifs.",
       "intro": "Voici ton onze, composé automatiquement. Les joueurs d'un même club (2, 4 puis 7 joueurs) ou d'un même district (3, 5 puis 8) jouent mieux ensemble : jusqu'à +3 chacun, 33 pour l'équipe. Un joueur hors de son poste n'en apporte aucun.",
-      "introCta": "Continuer vers La Une"
+      "introCta": "Continuer vers La Une",
+      "save": "Valider ce onze",
+      "saved": "Onze enregistré"
     },
     "collection": {
       "count": "{count, plural, one {# carte} other {# cartes}}",
@@ -1149,6 +1156,19 @@
       "gold": "Or",
       "copies": "×{count}",
       "empty": "Aucune carte de ce niveau pour l'instant."
+    },
+    "match": {
+      "kickOff": "Coup d'envoi",
+      "checking": "Vérification du match…",
+      "validated": "Match validé",
+      "reward": "+{value} CR",
+      "back": "Retour à La Une"
+    },
+    "store": {
+      "title": "Boutique",
+      "intro": "Des packs contre tes crédits. Les probabilités sont affichées pour chaque pack.",
+      "buy": "Acheter · {price} CR",
+      "legal": "Aucun achat avec de l'argent réel : les crédits se gagnent en jouant."
     }
   },
   "packOpening": {

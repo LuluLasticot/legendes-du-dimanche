@@ -2,14 +2,28 @@
 
 import { findCard, type PackCard } from '@legendes/data';
 import { useTranslations } from 'next-intl';
+import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { openStarter } from '@/app/jouer/actions';
-import { PackOpening } from '@/components/pack/pack-opening';
+import type { PackArtType } from '@legendes/ui/card';
+import type { StarterResult } from '@/app/jouer/actions';
+import { PackOpening } from './pack-opening';
 import type { GameErrorCode } from '@/server/game/errors';
 
-/** Asks the server for the starter pack's cards, then opens it in the 3D scene. */
-export function StarterOpening() {
+/**
+ * Asks the server to open a pack (its id is the request id: asking again gives the same cards),
+ * then plays the opening in the 3D scene.
+ */
+export function PackReveal({
+  type,
+  open,
+  next,
+}: {
+  type: PackArtType;
+  /** A Server Action, bound to the pack. */
+  open: () => Promise<StarterResult>;
+  next: Route;
+}) {
   const t = useTranslations('game');
   const router = useRouter();
   const [cards, setCards] = useState<readonly PackCard[] | null>(null);
@@ -18,7 +32,7 @@ export function StarterOpening() {
 
   const ask = useCallback(async (): Promise<void> => {
     setError(null);
-    const result = await openStarter();
+    const result = await open();
     if (!result.ok) {
       setError(result.error);
       return;
@@ -29,7 +43,7 @@ export function StarterOpening() {
       return card ? [card] : [];
     });
     setCards(found);
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     // Once per visit (strict mode mounts twice); asking again is harmless but useless.
@@ -57,11 +71,7 @@ export function StarterOpening() {
   if (!cards) return <div className="flex-1" aria-busy />;
   return (
     <div className="relative flex min-h-[70dvh] flex-1 flex-col">
-      <PackOpening
-        type="starter"
-        cards={cards}
-        onDone={() => router.push('/jouer/equipes?accueil=1')}
-      />
+      <PackOpening type={type} cards={cards} onDone={() => router.push(next)} />
     </div>
   );
 }

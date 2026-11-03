@@ -1,6 +1,7 @@
 import { STARTER_COMPOSITION } from '@legendes/data';
 import { getTranslations } from 'next-intl/server';
-import { StarterOpening } from '@/components/welcome/starter-opening';
+import { PackReveal } from '@/components/pack/pack-reveal';
+import { openStarter } from '../../actions';
 import { requireStage } from '../../current';
 
 export default async function PackPage() {
@@ -27,7 +28,7 @@ export default async function PackPage() {
           })}
         </p>
       </header>
-      <StarterOpening />
+      <PackReveal type="starter" open={openStarter} next="/jouer/equipes?accueil=1" />
     </main>
   );
 }

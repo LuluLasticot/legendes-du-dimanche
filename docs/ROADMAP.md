@@ -105,7 +105,7 @@ Si le ressenti n'y est pas : itérer sur la caméra, le timing et les animations
 
 > **Construction : tranche fine de bout en bout d'abord** (conception dans `docs/superpowers/specs/2026-10-06-phase-4-tranche-fine-design.md`) : arrivée en invité → choix du club → pack de départ → effectif auto-composé → premier match guidé → récompense validée par le serveur → boutique → nouveau pack. On élargit ensuite chaque maillon. Interface : coque à 7 onglets (La Une, Solo, En ligne, Équipes, Transferts, Boutique, Mon club) inspirée du parcours d'un joueur du mode « équipe ultime » (GDD §3.5).
 
-> Avancement : ✅ plan A — socle serveur (profils, grand livre, packs et cartes en base ; modules serveur, D-041). ✅ plan B — coque à 7 onglets, accueil (tout club du pilote), pack de départ à l'écran, onze automatique et collectifs (D-042). À venir : plan C (match, objectifs, boutique, bout en bout).
+> Avancement : ✅ plan A — socle serveur (profils, grand livre, packs et cartes en base ; modules serveur, D-041). ✅ plan B — coque à 7 onglets, accueil (tout club du pilote), pack de départ à l'écran, onze automatique et collectifs (D-042). ✅ plan C — match rejoué et payé par le serveur, Fondations, onze enregistré, boutique, bout en bout en CI (D-043). À venir : mise en ligne (Supabase hébergé, captcha), PWA et finition.
 
 - Authentification : **invité d'abord**, rattaché ensuite à un e-mail magique (Google plus tard), profil, pseudo
 - **Onboarding** : « Choisis ton club » (tout club du pilote), **pack de départ** (8 cartes du club, bronze, argent et or, même force pour tous), effectif auto-composé, **Les Fondations** (chaîne d'objectifs qui font toucher chaque mode), premier match guidé avec une action clé scénarisée (**premier but en moins de 3 minutes**)

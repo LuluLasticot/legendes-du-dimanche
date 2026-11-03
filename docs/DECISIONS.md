@@ -402,3 +402,29 @@ Retours du joueur après essai de `/lab/match` ; traités en PR séparées.
 - **Onze automatique** (`autoSquad`, `bestSquad`) : d'abord aucun poste vide, puis le moins de joueurs hors poste (85 % de leur note dans la bonne ligne), puis le meilleur total des notes et des collectifs ; départ par affectation exacte (algorithme hongrois), puis échanges pour les collectifs ; la formation retenue est celle qui a le moins de joueurs hors poste, puis le meilleur score exact ; un joueur en double ne joue qu'une fois ; une collection trop courte laisse des postes vides.
 - **Coque** : barre du club (crédits réels ; record et XP à zéro jusqu'au plan C), 7 onglets (barre du bas à 5 + « Plus » sur mobile). La Une, Équipes et Mon club sur les vraies données ; Solo, En ligne, Transferts, Boutique en « Bientôt ». La maquette `/lab/une` est retirée.
 - **Reportés au plan C** : le match (bouton « Jouer » en « Bientôt »), les objectifs en base (Fondations et objectifs du jour), la boutique et l'ouverture des autres packs, le rattachement à un e-mail, l'e2e avec Supabase et sa CI.
+
+## D-043 — La boucle de la tranche : match rejoué, objectifs, boutique (Phase 4, plan C)
+
+- **Le match est figé, rejoué, payé par le serveur.**
+  - `startMatch` construit le onze du joueur (le onze enregistré, sinon l'automatique) avec `toMatchTeamFromSheet` et l'adversaire de la journée : le N-ième autre club de la division, en boucle.
+  - Il fige le tout dans `matches` (setup en JSON, aller-retour JSON compris, pour que le client joue exactement le match rejoué).
+  - Le client renvoie ses **entrées** (issues des actions clés, changements) et le score vu. Le serveur les rejoue sur le setup figé ; un score différent ou des entrées qui ne collent pas font rejeter le match.
+  - Seuls les changements du côté du joueur sont acceptés, avec des tactiques bornées.
+  - **Un seul match ouvert par joueur** (verrou du profil, index unique) ; les matchs rejetés comptent pour la journée.
+- **Barème de départ** (GDD §9.2) :
+  - victoire 300 / 600 / 900 CR (District / Régional / National) ;
+  - nul 50 %, défaite 25 % ;
+  - +25 par action clé réussie (but marqué, ou tir repoussé quand le joueur garde les buts).
+  - `record_match` paie une seule fois et avance les objectifs.
+- **Premier match guidé** : le moteur n'est pas touché. Le serveur cherche, parmi les graines 1 à 400, la première dont la première action clé du joueur tombe avant 3:00.
+- **Objectifs en données** (`objective_defs`, `user_objectives`, `advance_objective` idempotent) :
+  - Les Fondations : jouer un match → Pack Bronze, composer l'équipe → 300 CR, ouvrir un pack → Pack Bronze ;
+  - les objectifs du jour et de la semaine ne seront que des lignes.
+- **Onze enregistré** (`user_squads`, `save_squad`) : onze cartes possédées, sinon refus.
+- **Boutique** : probabilités toujours affichées (règle 5), un `request_id` par page vue (un double clic débite une fois). Ouvrir un pack : même `request_id` que l'id du pack.
+- **Record et XP** dérivés des matchs validés, sans table : 100 XP par match, +50 par victoire, un niveau tous les 500.
+- **Bout en bout** : `e2e/game.spec.ts`, de l'arrivée à la première récompense. Le job CI `game` démarre Supabase local et lance les tests de base puis ce parcours.
+- **Limites connues, avant la mise en ligne publique** :
+  - les issues des actions clés viennent du client (le geste 3D se joue dans le navigateur) : un client scripté peut gonfler ses gains. Ils sont plafonnés par match (le nombre d'actions clés), mais **pas en nombre de matchs** tant qu'il n'y a pas de limite de débit, et la graine figée peut être rejouée en local pour choisir les meilleurs changements ; à traiter avec les limites de débit, le captcha et, plus tard, la validation de la cadence (spec §12) ;
+  - le moteur compte encore la ligue dans ses collectifs (sans effet dans le pilote : les deux équipes l'ont), à aligner en Phase 5 ;
+  - le onze de départ, avec de l'or, écrase un club de District 5 (7-0 au premier essai) : la force de l'adversaire est à équilibrer.
