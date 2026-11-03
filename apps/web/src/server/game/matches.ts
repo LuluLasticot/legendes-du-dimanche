@@ -29,6 +29,8 @@ const WIN: Readonly<Record<CompetitionLevel, number>> = {
   national: 900,
 };
 const PER_MOMENT = 25;
+/** No real match is over this fast (two minutes at the top speed): faster is a script (D-044). */
+const MIN_MATCH_SECONDS = 60;
 /** The first match: its first key moment comes before 3:00 (spec §8, "match guidé"). */
 const GUIDED_BEFORE = 3 * 60;
 const SURFACE = { grass: 'grass', artificial: 'artificial', stabilized: 'dirt' } as const;
@@ -217,10 +219,11 @@ export async function finishMatch(
   userId: string,
   matchId: string,
   claimed: unknown,
+  { minSeconds = MIN_MATCH_SECONDS }: { minSeconds?: number } = {},
 ): Promise<MatchVerdict> {
   const found = await db
     .from('matches')
-    .select('setup, status, reward, score')
+    .select('setup, status, reward, score, created_at')
     .eq('id', matchId)
     .eq('user_id', userId)
     .maybeSingle();
@@ -243,7 +246,8 @@ export async function finishMatch(
     score: [0, 0],
     won: 0,
   };
-  if (parsed.success) {
+  const elapsed = (Date.now() - new Date(row.created_at).getTime()) / 1000;
+  if (parsed.success && elapsed >= minSeconds) {
     try {
       const { result, played } = replay(setup, parsed.data);
       const score: [number, number] = [result.score[0], result.score[1]];

@@ -19,6 +19,7 @@ export const GAME_ERROR_CODES = [
   'match_rejected',
   'squad_incomplete',
   'card_not_owned',
+  'too_many_matches',
   'unexpected',
 ] as const;
 export type GameErrorCode = (typeof GAME_ERROR_CODES)[number];
