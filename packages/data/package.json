@@ -11,8 +11,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "lint": "eslint .",
-    "test": "vitest run && node scripts/build-seed.ts --check",
-    "build:seed": "node scripts/build-seed.ts"
+    "test": "vitest run && node scripts/build-seed.ts --check && node scripts/build-card-seed.ts --check",
+    "build:seed": "node scripts/build-seed.ts",
+    "build:cards": "node scripts/build-card-seed.ts"
   },
   "dependencies": {
     "@legendes/engine": "workspace:*",
