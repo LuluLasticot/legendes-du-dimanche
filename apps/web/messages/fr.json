@@ -1107,7 +1107,8 @@
       "match_not_found": "Ce match n'existe pas ou n'est plus à toi.",
       "match_rejected": "Ce résultat n'a pas pu être vérifié. Aucune récompense.",
       "squad_incomplete": "Ton onze doit compter onze joueurs.",
-      "card_not_owned": "Ce onze contient une carte qui n'est pas à toi."
+      "card_not_owned": "Ce onze contient une carte qui n'est pas à toi.",
+      "too_many_matches": "Tu as joué beaucoup de matchs cette heure-ci. Reviens dans un moment."
     },
     "welcome": {
       "title": "Légendes du Dimanche",

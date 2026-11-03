@@ -8,6 +8,8 @@ const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
   /** Where the converted character asset lives (default: served locally from /public). */
   NEXT_PUBLIC_CHARACTER_ASSETS_URL: z.string().min(1).optional(),
+  /** Cloudflare Turnstile site key: with it, new guests pass a captcha (D-044). */
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
 });
 
 const serverSchema = publicSchema.extend({
@@ -24,6 +26,7 @@ export const publicEnv = publicSchema.parse({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: emptyToUndefined(
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   ),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: emptyToUndefined(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY),
 });
 
 /** Server variables: only call from server code. */

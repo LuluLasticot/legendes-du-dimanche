@@ -8,6 +8,8 @@ import { loadPlayer, type PlayerState } from '@/server/game/player.ts';
 import { admin, newGuest } from './harness.ts';
 
 const club = WORLD.clubs.find((c) => c.divisionId === 'escaut-d5')!;
+/** The tests play their matches instantly: no minimum duration. */
+const FAST = { minSeconds: 0 };
 
 async function ready(): Promise<PlayerState> {
   const g = await newGuest();
@@ -29,10 +31,10 @@ describe('a match, replayed by the server', () => {
     const { matchId, setup } = await startMatch(admin, player, crypto.randomUUID());
     expect((await startMatch(admin, player, crypto.randomUUID())).matchId).toBe(matchId);
     const claimed = played(setup);
-    const verdict = await finishMatch(admin, player.userId, matchId, claimed);
+    const verdict = await finishMatch(admin, player.userId, matchId, claimed, FAST);
     expect(verdict.status).toBe('validated');
     expect(verdict.reward).toBeGreaterThan(0);
-    expect(await finishMatch(admin, player.userId, matchId, claimed)).toEqual(verdict);
+    expect(await finishMatch(admin, player.userId, matchId, claimed, FAST)).toEqual(verdict);
     const lines = await admin
       .from('credit_ledger')
       .select('delta')
@@ -115,13 +117,15 @@ describe('a match, replayed by the server', () => {
     }
     const claimed = { ...match.inputs, score: [...match.result().score] };
     expect(claimed.changes.length).toBe(15);
-    expect((await finishMatch(admin, player.userId, matchId, claimed)).status).toBe('validated');
+    expect((await finishMatch(admin, player.userId, matchId, claimed, FAST)).status).toBe(
+      'validated',
+    );
   });
 
   it('gives two tabs the stored match on later matchdays too', async () => {
     const player = await ready();
     const first = await startMatch(admin, player, crypto.randomUUID());
-    await finishMatch(admin, player.userId, first.matchId, played(first.setup));
+    await finishMatch(admin, player.userId, first.matchId, played(first.setup), FAST);
     const [a, b] = await Promise.all([
       startMatch(admin, player, crypto.randomUUID()),
       startMatch(admin, player, crypto.randomUUID()),
@@ -130,5 +134,44 @@ describe('a match, replayed by the server', () => {
     const stored = await admin.from('matches').select('setup').eq('id', a.matchId).single();
     expect(a.setup).toEqual(stored.data?.setup);
     expect(b.setup).toEqual(stored.data?.setup);
+  });
+
+  it('refuses a match validated too soon after its start', async () => {
+    const player = await ready();
+    const { matchId, setup } = await startMatch(admin, player, crypto.randomUUID());
+    const verdict = await finishMatch(admin, player.userId, matchId, played(setup), {
+      minSeconds: 60,
+    });
+    expect(verdict.status).toBe('rejected');
+  });
+
+  it('refuses a 21st match started within the hour', async () => {
+    const player = await ready();
+    for (let i = 0; i < 20; i++) {
+      const { data, error } = await admin.rpc('create_match', {
+        p_user: player.userId,
+        p_seed: i,
+        p_setup: {},
+        p_options: {},
+        p_request: crypto.randomUUID(),
+      });
+      expect(error).toBeNull();
+      await admin.rpc('record_match', {
+        p_user: player.userId,
+        p_match: data!,
+        p_valid: false,
+        p_score: [0, 0],
+        p_moments_won: 0,
+        p_reward: 0,
+      });
+    }
+    const { error } = await admin.rpc('create_match', {
+      p_user: player.userId,
+      p_seed: 99,
+      p_setup: {},
+      p_options: {},
+      p_request: crypto.randomUUID(),
+    });
+    expect(error?.message).toBe('too_many_matches');
   });
 });
