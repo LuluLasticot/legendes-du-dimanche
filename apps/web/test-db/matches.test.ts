@@ -83,4 +83,19 @@ describe('a match, replayed by the server', () => {
       .eq('reason', 'match');
     expect(paid.data).toEqual([]);
   });
+
+  it('keeps one open match per player, even when two tabs start one at once', async () => {
+    const player = await ready();
+    const [a, b] = await Promise.all([
+      startMatch(admin, player, crypto.randomUUID()),
+      startMatch(admin, player, crypto.randomUUID()),
+    ]);
+    expect(a.matchId).toBe(b.matchId);
+    const open = await admin
+      .from('matches')
+      .select('id')
+      .eq('user_id', player.userId)
+      .eq('status', 'created');
+    expect(open.data).toHaveLength(1);
+  });
 });

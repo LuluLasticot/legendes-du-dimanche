@@ -95,7 +95,8 @@ export async function startMatch(
     .from('matches')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', player.userId)
-    .eq('status', 'validated');
+    // Rejected matches count too: a bad result does not buy a new first-match seed.
+    .neq('status', 'created');
   if (played.error) throw gameErrorFrom(played.error);
   const matchday = (played.count ?? 0) + 1;
   const opponent = opponentOf(club, matchday);

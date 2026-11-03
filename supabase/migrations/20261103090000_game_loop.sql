@@ -18,6 +18,8 @@ create table public.matches (
   unique (user_id, request_id)
 );
 create index matches_user_idx on public.matches (user_id, created_at);
+-- One match open at a time: no second seed to try while the first is unfinished.
+create unique index matches_one_open on public.matches (user_id) where status = 'created';
 alter table public.matches enable row level security;
 revoke all on public.matches from anon, authenticated;
 grant select on public.matches to authenticated;
@@ -97,7 +99,8 @@ begin
   return done;
 end $$;
 
--- A match frozen by the server before it is played. Asking again with the same request returns it.
+-- A match frozen by the server before it is played. The player's open match, if he has one, is
+-- returned instead (two tabs at once included: the profile row is locked first).
 create function public.create_match(
   p_user uuid, p_seed integer, p_setup jsonb, p_options jsonb, p_request uuid
 ) returns uuid
@@ -105,16 +108,15 @@ language plpgsql security definer set search_path = '' as $$
 declare
   id uuid;
 begin
-  if not exists (select 1 from public.profiles where profiles.id = p_user) then
-    raise exception 'profile_not_found';
-  end if;
+  perform 1 from public.profiles where profiles.id = p_user for update;
+  if not found then raise exception 'profile_not_found'; end if;
+  select matches.id into id from public.matches
+  where user_id = p_user and (status = 'created' or request_id = p_request)
+  order by created_at desc limit 1;
+  if id is not null then return id; end if;
   insert into public.matches (user_id, seed, setup, options, request_id)
   values (p_user, p_seed, p_setup, p_options, p_request)
-  on conflict (user_id, request_id) do nothing
   returning matches.id into id;
-  if id is null then
-    select matches.id into id from public.matches where user_id = p_user and request_id = p_request;
-  end if;
   return id;
 end $$;
 
