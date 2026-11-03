@@ -1102,7 +1102,11 @@
       "invalid_price": "Le tirage n'a pas pu être enregistré. Réessaie.",
       "invalid_pack": "Le tirage n'a pas pu être enregistré. Réessaie.",
       "unexpected": "Quelque chose s'est mal passé. Réessaie.",
-      "retry": "Réessayer"
+      "retry": "Réessayer",
+      "match_not_found": "Ce match n'existe pas ou n'est plus à toi.",
+      "match_rejected": "Ce résultat n'a pas pu être vérifié. Aucune récompense.",
+      "squad_incomplete": "Ton onze doit compter onze joueurs.",
+      "card_not_owned": "Ce onze contient une carte qui n'est pas à toi."
     },
     "welcome": {
       "title": "Légendes du Dimanche",
