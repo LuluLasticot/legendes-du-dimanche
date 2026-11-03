@@ -4,7 +4,7 @@
 // exactly the odds it draws with (rule 5).
 
 import { Rng } from '@legendes/engine/rng';
-import { POSITION_LINE, type PositionLine } from '@legendes/engine/sim/positions';
+import { POSITION_LINE, type Position, type PositionLine } from '@legendes/engine/sim/positions';
 import type { CardTier, Rarity } from '@legendes/shared';
 import { cardOf, type Card } from './squad/cards.ts';
 import { generateSquad } from './squad/generate.ts';
@@ -228,19 +228,40 @@ export function openPack(type: PackType, seed: string): OpenedPack {
 export const STARTER_PACK_SIZE = 18;
 /** Cards from the chosen club; the rest comes from the other clubs of the pilot. */
 export const STARTER_CLUB_CARDS = 8;
-/** Cards of each tier in the whole pack, whatever the club (a strong club may go over). */
+/**
+ * Cards of each tier the pack aims at. A club stronger than the mix (R1 to N1) keeps its own
+ * cards and gets weaker others, so the mix is exact for district clubs only: the game shows
+ * `STARTER_COMPOSITION`, which always holds.
+ */
 export const STARTER_MIX: Readonly<Record<StarterTier, number>> = { bronze: 8, silver: 6, gold: 4 };
 
 type StarterTier = Exclude<CardTier, 'special'>;
 const STARTER_TIERS: readonly StarterTier[] = ['bronze', 'silver', 'gold'];
 
-/** Per line: how many cards from the club, how many from the others (2 + 6 + 6 + 4 in all). */
-const STARTER_SLOTS: readonly { line: PositionLine; own: number; others: number }[] = [
-  { line: 'goalkeeper', own: 1, others: 1 },
-  { line: 'defence', own: 3, others: 3 },
-  { line: 'midfield', own: 2, others: 4 },
-  { line: 'attack', own: 2, others: 2 },
+/**
+ * Per main position: how many cards from the club, how many from the others. The pack always
+ * holds a 4-3-3 of players at their own position (GK, LB, 2 CB, RB, 3 CM, LW, ST, RW) and seven
+ * spares: 2 keepers, 6 defenders, 6 midfielders, 4 forwards in all.
+ */
+const STARTER_SLOTS: readonly { position: Position; own: number; others: number }[] = [
+  { position: 'GK', own: 1, others: 1 },
+  { position: 'LB', own: 1, others: 1 },
+  { position: 'CB', own: 1, others: 1 },
+  { position: 'RB', own: 1, others: 1 },
+  { position: 'CM', own: 2, others: 2 },
+  { position: 'CDM', own: 0, others: 1 },
+  { position: 'CAM', own: 0, others: 1 },
+  { position: 'LW', own: 1, others: 0 },
+  { position: 'ST', own: 1, others: 1 },
+  { position: 'RW', own: 0, others: 1 },
 ];
+
+/** What every starter pack holds, as the game shows it before the opening (rule 5). */
+export const STARTER_COMPOSITION = {
+  club: STARTER_CLUB_CARDS,
+  others: STARTER_PACK_SIZE - STARTER_CLUB_CARDS,
+  lines: { goalkeeper: 2, defence: 6, midfield: 6, attack: 4 },
+} as const;
 
 /** No big rare: no rare gold, no promo. */
 const STARTER_CLASSES: ReadonlySet<CardClass> = new Set([
@@ -260,6 +281,7 @@ export interface StarterPack {
 }
 
 interface StarterEntry extends Entry {
+  readonly position: Position;
   readonly line: PositionLine;
   readonly tier: StarterTier;
 }
@@ -273,6 +295,7 @@ function starterEntries(): readonly StarterEntry[] {
   starterPool = [...STARTER_CLASSES].flatMap((cardClass) =>
     p[cardClass].map((e) => ({
       ...e,
+      position: e.player.positions[0] ?? 'CM',
       line: POSITION_LINE[e.player.positions[0] ?? 'CM'],
       tier: cardClass.split('-')[0] as StarterTier,
     })),
@@ -315,26 +338,44 @@ export function openStarterPack(club: Club, seed: string): StarterPack {
     picked.push(entry);
   };
 
+  // A pool narrowed step by step: the exact position first, then the same line.
+  const firstFree = (...pools: readonly (readonly StarterEntry[])[]): readonly StarterEntry[] =>
+    pools.find((pool) => pool.some((e) => !taken.has(e.player.id))) ?? [];
+
   // The club's cards; a club short of a profile is completed from clubs of its division.
-  for (const { line, own } of STARTER_SLOTS) {
-    const mine = entries.filter((e) => e.line === line && e.club.id === club.id);
+  for (const { position, own } of STARTER_SLOTS) {
+    const line = POSITION_LINE[position];
+    const mine = entries.filter((e) => e.club.id === club.id);
     const near = entries.filter(
-      (e) => e.line === line && e.club.id !== club.id && e.club.divisionId === club.divisionId,
+      (e) => e.club.id !== club.id && e.club.divisionId === club.divisionId,
     );
-    for (let i = 0; i < own; i++)
-      draw(mine.some((e) => !taken.has(e.player.id)) ? mine : near, line);
+    for (let i = 0; i < own; i++) {
+      draw(
+        firstFree(
+          mine.filter((e) => e.position === position),
+          near.filter((e) => e.position === position),
+          mine.filter((e) => e.line === line),
+          near.filter((e) => e.line === line),
+        ),
+        position,
+      );
+    }
   }
 
   // The others, from the rest of the pilot, at the tiers that keep the mix.
-  const others = STARTER_SLOTS.flatMap(({ line, others: n }) =>
-    Array.from({ length: n }, () => line),
+  const others = STARTER_SLOTS.flatMap(({ position, others: n }) =>
+    Array.from({ length: n }, () => position),
   );
   const tiers = rng.fork('tiers').shuffle(othersTiers(picked, others.length));
-  others.forEach((line, i) => {
+  others.forEach((position, i) => {
     const tier = tiers[i] ?? 'bronze';
+    const pool = entries.filter((e) => e.tier === tier && e.club.id !== club.id);
     draw(
-      entries.filter((e) => e.line === line && e.tier === tier && e.club.id !== club.id),
-      `${tier} ${line}`,
+      firstFree(
+        pool.filter((e) => e.position === position),
+        pool.filter((e) => e.line === POSITION_LINE[position]),
+      ),
+      `${tier} ${position}`,
     );
   });
 

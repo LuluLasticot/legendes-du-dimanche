@@ -4,7 +4,7 @@ import { commentary, sim } from '@legendes/engine';
 import type { MatchAudio } from '@legendes/render3d/audio';
 import type { Phase, Pitch2DHandle, Stoppage, TeamLook, Timeline } from '@legendes/render2d';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { buildSetup, DEFAULT_CONFIG, SIDE, type MatchConfig } from './match-config';
 import { MatchSounds } from './match-sound';
 import { teamCode } from './team-code';
@@ -85,7 +85,23 @@ function TeamName({ team }: { team: sim.MatchTeam }) {
  * half-time changes, full time. The simulation is the source of truth; this component drives
  * it phase by phase, feeds the display timeline and hands the 3D outcomes back.
  */
-export function MatchScreen() {
+/** What a played match hands back: the player's inputs and the score he saw. */
+export interface PlayedMatch {
+  readonly moments: sim.ShotOutcome[];
+  readonly changes: sim.MatchChange[];
+  readonly score: [number, number];
+}
+
+/** The game's match: a setup frozen by the server, and what to do at full time. */
+export interface GameMatchProps {
+  readonly setup: sim.MatchSetup;
+  readonly onFullTime: (played: PlayedMatch) => void;
+  /** Shown at full time instead of the lab's panel. */
+  readonly fullTime: ReactNode;
+  readonly kickOffLabel: string;
+}
+
+export function MatchScreen({ game }: { game?: GameMatchProps } = {}) {
   const t = useTranslations('match');
   const speaker = useTranslations('commentary');
   const hostRef = useRef<HTMLDivElement>(null);
@@ -158,12 +174,11 @@ export function MatchScreen() {
   }, []);
 
   const start = useCallback(
-    async (cfg: MatchConfig): Promise<void> => {
+    async (setup: sim.MatchSetup, play: boolean): Promise<void> => {
       unlockAudio();
       const { Timeline: TimelineImpl } = await import('@legendes/render2d');
-      const setup = buildSetup(cfg);
       const match = new sim.MatchSim(setup, {
-        userSide: cfg.play ? SIDE : null,
+        userSide: play ? SIDE : null,
         pauseAtHalfTime: true,
       });
       const rt: Runtime = {
@@ -186,20 +201,26 @@ export function MatchScreen() {
     [advance, go, unlockAudio],
   );
 
-  // Lab controls in the URL: ?seed=N, ?speed=K, ?auto=1 (straight to kick-off, moments by the coach).
+  // Controls in the URL: ?seed=N (lab), ?speed=K, ?auto=1 (the coach plays the key moments).
+  const autoRef = useRef(false);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const seed = Number(q.get('seed')) || DEFAULT_CONFIG.seed;
     const speedParam = Number(q.get('speed'));
     const auto = q.has('auto');
     const id = requestAnimationFrame(() => {
+      if (speedParam >= 1 && speedParam <= MAX_SPEED) setSpeed(speedParam);
+      if (game) {
+        // The game's match always has the player's side: the coach answers its moments.
+        autoRef.current = auto;
+        return;
+      }
       const next = { ...DEFAULT_CONFIG, seed, play: !auto };
       setConfig(next);
-      if (speedParam >= 1 && speedParam <= MAX_SPEED) setSpeed(speedParam);
-      if (auto) void start(next);
+      if (auto) void start(buildSetup(next), false);
     });
     return () => cancelAnimationFrame(id);
-  }, [start]);
+  }, [start, game]);
 
   // The 2D pitch and its loop live as long as a match does.
   useEffect(() => {
@@ -289,8 +310,14 @@ export function MatchScreen() {
         if (rt.display >= rt.timeline.duration - 1e-6) {
           if (rt.match.over) go('fulltime');
           else if (rt.match.waiting === 'moment') {
-            setRequest(rt.match.pendingMoment);
-            go('moment');
+            const pending = rt.match.pendingMoment;
+            if (autoRef.current && pending) {
+              rt.match.resolveMoment(sim.autoResolveMoment(pending, rt.setup.conditions));
+              advance(rt);
+            } else {
+              setRequest(pending);
+              go('moment');
+            }
           } else if (rt.match.waiting === 'half-time') go('halftime');
         }
       };
@@ -301,7 +328,18 @@ export function MatchScreen() {
       cancelAnimationFrame(raf);
       handle?.dispose();
     };
-  }, [runId, go]);
+  }, [runId, go, advance]);
+
+  // Full time in the game: the inputs go back once, to be checked by the server.
+  const handedBack = useRef(false);
+  useEffect(() => {
+    const current = runtimeRef.current;
+    if (!game || stage !== 'fulltime' || !current || handedBack.current) return;
+    handedBack.current = true;
+    const { moments, changes } = current.match.inputs;
+    const [home, away] = current.match.result().score;
+    game.onFullTime({ moments: [...moments], changes: [...changes], score: [home, away] });
+  }, [game, stage]);
 
   const rt = runtime;
 
@@ -416,8 +454,23 @@ export function MatchScreen() {
         </>
       )}
 
-      {stage === 'prematch' && (
-        <PreMatch config={config} onChange={setConfig} onStart={() => void start(config)} />
+      {stage === 'prematch' && !game && (
+        <PreMatch
+          config={config}
+          onChange={setConfig}
+          onStart={() => void start(buildSetup(config), config.play)}
+        />
+      )}
+      {stage === 'prematch' && game && (
+        <div className="absolute inset-0 grid place-items-center bg-pitch-950/70">
+          <button
+            type="button"
+            onClick={() => void start(game.setup, true)}
+            className="rounded-md bg-floodlight-400 px-6 py-3 font-display text-2xl font-extrabold tracking-wide text-pitch-950 uppercase shadow-floodlight hover:bg-floodlight-300"
+          >
+            {game.kickOffLabel}
+          </button>
+        </div>
       )}
       {stage === 'moment' && request && rt && (
         <MomentPlayer
@@ -431,7 +484,12 @@ export function MatchScreen() {
       {stage === 'halftime' && rt && (
         <HalfTime matchSim={rt.match} setup={rt.setup} onResume={resumeSecondHalf} />
       )}
-      {stage === 'fulltime' && rt && (
+      {stage === 'fulltime' && game && (
+        <div className="absolute inset-0 grid place-items-center bg-pitch-950/80 p-4">
+          {game.fullTime}
+        </div>
+      )}
+      {stage === 'fulltime' && rt && !game && (
         <FullTime
           matchSim={rt.match}
           setup={rt.setup}

@@ -933,6 +933,10 @@
       "gold-premium": {
         "name": "Pack Or Premium",
         "contents": "12 cartes or · 3 rares garanties"
+      },
+      "starter": {
+        "name": "Pack de départ",
+        "contents": "18 cartes · 8 de ton club"
       }
     },
     "classes": {
@@ -957,7 +961,8 @@
       "expected": "Par pack",
       "atLeastOne": "Au moins une",
       "note": "Tirage au hasard parmi les joueurs générés du pilote. Dans le jeu, le tirage se fera sur le serveur."
-    }
+    },
+    "starterMix": "Composition : {club} cartes de ton club et {others} d'autres clubs · {goalkeepers} gardiens, {defenders} défenseurs, {midfielders} milieux, {forwards} attaquants · bronze, argent et or, sans or rare ni promo"
   },
   "share": {
     "brand": "Légendes du Dimanche",
@@ -998,5 +1003,187 @@
       "midfield": "Milieux",
       "attack": "Attaquants"
     }
+  },
+  "game": {
+    "tabs": {
+      "home": "La Une",
+      "solo": "Solo",
+      "online": "En ligne",
+      "squads": "Équipes",
+      "transfers": "Transferts",
+      "store": "Boutique",
+      "club": "Mon club",
+      "more": "Plus"
+    },
+    "bar": {
+      "founded": "Fondé en {year}",
+      "credits": "Crédits",
+      "creditsValue": "{value} CR",
+      "record": "Record",
+      "recordValue": "{wins} V · {draws} N · {losses} D",
+      "level": "Niv. {level}",
+      "xp": "{xp} / {next} XP de saison",
+      "store": "Boutique",
+      "packsWaiting": "{count, plural, one {# pack à ouvrir} other {# packs à ouvrir}}"
+    },
+    "home": {
+      "next": {
+        "kicker": "Les Fondations · match guidé",
+        "title": "Premier match",
+        "matchday": "Journée {day} · {division}",
+        "stadium": "{stadium}, {city}",
+        "home": "Domicile",
+        "play": "Jouer",
+        "reward": "Récompense : Pack Bronze",
+        "titleNext": "Match suivant"
+      },
+      "foundations": {
+        "kicker": "Objectifs",
+        "title": "Les Fondations",
+        "progress": "{done} sur {total}",
+        "steps": {
+          "club": "Choisir ton club",
+          "pack": "Ouvrir le pack de départ",
+          "match": "Jouer un match",
+          "squad": "Composer ton équipe",
+          "open": "Ouvrir un pack"
+        },
+        "rewardPack": "Pack Bronze",
+        "rewardCredits": "{value} CR",
+        "done": "Fait"
+      },
+      "packs": {
+        "kicker": "Inventaire",
+        "title": "Packs à ouvrir",
+        "open": "Ouvrir",
+        "from": "Gagné : Les Fondations",
+        "none": "Aucun pack en attente. Les objectifs et la boutique en donnent."
+      },
+      "daily": {
+        "kicker": "Objectifs du jour",
+        "title": "Chaque jour",
+        "soon": "Trois objectifs par jour, renouvelés toutes les 24 heures, avec des crédits à la clé."
+      },
+      "squad": {
+        "kicker": "Équipes",
+        "title": "Ton onze",
+        "rating": "Note du onze",
+        "edit": "Composer"
+      },
+      "collective": {
+        "kicker": "Collectifs",
+        "title": "Jouer local",
+        "club": "Club",
+        "district": "District",
+        "players": "{count, plural, one {# joueur} other {# joueurs}}",
+        "bonus": "+{points}",
+        "rule": "Chaque joueur prend le meilleur des deux.",
+        "total": "{points} / 33 points de collectif"
+      },
+      "soon": {
+        "kicker": "En ligne",
+        "title": "Le Dimanche",
+        "body": "Ton onze contre celui d'un autre joueur, chaque week-end.",
+        "badge": "Bientôt"
+      }
+    },
+    "nav": "Menu du jeu",
+    "errors": {
+      "insufficient_funds": "Pas assez de crédits.",
+      "pack_not_found": "Ce pack n'existe pas ou n'est plus à toi.",
+      "pack_already_opened": "Ce pack est déjà ouvert.",
+      "club_already_chosen": "Ton club est déjà choisi.",
+      "club_not_eligible": "Ce club ne fait pas partie du jeu.",
+      "club_not_chosen": "Choisis d'abord ton club.",
+      "unknown_card": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "wrong_card_count": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "empty_pack": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "profile_not_found": "Ta session a expiré. Recommence depuis l'accueil.",
+      "invalid_amount": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "invalid_price": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "invalid_pack": "Le tirage n'a pas pu être enregistré. Réessaie.",
+      "unexpected": "Quelque chose s'est mal passé. Réessaie.",
+      "retry": "Réessayer",
+      "match_not_found": "Ce match n'existe pas ou n'est plus à toi.",
+      "match_rejected": "Ce résultat n'a pas pu être vérifié. Aucune récompense.",
+      "squad_incomplete": "Ton onze doit compter onze joueurs.",
+      "card_not_owned": "Ce onze contient une carte qui n'est pas à toi."
+    },
+    "welcome": {
+      "title": "Légendes du Dimanche",
+      "pitch": "Ton club, tes cartes, ton dimanche. Choisis ton club, ouvre ton premier pack et compose ton onze.",
+      "start": "Commencer",
+      "guest": "Sans inscription : tu joues en invité, ta progression reste sur cet appareil.",
+      "clubTitle": "Choisis ton club",
+      "clubIntro": "Le club que tu soutiens, du District 5 au National 1. Ses joueurs seront le cœur de ton pack de départ.",
+      "search": "Chercher un club ou une ville",
+      "noMatch": "Aucun club ne correspond.",
+      "confirm": "Choisir {club}",
+      "final": "Choix définitif",
+      "cancel": "Changer",
+      "packTitle": "Ton pack de départ",
+      "continue": "Découvrir mon équipe"
+    },
+    "soon": {
+      "badge": "Bientôt",
+      "solo": "Carrière, Matchs de la semaine, défis de composition et Onze du week-end arrivent avec le premier match.",
+      "online": "Le Championnat en ligne et Le Dimanche : affronte d'autres joueurs (Phases 7 et 8).",
+      "transfers": "Le marché des transferts : achète et vends des cartes (Phase 6).",
+      "store": "Les packs à acheter avec tes crédits, probabilités affichées."
+    },
+    "squads": {
+      "kicker": "Équipes",
+      "title": "Ton onze",
+      "rating": "Note du onze",
+      "collective": "Collectif",
+      "collectiveValue": "{points} / 33",
+      "formation": "Formation",
+      "bench": "Remplaçants",
+      "points": "{points, plural, =0 {Aucun point} one {# point} other {# points}} de collectif",
+      "offPosition": "Hors poste",
+      "auto": "Composé automatiquement : le meilleur total des notes et des collectifs.",
+      "intro": "Voici ton onze, composé automatiquement. Les joueurs d'un même club (2, 4 puis 7 joueurs) ou d'un même district (3, 5 puis 8) jouent mieux ensemble : jusqu'à +3 chacun, 33 pour l'équipe. Un joueur hors de son poste n'en apporte aucun.",
+      "introCta": "Continuer vers La Une",
+      "save": "Valider ce onze",
+      "saved": "Onze enregistré"
+    },
+    "collection": {
+      "count": "{count, plural, one {# carte} other {# cartes}}",
+      "title": "Ma collection",
+      "all": "Toutes",
+      "bronze": "Bronze",
+      "silver": "Argent",
+      "gold": "Or",
+      "copies": "×{count}",
+      "empty": "Aucune carte de ce niveau pour l'instant."
+    },
+    "match": {
+      "kickOff": "Coup d'envoi",
+      "checking": "Vérification du match…",
+      "validated": "Match validé",
+      "reward": "+{value} CR",
+      "back": "Retour à La Une"
+    },
+    "store": {
+      "title": "Boutique",
+      "intro": "Des packs contre tes crédits. Les probabilités sont affichées pour chaque pack.",
+      "buy": "Acheter · {price} CR",
+      "legal": "Aucun achat avec de l'argent réel : les crédits se gagnent en jouant."
+    }
+  },
+  "packOpening": {
+    "title": "Ouverture de pack",
+    "loading": "Préparation du pack…",
+    "failed": "La 3D n'est pas disponible sur cet appareil ou ce navigateur.",
+    "hint": "Glisse le doigt le long du pointillé pour déchirer le pack",
+    "open": "Ouvrir le pack",
+    "skip": "Passer",
+    "mute": "Couper le son",
+    "unmute": "Remettre le son",
+    "heroNext": "Touche pour voir le reste du pack",
+    "gridHint": "Touche une carte pour la retourner",
+    "gridAll": "Tout retourner",
+    "summary": "Ton pack",
+    "continue": "Continuer"
   }
 }

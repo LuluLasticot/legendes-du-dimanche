@@ -92,3 +92,38 @@ jobs:
           name: playwright-traces
           path: apps/web/test-results
           retention-days: 7
+
+  # The game against a local Supabase (spec §11): the database tests (RLS, server-only writes,
+  # replayed matches) and the end-to-end run from the first visit to the first reward.
+  game:
+    name: Game (local Supabase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
+      - name: Local Supabase keys for the app and the tests
+        run: |
+          eval "$(pnpm exec supabase status -o env)"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+          } > apps/web/.env.local
+          cat apps/web/.env.local >> "$GITHUB_ENV"
+      - run: pnpm --filter @legendes/web test:db
+      - run: pnpm --filter @legendes/web build
+      - run: pnpm --filter @legendes/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @legendes/web exec playwright test --project=chromium game.spec
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-traces
+          path: apps/web/test-results
+          retention-days: 7

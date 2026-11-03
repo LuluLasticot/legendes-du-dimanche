@@ -387,7 +387,44 @@ Retours du joueur après essai de `/lab/match` ; traités en PR séparées.
 - **Le tirage reste en TypeScript** (une seule définition des probabilités, déjà testée) : le serveur Next.js tire la graine (`crypto.randomBytes`), appelle `openPack` ou `openStarterPack`, puis la base valide et enregistre. Le prix d'un pack vient de `PACKS`, jamais du client.
 - **Les cartes possédées sont des références** : `card_defs` (9 749 lignes générées par `build:cards`, vérifiées par `--check` dans `pnpm test`) dit quelles cartes existent ; l'image se recalcule depuis l'identifiant (`findCard`).
 - **Choisir son club accorde le pack de départ dans la même transaction** (`choose_club` renvoie l'id du pack, le même si on redemande le même club) : un joueur avec un club et sans pack ne peut pas exister. `grant_pack` refuse un prix absent (`invalid_price`) au lieu d'offrir le pack.
-- **Pack de départ** (`openStarterPack`) : n'importe quel club du pilote (D5 à N2), comme le choix de championnat du genre. 18 cartes : 8 du club, 10 d'autres clubs ; 2 gardiens, 6 défenseurs, 6 milieux, 4 attaquants ; **8 bronze, 6 argent, 4 or** pour tous, les cartes du club comptant dans ce mélange ; un club plus fort reçoit des cartes plus faibles (l'or cède d'abord), écart de force borné par un test sur tous les clubs ; ni or rare ni promo. Sinon l'équipe d'un club de district, toute du même district, avait 33 points de collectif dès le premier jour.
+- **Pack de départ** (`openStarterPack`) : n'importe quel club du pilote (D5 à N1), comme le choix de championnat du genre. 18 cartes : 8 du club, 10 d'autres clubs ; 2 gardiens, 6 défenseurs, 6 milieux, 4 attaquants ; **8 bronze, 6 argent, 4 or visés**, les cartes du club comptant dans ce mélange : exact pour un club de district ; un club plus fort (R1 à N1) garde ses cartes et reçoit des cartes plus faibles (l'or cède d'abord ; jusqu'à 8 or pour un club de N1), écart de force borné par un test sur tous les clubs ; ni or rare ni promo. Sinon l'équipe d'un club de district, toute du même district, avait 33 points de collectif dès le premier jour.
 - **Invités** : connexions anonymes activées ; le profil est créé par déclencheur ; l'amélioration vers un e-mail garde l'identifiant. Limites de débit et captcha à prévoir avant l'ouverture publique.
 - **Types de la base** : `pnpm db:types` écrit `packages/shared/src/db/database.types.ts` (exclu d'ESLint, formaté par Prettier) ; les clients Supabase sont typés avec `Database`.
 - **Tests** : `pnpm --filter @legendes/web test:db` (Supabase local, Docker) ; pas encore dans la CI (plan C). Après `pnpm db:reset`, si l'API répond `PGRST202` (fonction introuvable), recharger son cache : `docker exec supabase_db_legendes-du-dimanche psql -U postgres -c "notify pgrst, 'reload schema'"`.
+
+## D-042 — La coque, l'accueil et le onze automatique (Phase 4, plan B)
+
+- **Parcours `/jouer`** gardé par une seule fonction, `stageOf` : sans session → `/jouer/bienvenue` ; sans club → `/jouer/bienvenue/club` ; pack de départ fermé → `/jouer/bienvenue/pack` ; sinon la coque (`app/jouer/(jeu)`). Un lien direct vers un onglet mène toujours à la bonne étape.
+- **Session invitée en cookies** (`@supabase/ssr`) : « Commencer » crée un compte anonyme (pas de formulaire) et paie le bonus de bienvenue ; `src/proxy.ts` rafraîchit la session sur `/jouer`. Les pages **lisent avec la session du joueur** (RLS : ses lignes seules) ; les **écritures passent par des Server Actions** qui appellent les modules du plan A avec `service_role` (`import 'server-only'`). Les erreurs reviennent au navigateur sous forme de **codes**, traduits dans `game.errors` (une erreur levée par une Server Action est masquée en production).
+- **Pack de départ à l'écran** : la scène de `/lab/pack` est partagée (`components/pack/` : textures, indices du walkout, composant `PackOpening`) ; son habillage propre (pelouse de nuit). Son `request_id` est **l'id du pack** : un rechargement, même après l'ouverture, rejoue les mêmes cartes. La composition affichée avant l'ouverture (règle 5) est ce qui vaut pour **tous** les packs (`STARTER_COMPOSITION`) : 8 du club et 10 d'autres, 2 gardiens, 6 défenseurs, 6 milieux, 4 attaquants, bronze, argent et or sans or rare ni promo ; le mélange 8/6/4 n'est exact que pour un club de district. Le pack contient toujours un 4-3-3 de joueurs à leur poste (GK, DG, 2 DC, DD, 3 MC, AG, BU, AD).
+- **Choix du club** : tout le pilote, du District 5 au **National 1** (le pilote compte aussi des clubs de N1), recherche sans accents, confirmation « choix définitif ».
+- **Collectifs** (`packages/data/src/team/collective.ts`) : club (2, 4, 7) et district (3, 5, 8), le meilleur des deux, 3 au plus par joueur, 33 pour l'équipe ; un joueur hors de son poste n'en donne ni n'en reçoit. **La ligue n'est pas comptée tant que le pilote n'a qu'une ligue** (elle donnerait +3 à tous) ; le bonus de division attend la Phase 5.
+- **Onze automatique** (`autoSquad`, `bestSquad`) : d'abord aucun poste vide, puis le moins de joueurs hors poste (85 % de leur note dans la bonne ligne), puis le meilleur total des notes et des collectifs ; départ par affectation exacte (algorithme hongrois), puis échanges pour les collectifs ; la formation retenue est celle qui a le moins de joueurs hors poste, puis le meilleur score exact ; un joueur en double ne joue qu'une fois ; une collection trop courte laisse des postes vides.
+- **Coque** : barre du club (crédits réels ; record et XP à zéro jusqu'au plan C), 7 onglets (barre du bas à 5 + « Plus » sur mobile). La Une, Équipes et Mon club sur les vraies données ; Solo, En ligne, Transferts, Boutique en « Bientôt ». La maquette `/lab/une` est retirée.
+- **Reportés au plan C** : le match (bouton « Jouer » en « Bientôt »), les objectifs en base (Fondations et objectifs du jour), la boutique et l'ouverture des autres packs, le rattachement à un e-mail, l'e2e avec Supabase et sa CI.
+
+## D-043 — La boucle de la tranche : match rejoué, objectifs, boutique (Phase 4, plan C)
+
+- **Le match est figé, rejoué, payé par le serveur.**
+  - `startMatch` construit le onze du joueur (le onze enregistré, sinon l'automatique) avec `toMatchTeamFromSheet` et l'adversaire de la journée : le N-ième autre club de la division, en boucle.
+  - Il fige le tout dans `matches` (setup en JSON, aller-retour JSON compris, pour que le client joue exactement le match rejoué).
+  - Le client renvoie ses **entrées** (issues des actions clés, changements) et le score vu. Le serveur les rejoue sur le setup figé ; un score différent ou des entrées qui ne collent pas font rejeter le match.
+  - Seuls les changements du côté du joueur sont acceptés, avec des tactiques bornées.
+  - **Un seul match ouvert par joueur** (verrou du profil, index unique) ; les matchs rejetés comptent pour la journée.
+- **Barème de départ** (GDD §9.2) :
+  - victoire 300 / 600 / 900 CR (District / Régional / National) ;
+  - nul 50 %, défaite 25 % ;
+  - +25 par action clé réussie (but marqué, ou tir repoussé quand le joueur garde les buts).
+  - `record_match` paie une seule fois et avance les objectifs.
+- **Premier match guidé** : le moteur n'est pas touché. Le serveur cherche, parmi les graines 1 à 400, la première dont la première action clé du joueur tombe avant 3:00.
+- **Objectifs en données** (`objective_defs`, `user_objectives`, `advance_objective` idempotent) :
+  - Les Fondations : jouer un match → Pack Bronze, composer l'équipe → 300 CR, ouvrir un pack → Pack Bronze ;
+  - les objectifs du jour et de la semaine ne seront que des lignes.
+- **Onze enregistré** (`user_squads`, `save_squad`) : onze cartes possédées, sinon refus.
+- **Boutique** : probabilités toujours affichées (règle 5), un `request_id` par page vue (un double clic débite une fois). Ouvrir un pack : même `request_id` que l'id du pack.
+- **Record et XP** dérivés des matchs validés, sans table : 100 XP par match, +50 par victoire, un niveau tous les 500.
+- **Bout en bout** : `e2e/game.spec.ts`, de l'arrivée à la première récompense. Le job CI `game` démarre Supabase local et lance les tests de base puis ce parcours.
+- **Limites connues, avant la mise en ligne publique** :
+  - les issues des actions clés viennent du client (le geste 3D se joue dans le navigateur) : un client scripté peut gonfler ses gains. Ils sont plafonnés par match (le nombre d'actions clés), mais **pas en nombre de matchs** tant qu'il n'y a pas de limite de débit, et la graine figée peut être rejouée en local pour choisir les meilleurs changements ; à traiter avec les limites de débit, le captcha et, plus tard, la validation de la cadence (spec §12) ;
+  - le moteur compte encore la ligue dans ses collectifs (sans effet dans le pilote : les deux équipes l'ont), à aligner en Phase 5 ;
+  - le onze de départ, avec de l'or, écrase un club de District 5 (7-0 au premier essai) : la force de l'adversaire est à équilibrer.

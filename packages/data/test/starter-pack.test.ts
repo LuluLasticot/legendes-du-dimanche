@@ -5,6 +5,7 @@ import {
   cardValue,
   openStarterPack,
   STARTER_CLUB_CARDS,
+  STARTER_COMPOSITION,
   STARTER_MIX,
   STARTER_PACK_SIZE,
   WORLD,
@@ -104,6 +105,18 @@ describe('the starter pack', () => {
     const target = score(STARTER_MIX);
     for (const { pack } of packs) {
       expect(Math.abs(score(countTiers(pack.cards)) - target)).toBeLessThanOrEqual(0.25);
+    }
+  });
+
+  it('matches the composition shown before the opening, for every club (rule 5)', () => {
+    expect(STARTER_COMPOSITION.club + STARTER_COMPOSITION.others).toBe(STARTER_PACK_SIZE);
+    for (const { pack, own, others } of packs) {
+      expect(own).toHaveLength(STARTER_COMPOSITION.club);
+      expect(others).toHaveLength(STARTER_COMPOSITION.others);
+      const lines = pack.cards.map((c) => POSITION_LINE[c.card.player.positions[0] ?? 'CM']);
+      for (const [line, n] of Object.entries(STARTER_COMPOSITION.lines)) {
+        expect(lines.filter((l) => l === line)).toHaveLength(n);
+      }
     }
   });
 

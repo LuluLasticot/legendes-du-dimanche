@@ -29,7 +29,7 @@ Cible d'expérience : **premier but en moins de 3 minutes** (GDD §10).
 **Première session**
 
 1. Arrivée → compte invité créé automatiquement (profil, bonus de bienvenue idempotent).
-2. **« Choisis ton club »** (équivalent de « Choisis ta ligue ») : **n'importe quel club du pilote**, du District 5 au National 2 (révisé le 09/10/2026 : un joueur de N2 doit pouvoir débuter avec son club).
+2. **« Choisis ton club »** (équivalent de « Choisis ta ligue ») : **n'importe quel club du pilote**, du District 5 au National 1 (révisé le 09/10/2026 : un joueur de N2 doit pouvoir débuter avec son club).
 3. **Pack de départ** ouvert sur l'écran du pack (la scène d'ouverture existante).
 4. **Effectif auto-composé** (meilleur onze selon la formation), **collectifs expliqués** : avoir 7 joueurs du même club donne +3.
 5. **« Les Fondations »** : chaîne d'objectifs où chacun fait toucher un mode et rapporte un pack ou des crédits. Dans la tranche : *jouer un match*, *composer l'équipe*, *ouvrir un pack*.
@@ -98,8 +98,8 @@ Une migration `game_core` (nom horodaté) ; **la sécurité par ligne est activ�
 Fonction pure et déterministe `openStarterPack(club, graine)` dans `packages/data/src/packs.ts`, testée comme les autres packs.
 
 - **18 cartes** : 8 du club choisi (le plus gros groupe), 10 d'autres clubs de tout le pilote.
-- **Postes garantis** (équipe toujours valide) : 2 gardiens, 6 défenseurs, 6 milieux, 4 attaquants. Part du club : 1 / 4 / 4 / 2 ; part des autres : 1 / 2 / 2 / 2. Si le club manque d'un profil, on complète depuis le district.
-- **Même force pour tous** : le pack compte 8 bronze, 6 argent et 4 or (commun et rare pour le bronze et l'argent, or commun seulement ; ni promo). Les cartes du club comptent dans ce mélange ; les autres le complètent. Un club plus fort que le mélange (R1 à N2) reçoit des cartes plus faibles, l'or cédant d'abord : l'écart de force reste borné et testé.
+- **Postes garantis** (équipe toujours valide) : 2 gardiens, 6 défenseurs, 6 milieux, 4 attaquants, dont toujours un 4-3-3 de joueurs à leur poste (révisé le 09/10/2026, D-042). Si le club manque d'un profil, on complète depuis sa division.
+- **Même force pour tous** : le pack vise 8 bronze, 6 argent et 4 or (exact pour un club de district ; un club plus fort garde ses cartes, voir D-042) (commun et rare pour le bronze et l'argent, or commun seulement ; ni promo). Les cartes du club comptent dans ce mélange ; les autres le complètent. Un club plus fort que le mélange (R1 à N2) reçoit des cartes plus faibles, l'or cédant d'abord : l'écart de force reste borné et testé.
 - Le premier pack contient de l'or : la sortie complète du joueur peut avoir lieu dès l'ouverture.
 - Pas de probabilités par classe : la **composition** est affichée (règle 5).
 - Cartes triées, la meilleure en dernier, comme `openPack`.

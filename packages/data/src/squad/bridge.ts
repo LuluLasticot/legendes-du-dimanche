@@ -79,7 +79,7 @@ const STYLES: readonly (readonly [PlayStyle, number])[] = [
 ];
 
 /** Readable colours for a kit: shirt, shorts, and the number that shows on the shirt. */
-function coloursOf(kit: KitSpec): MatchTeam['colours'] {
+export function coloursOf(kit: KitSpec): MatchTeam['colours'] {
   return {
     shirt: kit.body,
     shorts: kit.shorts,
