@@ -98,4 +98,37 @@ describe('a match, replayed by the server', () => {
       .eq('status', 'created');
     expect(open.data).toHaveLength(1);
   });
+
+  it('validates a match whose coach changed his tactics many times at half-time', async () => {
+    const player = await ready();
+    const { matchId, setup } = await startMatch(admin, player, crypto.randomUUID());
+    const match = new sim.MatchSim(setup, MATCH_OPTIONS);
+    while (match.step()) {
+      if (match.waiting === 'half-time') {
+        for (let i = 0; i < 15; i++) {
+          match.setTactic(0, { ...match.tacticOf(0), mentality: i % 2 === 0 ? 1 : 0 });
+        }
+        match.resumeSecondHalf();
+      }
+      const pending = match.pendingMoment;
+      if (pending) match.resolveMoment(sim.autoResolveMoment(pending, setup.conditions));
+    }
+    const claimed = { ...match.inputs, score: [...match.result().score] };
+    expect(claimed.changes.length).toBe(15);
+    expect((await finishMatch(admin, player.userId, matchId, claimed)).status).toBe('validated');
+  });
+
+  it('gives two tabs the stored match on later matchdays too', async () => {
+    const player = await ready();
+    const first = await startMatch(admin, player, crypto.randomUUID());
+    await finishMatch(admin, player.userId, first.matchId, played(first.setup));
+    const [a, b] = await Promise.all([
+      startMatch(admin, player, crypto.randomUUID()),
+      startMatch(admin, player, crypto.randomUUID()),
+    ]);
+    expect(a.matchId).toBe(b.matchId);
+    const stored = await admin.from('matches').select('setup').eq('id', a.matchId).single();
+    expect(a.setup).toEqual(stored.data?.setup);
+    expect(b.setup).toEqual(stored.data?.setup);
+  });
 });

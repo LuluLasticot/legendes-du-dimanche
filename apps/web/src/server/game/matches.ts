@@ -112,8 +112,7 @@ export async function startMatch(
     },
   };
   const seed = matchday === 1 ? guidedSeed(base) : randomInt(1, 2 ** 31 - 1);
-  // As the database will give it back to the replay: the client plays exactly the same match.
-  const setup = JSON.parse(JSON.stringify({ ...base, seed })) as sim.MatchSetup;
+  const setup: sim.MatchSetup = { ...base, seed };
   const { data, error } = await db.rpc('create_match', {
     p_user: player.userId,
     p_seed: seed,
@@ -122,7 +121,11 @@ export async function startMatch(
     p_request: requestId,
   });
   if (error) throw gameErrorFrom(error);
-  return { matchId: z.uuid().parse(data), setup };
+  const matchId = z.uuid().parse(data);
+  // Another tab may have stored its own match first: play the stored one, whatever this call built.
+  const stored = await db.from('matches').select('setup').eq('id', matchId).single();
+  if (stored.error) throw gameErrorFrom(stored.error);
+  return { matchId, setup: stored.data.setup as unknown as sim.MatchSetup };
 }
 
 const OUTCOMES = ['goal', 'save-catch', 'save-parry', 'block', 'post', 'miss', 'offside'] as const;
@@ -164,7 +167,8 @@ const change = z.discriminatedUnion('type', [
 ]);
 const claimedSchema = z.object({
   moments: z.array(z.enum(OUTCOMES)).max(12),
-  changes: z.array(change).max(10),
+  // The half-time panel records each click: well above what a coach does, still bounded.
+  changes: z.array(change).max(200),
   score: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
 });
 

@@ -1,7 +1,6 @@
 import {
   COLLECTIVE_STEPS,
   PACK_TYPES,
-  bestSquad,
   crestOf,
   divisionLabel,
   getClub,
@@ -17,8 +16,8 @@ import { Kit } from '@/components/club/kit';
 import { Icon } from '@/components/shell/icons';
 import { PackArt } from '@/components/shell/pack-art';
 import { Tile, TileButton } from '@/components/shell/tile';
-import { cardsOf } from '@/server/game/collection';
 import { opponentOf } from '@/server/game/matches';
+import { savedSheet } from '@/server/game/squads';
 import { listObjectives, type ObjectiveState } from '@/server/game/objectives';
 import { STAGE_PATH } from '@/server/game/stage';
 import { sessionClient } from '@/lib/supabase/session';
@@ -55,7 +54,8 @@ export default async function HomePage() {
   const division = getDivision(club.divisionId);
   const kits = matchKits(club, opponent);
 
-  const sheet = bestSquad(cardsOf(player.cardIds));
+  // The eleven the matches are played with: the saved one, else the automatic one.
+  const sheet = await savedSheet(db, player);
   const playing = sheet.slots.flatMap((s) => (s.card && s.inPosition ? [s.card] : []));
   const fromClub = playing.filter((c) => c.club.id === club.id).length;
   const fromDistrict = playing.filter((c) => c.club.districtId === club.districtId).length;

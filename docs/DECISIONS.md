@@ -425,6 +425,6 @@ Retours du joueur après essai de `/lab/match` ; traités en PR séparées.
 - **Record et XP** dérivés des matchs validés, sans table : 100 XP par match, +50 par victoire, un niveau tous les 500.
 - **Bout en bout** : `e2e/game.spec.ts`, de l'arrivée à la première récompense. Le job CI `game` démarre Supabase local et lance les tests de base puis ce parcours.
 - **Limites connues, avant la mise en ligne publique** :
-  - les issues des actions clés viennent du client (le geste 3D se joue dans le navigateur) : un client scripté peut gonfler ses gains, plafonnés par le nombre d'actions du match ; à traiter avec les limites de débit, le captcha et, plus tard, la validation de la cadence (spec §12) ;
+  - les issues des actions clés viennent du client (le geste 3D se joue dans le navigateur) : un client scripté peut gonfler ses gains. Ils sont plafonnés par match (le nombre d'actions clés), mais **pas en nombre de matchs** tant qu'il n'y a pas de limite de débit, et la graine figée peut être rejouée en local pour choisir les meilleurs changements ; à traiter avec les limites de débit, le captcha et, plus tard, la validation de la cadence (spec §12) ;
   - le moteur compte encore la ligue dans ses collectifs (sans effet dans le pilote : les deux équipes l'ont), à aligner en Phase 5 ;
   - le onze de départ, avec de l'or, écrase un club de District 5 (7-0 au premier essai) : la force de l'adversaire est à équilibrer.
