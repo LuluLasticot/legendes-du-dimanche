@@ -187,6 +187,17 @@ export function autoSquad(cards: readonly PackCard[], formation: Formation): Tea
     }
   }
 
+  return sheetFrom(formation, pool, lineup);
+}
+
+/** The sheet of a lineup: slots with their collectives, the bench, the totals. */
+function sheetFrom(
+  formation: Formation,
+  pool: readonly PackCard[],
+  lineup: readonly (PackCard | null)[],
+): TeamSheet {
+  const slots = FORMATION_SLOTS[formation];
+  const positions = slots.map((s) => s.position);
   const members = membersOf(lineup, positions);
   const collective = collectiveOf(members);
   const values = valuesOf(lineup, positions);
@@ -211,6 +222,18 @@ export function autoSquad(cards: readonly PackCard[], formation: Formation): Tea
     score: score(lineup, positions),
     rating: Math.round(values.reduce((a, b) => a + b, 0) / values.length),
   };
+}
+
+/** A saved eleven (card ids in the formation's order) on the cards owned; null if one is gone. */
+export function sheetOf(
+  cards: readonly PackCard[],
+  formation: Formation,
+  lineup: readonly string[],
+): TeamSheet | null {
+  const pool = distinct(cards);
+  const picked = lineup.map((id) => pool.find((c) => c.card.id === id) ?? null);
+  if (picked.some((c) => c === null) || new Set(picked).size !== picked.length) return null;
+  return sheetFrom(formation, pool, picked);
 }
 
 /** The automatic squad in the formation that suits the cards best: fewest out of position, then score. */
