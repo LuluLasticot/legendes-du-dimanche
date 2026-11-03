@@ -74,5 +74,6 @@ describe('the automatic squad', () => {
         if (out(other) === out(best)) expect(best.score).toBeGreaterThanOrEqual(other.score);
       }
     }
-  });
+    // 205 clubs × 11 formations: seconds on a CI runner.
+  }, 60_000);
 });

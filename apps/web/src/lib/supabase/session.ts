@@ -6,8 +6,9 @@ import { cookies } from 'next/headers';
 import { gameEnv } from '@/env';
 
 export async function sessionClient() {
-  const { url, publishableKey } = gameEnv();
+  // Cookies first: they make every game page dynamic (never prerendered at build time).
   const store = await cookies();
+  const { url, publishableKey } = gameEnv();
   return createServerClient<Database>(url, publishableKey, {
     cookies: {
       getAll: () => store.getAll(),
